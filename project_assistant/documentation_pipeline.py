@@ -9,6 +9,8 @@ from project_assistant.generators import (
     CodexStartDocumentGenerator,
     DeploymentDocumentGenerator,
     InvariantsDocumentGenerator,
+    PythonCliReadmeDocumentGenerator,
+    PythonCliReadmeDevDocumentGenerator,
     ReadmeDocumentGenerator,
     ReadmeDevDocumentGenerator,
     SpecificationDocumentGenerator,
@@ -109,18 +111,42 @@ class DocumentationPipeline:
             generator_name = "invariants-déterministe-protégé"
 
         elif document_path == "README.md":
-            content = ReadmeDocumentGenerator().generate(
-                project,
-                self.knowledge.readme,
-            )
-            generator_name = "readme-déterministe"
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliReadmeDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                    )
+                )
+                generator_name = (
+                    "readme-python-cli-déterministe"
+                )
+            else:
+                content = ReadmeDocumentGenerator().generate(
+                    project,
+                    self.knowledge.readme,
+                )
+                generator_name = "readme-déterministe"
 
         elif document_path == "README_DEV.md":
-            content = ReadmeDevDocumentGenerator().generate(
-                project,
-                self.knowledge,
-            )
-            generator_name = "readme-dev-déterministe"
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliReadmeDevDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                    )
+                )
+                generator_name = (
+                    "readme-dev-python-cli-déterministe"
+                )
+            else:
+                content = ReadmeDevDocumentGenerator().generate(
+                    project,
+                    self.knowledge,
+                )
+                generator_name = "readme-dev-déterministe"
 
         elif document_path == "docs/api.md":
             content = ApiDocumentGenerator().generate(

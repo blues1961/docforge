@@ -19,6 +19,10 @@ from project_assistant.analyzers.deployment import (
     DeploymentAnalyzer,
     DeploymentFacts,
 )
+from project_assistant.analyzers.pyproject import (
+    PyprojectAnalyzer,
+    PyprojectFacts,
+)
 from project_assistant.analyzers.readme import (
     ReadmeAnalyzer,
     ReadmeFacts,
@@ -35,6 +39,8 @@ from project_assistant.analyzers.template import (
 )
 
 __all__ = [
+    "PyprojectFacts",
+    "PyprojectAnalyzer",
     "ReadmeFacts",
     "ReadmeAnalyzer",
     "SpecificationFacts",

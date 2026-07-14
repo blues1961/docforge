@@ -12,6 +12,8 @@ from project_assistant.analyzers import (
     ArchitectureFacts,
     DeploymentAnalyzer,
     DeploymentFacts,
+    PyprojectAnalyzer,
+    PyprojectFacts,
     ReadmeAnalyzer,
     ReadmeFacts,
     SpecificationAnalyzer,
@@ -43,6 +45,7 @@ class ProjectKnowledge:
 
     architecture: ArchitectureFacts
     deployment: DeploymentFacts
+    pyproject: PyprojectFacts
     api: ApiFacts
     specification: SpecificationFacts
     readme: ReadmeFacts
@@ -91,6 +94,7 @@ class ProjectKnowledgeBuilder:
         deployment = DeploymentAnalyzer().analyze(
             project
         )
+        pyproject = PyprojectAnalyzer().analyze(project)
         api = ApiAnalyzer().analyze(project)
         specification = SpecificationAnalyzer().analyze(
             project
@@ -119,6 +123,7 @@ class ProjectKnowledgeBuilder:
             profile=profile,
             architecture=architecture,
             deployment=deployment,
+            pyproject=pyproject,
             api=api,
             specification=specification,
             readme=readme,

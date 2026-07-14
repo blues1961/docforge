@@ -183,6 +183,7 @@ def test_project_knowledge_is_json_serializable(
     assert data["schema_version"] == 1
     assert data["identity"]["name"] == tmp_path.name
     assert data["profile"]["name"] == "django-react"
+    assert "pyproject" in data
     assert "architecture" in data
     assert "deployment" in data
     assert "api" in data

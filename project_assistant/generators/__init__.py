@@ -20,6 +20,12 @@ from project_assistant.generators.documentation import (
 from project_assistant.generators.invariants import (
     InvariantsDocumentGenerator,
 )
+from project_assistant.generators.python_cli_readme import (
+    PythonCliReadmeDocumentGenerator,
+)
+from project_assistant.generators.python_cli_readme_dev import (
+    PythonCliReadmeDevDocumentGenerator,
+)
 from project_assistant.generators.readme import (
     ReadmeDocumentGenerator,
 )
@@ -39,6 +45,8 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "PythonCliReadmeDevDocumentGenerator",
+    "PythonCliReadmeDocumentGenerator",
     "InvariantsDocumentGenerator",
     "CodexStartDocumentGenerator",
     "AgentsDocumentGenerator",
