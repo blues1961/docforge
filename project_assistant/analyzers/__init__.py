@@ -1,3 +1,9 @@
+from project_assistant.analyzers.api import (
+    ApiAnalyzer,
+    ApiFacts,
+    ApiRoute,
+    RouterRegistration,
+)
 from project_assistant.analyzers.architecture import (
     ArchitectureAnalyzer,
     ArchitectureFacts,
@@ -9,6 +15,10 @@ from project_assistant.analyzers.deployment import (
 )
 
 __all__ = [
+    "ApiAnalyzer",
+    "ApiFacts",
+    "ApiRoute",
+    "RouterRegistration",
     "ArchitectureAnalyzer",
     "ArchitectureFacts",
     "ArchitectureService",

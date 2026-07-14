@@ -18,6 +18,8 @@ from project_assistant.commands.init import initialize_project
 from project_assistant.commands.verify import verify_project
 from project_assistant.detectors import TechnologyDetector
 from project_assistant.scanners import FileSystemScanner
+from project_assistant.project_manager import ProjectManager
+from project_assistant.project_registry import ProjectRegistry
 
 app = typer.Typer(
     name="project-assistant",
@@ -521,3 +523,189 @@ def apply_command(
         "Les changements ne sont pas committés. Vérifiez avec git diff."
         "[/yellow]"
     )
+
+
+projects_app = typer.Typer(
+    help="Gérer le registre des projets.",
+    no_args_is_help=True,
+)
+
+app.add_typer(
+    projects_app,
+    name="projects",
+)
+
+
+@projects_app.command("add")
+def projects_add(
+    path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du projet à enregistrer.",
+    ),
+    name: str | None = typer.Option(
+        None,
+        "--name",
+        help="Nom personnalisé du projet.",
+    ),
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        "-p",
+        help="Profil documentaire explicite.",
+    ),
+) -> None:
+    """Ajouter ou mettre à jour un projet dans le registre."""
+
+    registered = ProjectRegistry().add(
+        path=path,
+        name=name,
+        profile=profile,
+    )
+
+    console.print(
+        f"[green]Projet enregistré :[/green] "
+        f"{registered.name}"
+    )
+    console.print(
+        f"[bold]Chemin :[/bold] {registered.path}"
+    )
+    console.print(
+        f"[bold]Profil :[/bold] "
+        f"{registered.profile or 'automatique'}"
+    )
+
+
+@projects_app.command("list")
+def projects_list() -> None:
+    """Afficher les projets enregistrés."""
+
+    registry = ProjectRegistry()
+    projects = registry.load()
+
+    if not projects:
+        console.print(
+            "[yellow]Aucun projet enregistré.[/yellow]"
+        )
+        console.print(
+            f"Registre : {registry.registry_path}"
+        )
+        return
+
+    table = Table(title="Projets enregistrés")
+    table.add_column("Nom")
+    table.add_column("Chemin")
+    table.add_column("Profil")
+    table.add_column("Actif")
+    table.add_column("Existe")
+
+    for project in projects:
+        table.add_row(
+            project.name,
+            str(project.path),
+            project.profile or "automatique",
+            "oui" if project.enabled else "non",
+            "oui" if project.path.exists() else "non",
+        )
+
+    console.print(table)
+    console.print(
+        f"\nRegistre : {registry.registry_path}"
+    )
+
+
+@projects_app.command("remove")
+def projects_remove(
+    identifier: str = typer.Argument(
+        ...,
+        help="Nom ou chemin du projet à retirer.",
+    ),
+) -> None:
+    """Retirer un projet du registre."""
+
+    removed = ProjectRegistry().remove(identifier)
+
+    if not removed:
+        console.print(
+            f"[red]Projet introuvable :[/red] {identifier}"
+        )
+        raise typer.Exit(code=2)
+
+    console.print(
+        f"[green]Projet retiré :[/green] {identifier}"
+    )
+
+
+@app.command("refresh-all")
+def refresh_all_command(
+    clean: bool = typer.Option(
+        False,
+        "--clean",
+        help=(
+            "Supprimer les anciens aperçus avant "
+            "chaque régénération."
+        ),
+    ),
+) -> None:
+    """Actualiser les aperçus de tous les projets enregistrés."""
+
+    results = ProjectManager().refresh_all(
+        clean=clean,
+    )
+
+    if not results:
+        console.print(
+            "[yellow]Aucun projet actif dans le registre.[/yellow]"
+        )
+        return
+
+    table = Table(title="Actualisation multi-projets")
+    table.add_column("Projet")
+    table.add_column("État")
+    table.add_column("Documents")
+    table.add_column("Détail")
+
+    success_count = 0
+    failure_count = 0
+
+    for result in results:
+        if result.error:
+            failure_count += 1
+            table.add_row(
+                result.project.name,
+                "[red]erreur[/red]",
+                "—",
+                result.error,
+            )
+            continue
+
+        success_count += 1
+
+        documents = ", ".join(
+            item.document_path
+            for item in result.generated
+        ) or "aucun"
+
+        table.add_row(
+            result.project.name,
+            "[green]succès[/green]",
+            documents,
+            str(
+                result.project.path
+                / ".project-assistant"
+                / "preview"
+            ),
+        )
+
+    console.print(table)
+    console.print(
+        f"\nSuccès : {success_count} — "
+        f"Erreurs : {failure_count}"
+    )
+
+    if failure_count:
+        raise typer.Exit(code=1)

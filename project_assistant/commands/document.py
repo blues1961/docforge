@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from project_assistant.analyzers import (
+    ApiAnalyzer,
     ArchitectureAnalyzer,
     DeploymentAnalyzer,
 )
@@ -14,6 +15,7 @@ from project_assistant.config import (
 )
 from project_assistant.detectors import TechnologyDetector
 from project_assistant.generators import (
+    ApiDocumentGenerator,
     ArchitectureDocumentGenerator,
     DeploymentDocumentGenerator,
     DocumentationPreviewGenerator,
@@ -30,6 +32,7 @@ from project_assistant.validators import DocumentationValidator
 PREVIEW_DIRECTORY = Path(".project-assistant/preview")
 
 DETERMINISTIC_DOCUMENTS = {
+    "docs/api.md",
     "docs/architecture.md",
     "docs/deployment.md",
 }
@@ -135,7 +138,15 @@ def generate_documentation_preview(
         preview_path = preview_root / document_path
         preview_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if document_path == "docs/architecture.md":
+        if document_path == "docs/api.md":
+            facts = ApiAnalyzer().analyze(project)
+            content = ApiDocumentGenerator().generate(
+                project,
+                facts,
+            )
+            generator_name = "api-déterministe"
+
+        elif document_path == "docs/architecture.md":
             facts = ArchitectureAnalyzer().analyze(project)
             content = ArchitectureDocumentGenerator().generate(
                 project,

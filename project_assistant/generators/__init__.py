@@ -1,3 +1,6 @@
+from project_assistant.generators.api import (
+    ApiDocumentGenerator,
+)
 from project_assistant.generators.architecture import (
     ArchitectureDocumentGenerator,
 )
@@ -15,6 +18,7 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "ApiDocumentGenerator",
     "ArchitectureDocumentGenerator",
     "DeploymentDocumentGenerator",
     "DocumentationPreviewGenerator",
