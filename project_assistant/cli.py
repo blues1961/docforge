@@ -28,6 +28,11 @@ from project_assistant.audit_manager import (
 )
 from project_assistant.invariant_integrity import InvariantIntegrityManager
 from project_assistant.audit_report import generate_audit_report
+from project_assistant.audit_diff import (
+    AuditDiffAnalyzer,
+    AuditDiffError,
+    AuditDiffMarkdownGenerator,
+)
 
 app = typer.Typer(
     name="project-assistant",
@@ -1225,3 +1230,125 @@ def audit_report_command(
     console.print(
         f"Historique Markdown : {files.history_markdown}"
     )
+
+
+@app.command("audit-diff")
+def audit_diff_command(
+    current: Path = typer.Option(
+        Path("reports/audit-latest.json"),
+        "--current",
+        help="Rapport JSON courant.",
+    ),
+    previous: Path | None = typer.Option(
+        None,
+        "--previous",
+        help=(
+            "Rapport JSON précédent. "
+            "Le plus récent de reports/history est utilisé par défaut."
+        ),
+    ),
+    output: Path | None = typer.Option(
+        Path("reports/audit-diff-latest.md"),
+        "--output",
+        "-o",
+        help="Fichier Markdown de comparaison.",
+    ),
+) -> None:
+    """Comparer deux rapports de conformité."""
+
+    analyzer = AuditDiffAnalyzer()
+
+    current_path = current.expanduser().resolve()
+
+    try:
+        previous_path = (
+            previous.expanduser().resolve()
+            if previous is not None
+            else analyzer.find_previous_report(
+                reports_directory=current_path.parent,
+                current_path=current_path,
+            )
+        )
+
+        report = analyzer.compare(
+            previous_path=previous_path,
+            current_path=current_path,
+        )
+    except (
+        AuditDiffError,
+        FileNotFoundError,
+    ) as error:
+        console.print(
+            f"[red]Comparaison impossible :[/red] {error}"
+        )
+        raise typer.Exit(code=2)
+
+    table = Table(title="Évolution de la conformité")
+    table.add_column("Projet")
+    table.add_column("Évolution")
+    table.add_column("État précédent")
+    table.add_column("État courant")
+    table.add_column("Score précédent")
+    table.add_column("Score courant")
+    table.add_column("Écart")
+
+    groups = [
+        ("amélioré", report.improved),
+        ("dégradé", report.regressed),
+        ("nouveau", report.added),
+        ("retiré", report.removed),
+        ("inchangé", report.unchanged),
+    ]
+
+    for label, changes in groups:
+        for change in changes:
+            delta = (
+                f"{change.score_delta:+d}"
+                if change.score_delta is not None
+                else "—"
+            )
+
+            table.add_row(
+                change.name,
+                label,
+                change.previous_state or "—",
+                change.current_state or "—",
+                (
+                    str(change.previous_score)
+                    if change.previous_score is not None
+                    else "—"
+                ),
+                (
+                    str(change.current_score)
+                    if change.current_score is not None
+                    else "—"
+                ),
+                delta,
+            )
+
+    console.print(table)
+
+    console.print(
+        "\n"
+        f"Améliorés : {len(report.improved)} — "
+        f"Dégradés : {len(report.regressed)} — "
+        f"Inchangés : {len(report.unchanged)} — "
+        f"Nouveaux : {len(report.added)} — "
+        f"Retirés : {len(report.removed)}"
+    )
+
+    if output is not None:
+        output_path = output.expanduser().resolve()
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        output_path.write_text(
+            AuditDiffMarkdownGenerator().generate(report),
+            encoding="utf-8",
+        )
+
+        console.print(
+            f"\n[green]Rapport de comparaison :[/green] "
+            f"{output_path}"
+        )
