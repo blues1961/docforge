@@ -265,6 +265,11 @@ def test_refresh_regenerates_existing_deterministic_documents(
     )
 
     assert (
+        by_path["CODEX_START.md"].generator
+        == "codex-start-déterministe"
+    )
+
+    assert (
         by_path["README.md"].generator
         == "readme-déterministe"
     )

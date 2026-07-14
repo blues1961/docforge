@@ -139,6 +139,11 @@ test:
             "## Portée",
         ),
         (
+            "CODEX_START.md",
+            "codex-start-déterministe",
+            "## Mission",
+        ),
+        (
             "README.md",
             "readme-déterministe",
             "## Résumé du projet",
