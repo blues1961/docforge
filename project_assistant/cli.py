@@ -33,6 +33,8 @@ from project_assistant.audit_diff import (
     AuditDiffError,
     AuditDiffMarkdownGenerator,
 )
+from project_assistant.status_manager import StatusManager
+from project_assistant.remediation import generate_remediation_plan
 
 app = typer.Typer(
     name="project-assistant",
@@ -1352,3 +1354,274 @@ def audit_diff_command(
             f"\n[green]Rapport de comparaison :[/green] "
             f"{output_path}"
         )
+
+
+@app.command("status-all")
+def status_all_command(
+    template_path: Path = typer.Option(
+        Path.home() / "projets" / "app-template",
+        "--template",
+        help="Chemin du template canonique.",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+    ),
+    show_details: bool = typer.Option(
+        False,
+        "--show-details",
+        help=(
+            "Afficher les documents différents et "
+            "les écarts de conformité."
+        ),
+    ),
+) -> None:
+    """Afficher l’état quotidien de tous les projets."""
+
+    ecosystem = StatusManager().collect(
+        template_path
+    )
+
+    if not ecosystem.invariants_valid:
+        console.print(
+            "[red]État global bloqué.[/red]"
+        )
+        console.print(
+            ecosystem.invariant_error
+            or "Les invariants ne sont pas valides."
+        )
+        console.print(
+            "Exécutez : project-assistant "
+            f"verify-invariants {template_path}"
+        )
+        raise typer.Exit(code=1)
+
+    table = Table(title="État quotidien des projets")
+    table.add_column("Projet")
+    table.add_column("Git")
+    table.add_column("Branche")
+    table.add_column("Synchro")
+    table.add_column("Conformité")
+    table.add_column("Documentation")
+    table.add_column("État")
+
+    blocking_issues = 0
+
+    for item in ecosystem.projects:
+        git_status = item.git
+
+        if not git_status.is_repository:
+            git_label = "[red]non Git[/red]"
+            branch = "—"
+            sync = "—"
+            blocking_issues += 1
+        else:
+            git_label = (
+                "[yellow]modifié[/yellow]"
+                if git_status.dirty
+                else "[green]propre[/green]"
+            )
+            branch = git_status.branch or "—"
+
+            sync_parts: list[str] = []
+
+            if git_status.ahead:
+                sync_parts.append(
+                    f"+{git_status.ahead}"
+                )
+
+            if git_status.behind:
+                sync_parts.append(
+                    f"-{git_status.behind}"
+                )
+
+            sync = ", ".join(sync_parts) or "à jour"
+
+        compliance = item.compliance
+
+        if item.error:
+            compliance_label = "[red]erreur[/red]"
+            state = item.error
+            blocking_issues += 1
+        elif compliance is None:
+            compliance_label = "—"
+            state = "template ou projet non audité"
+        elif not compliance.eligible:
+            compliance_label = "[dim]ignoré[/dim]"
+            state = compliance.profile_reason
+        else:
+            error_count = sum(
+                1
+                for finding in compliance.findings
+                if finding.severity == "error"
+            )
+            warning_count = sum(
+                1
+                for finding in compliance.findings
+                if finding.severity == "warning"
+            )
+
+            if error_count:
+                compliance_label = (
+                    f"[red]{compliance.score} %[/red]"
+                )
+                state = (
+                    f"{error_count} erreur(s), "
+                    f"{warning_count} avertissement(s)"
+                )
+                blocking_issues += 1
+            elif warning_count:
+                compliance_label = (
+                    f"[yellow]{compliance.score} %[/yellow]"
+                )
+                state = (
+                    f"{warning_count} avertissement(s)"
+                )
+            else:
+                compliance_label = (
+                    f"[green]{compliance.score} %[/green]"
+                )
+                state = "aucun écart"
+
+        documentation = item.documentation
+
+        difference_count = (
+            len(documentation.changed_documents)
+            + len(documentation.new_documents)
+        )
+
+        if not documentation.preview_exists:
+            documentation_label = "aucun aperçu"
+        elif difference_count:
+            documentation_label = (
+                f"[yellow]{difference_count} changement(s)[/yellow]"
+            )
+        else:
+            documentation_label = (
+                "[green]à jour[/green]"
+            )
+
+        table.add_row(
+            item.project.name,
+            git_label,
+            branch,
+            sync,
+            compliance_label,
+            documentation_label,
+            state,
+        )
+
+    console.print(table)
+
+    if show_details:
+        for item in ecosystem.projects:
+            documentation = item.documentation
+            compliance = item.compliance
+
+            has_details = (
+                documentation.changed_documents
+                or documentation.new_documents
+                or (
+                    compliance is not None
+                    and compliance.findings
+                )
+                or item.error
+            )
+
+            if not has_details:
+                continue
+
+            console.print(
+                f"\n[bold]{item.project.name}[/bold]"
+            )
+
+            if item.error:
+                console.print(
+                    f"[red]{item.error}[/red]"
+                )
+
+            if documentation.changed_documents:
+                console.print(
+                    "[yellow]Documents modifiés dans l’aperçu :[/yellow]"
+                )
+
+                for document in (
+                    documentation.changed_documents
+                ):
+                    console.print(f"  - {document}")
+
+            if documentation.new_documents:
+                console.print(
+                    "[yellow]Nouveaux documents dans l’aperçu :[/yellow]"
+                )
+
+                for document in (
+                    documentation.new_documents
+                ):
+                    console.print(f"  - {document}")
+
+            if (
+                compliance is not None
+                and compliance.findings
+            ):
+                findings_table = Table()
+                findings_table.add_column("Sévérité")
+                findings_table.add_column("Code")
+                findings_table.add_column("Message")
+
+                for finding in compliance.findings:
+                    findings_table.add_row(
+                        finding.severity,
+                        finding.code,
+                        finding.message,
+                    )
+
+                console.print(findings_table)
+
+    console.print(
+        f"\nProblèmes bloquants : {blocking_issues}"
+    )
+
+
+@app.command("remediation-plan")
+def remediation_plan_command(
+    template_path: Path = typer.Option(
+        Path.home() / "projets" / "app-template",
+        "--template",
+        help="Chemin du template canonique.",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+    ),
+    output: Path = typer.Option(
+        Path("reports/remediation-latest.md"),
+        "--output",
+        "-o",
+        help="Fichier Markdown à générer.",
+    ),
+) -> None:
+    """Générer un plan de mise en conformité sans appliquer de changement."""
+
+    try:
+        output_path = generate_remediation_plan(
+            template_path=template_path,
+            output_path=output,
+        )
+    except InvariantIntegrityError as error:
+        console.print(
+            "[red]Plan bloqué.[/red]"
+        )
+        console.print(str(error))
+        console.print(
+            "Les invariants doivent être vérifiés et approuvés "
+            "avant toute proposition de mise en conformité."
+        )
+        raise typer.Exit(code=1)
+
+    console.print(
+        "[green]Plan de mise en conformité généré :[/green] "
+        f"{output_path}"
+    )
