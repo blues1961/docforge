@@ -319,6 +319,14 @@ def document(
         "--clean",
         help="Supprimer l'ancien aperçu avant la génération.",
     ),
+    refresh: bool = typer.Option(
+        False,
+        "--refresh",
+        help=(
+            "Régénérer les documents déterministes même "
+            "s'ils existent déjà dans le projet."
+        ),
+    ),
     write: bool = typer.Option(
         False,
         "--write",
@@ -338,6 +346,7 @@ def document(
             path=path,
             profile=profile,
             clean=clean,
+            refresh=refresh,
         )
     )
 
@@ -362,12 +371,14 @@ def document(
     table = Table(title="Documents générés en aperçu")
     table.add_column("Document cible")
     table.add_column("Aperçu")
+    table.add_column("Générateur")
     table.add_column("Motif")
 
     for item in generated:
         table.add_row(
-            item.source_path,
+            item.document_path,
             str(item.preview_path),
+            item.generator,
             item.reason,
         )
 
@@ -401,6 +412,14 @@ def generate_command(
         "--clean",
         help="Recréer entièrement le dossier d'aperçu.",
     ),
+    refresh: bool = typer.Option(
+        False,
+        "--refresh",
+        help=(
+            "Régénérer aussi les documents déterministes "
+            "déjà présents."
+        ),
+    ),
 ) -> None:
     """Remplir avec Ollama les documents manquants en aperçu."""
 
@@ -408,6 +427,7 @@ def generate_command(
         path=path,
         model=model,
         clean=clean,
+        refresh=refresh,
     )
 
     if not results:
@@ -418,16 +438,24 @@ def generate_command(
         )
         return
 
-    table = Table(title="Documentation générée par Ollama")
+    table = Table(title="Documentation générée")
     table.add_column("Document")
     table.add_column("Aperçu")
+    table.add_column("Générateur")
     table.add_column("Débit")
 
     for item in results:
+        rate = (
+            f"{item.tokens_per_second:.2f} tokens/s"
+            if item.tokens_per_second > 0
+            else "—"
+        )
+
         table.add_row(
             item.document_path,
             str(item.preview_path),
-            f"{item.tokens_per_second:.2f} tokens/s",
+            item.generator,
+            rate,
         )
 
     console.print(table)

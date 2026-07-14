@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from project_assistant.commands.document import (
+    DETERMINISTIC_DOCUMENTS,
     generate_documentation_preview,
 )
 from project_assistant.generators import (
@@ -16,6 +17,7 @@ class GeneratedDocumentResult:
     document_path: str
     preview_path: Path
     tokens_per_second: float
+    generator: str
 
 
 def generate_preview_with_llm(
@@ -23,19 +25,32 @@ def generate_preview_with_llm(
     *,
     model: str,
     clean: bool = False,
+    refresh: bool = False,
 ) -> list[GeneratedDocumentResult]:
     project, _, generated = generate_documentation_preview(
         path=path,
         clean=clean,
+        refresh=refresh,
     )
 
     generator = LLMDocumentationGenerator()
     results: list[GeneratedDocumentResult] = []
 
     for item in generated:
+        if item.document_path in DETERMINISTIC_DOCUMENTS:
+            results.append(
+                GeneratedDocumentResult(
+                    document_path=item.document_path,
+                    preview_path=item.preview_path,
+                    tokens_per_second=0.0,
+                    generator=item.generator,
+                )
+            )
+            continue
+
         document = generator.generate_document(
             project=project,
-            document_path=item.source_path,
+            document_path=item.document_path,
             skeleton_path=item.preview_path,
             model=model,
         )
@@ -47,11 +62,12 @@ def generate_preview_with_llm(
 
         results.append(
             GeneratedDocumentResult(
-                document_path=item.source_path,
+                document_path=item.document_path,
                 preview_path=item.preview_path,
                 tokens_per_second=(
                     document.average_tokens_per_second
                 ),
+                generator="ollama",
             )
         )
 
