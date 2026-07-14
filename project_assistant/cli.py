@@ -22,7 +22,10 @@ from project_assistant.project_manager import ProjectManager
 from project_assistant.project_registry import ProjectRegistry
 from project_assistant.commands.template import analyze_template
 from project_assistant.commands.global_invariants import generate_global_invariants
-from project_assistant.audit_manager import AuditManager
+from project_assistant.audit_manager import (
+    AuditManager,
+    InvariantIntegrityError,
+)
 from project_assistant.invariant_integrity import InvariantIntegrityManager
 
 app = typer.Typer(
@@ -894,7 +897,54 @@ def audit_all_command(
 ) -> None:
     """Comparer les applications enregistrées à app-template."""
 
-    results = AuditManager().audit_all(template_path)
+    manager = AuditManager()
+
+    try:
+        results = manager.audit_all(template_path)
+    except InvariantIntegrityError as error:
+        report = error.report
+
+        console.print("[red]Audit bloqué.[/red]")
+
+        if not report.baseline_exists:
+            console.print(
+                "Aucune version approuvée des invariants "
+                "n'est enregistrée."
+            )
+            console.print(
+                "Après validation explicite du propriétaire :"
+            )
+            console.print(
+                "project-assistant approve-invariants "
+                f"{template_path} --owner-approved"
+            )
+            raise typer.Exit(code=2)
+
+        console.print(
+            "Les fichiers protégés du template ne "
+            "correspondent plus à la version approuvée."
+        )
+        console.print(
+            "Aucune conformité applicative ne sera évaluée "
+            "tant que cette dérive n'aura pas été examinée."
+        )
+
+        drift_table = Table(title="Dérive des invariants")
+        drift_table.add_column("Fichier")
+        drift_table.add_column("État")
+        drift_table.add_column("Empreinte approuvée")
+        drift_table.add_column("Empreinte actuelle")
+
+        for drift in report.drifts:
+            drift_table.add_row(
+                drift.path,
+                drift.status,
+                drift.expected_sha256 or "—",
+                drift.actual_sha256 or "—",
+            )
+
+        console.print(drift_table)
+        raise typer.Exit(code=1)
 
     table = Table(title="Conformité des applications auto-hébergées")
     table.add_column("Projet")
