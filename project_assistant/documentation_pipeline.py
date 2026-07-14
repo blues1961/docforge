@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from project_assistant.generators import (
+    AgentsDocumentGenerator,
     ApiDocumentGenerator,
     ArchitectureDocumentGenerator,
     DeploymentDocumentGenerator,
     ReadmeDocumentGenerator,
+    ReadmeDevDocumentGenerator,
     SpecificationDocumentGenerator,
 )
 from project_assistant.knowledge import ProjectKnowledge
@@ -27,7 +29,9 @@ class UnsupportedDeterministicDocumentError(ValueError):
 class DocumentationPipeline:
     SUPPORTED_DOCUMENTS = frozenset(
         {
+            "AGENTS.md",
             "README.md",
+            "README_DEV.md",
             "docs/api.md",
             "docs/architecture.md",
             "docs/deployment.md",
@@ -46,12 +50,37 @@ class DocumentationPipeline:
         project: Project,
         document_path: str,
     ) -> GeneratedDocumentContent:
-        if document_path == "README.md":
+        if document_path == "AGENTS.md":
+            existing_path = project.root / "AGENTS.md"
+            existing_content = (
+                existing_path.read_text(
+                    encoding="utf-8",
+                    errors="ignore",
+                )
+                if existing_path.is_file()
+                else None
+            )
+
+            content = AgentsDocumentGenerator().generate(
+                project,
+                self.knowledge,
+                existing_content=existing_content,
+            )
+            generator_name = "agents-déterministe"
+
+        elif document_path == "README.md":
             content = ReadmeDocumentGenerator().generate(
                 project,
                 self.knowledge.readme,
             )
             generator_name = "readme-déterministe"
+
+        elif document_path == "README_DEV.md":
+            content = ReadmeDevDocumentGenerator().generate(
+                project,
+                self.knowledge,
+            )
+            generator_name = "readme-dev-déterministe"
 
         elif document_path == "docs/api.md":
             content = ApiDocumentGenerator().generate(

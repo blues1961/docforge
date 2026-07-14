@@ -30,7 +30,9 @@ from project_assistant.validators import DocumentationValidator
 PREVIEW_DIRECTORY = Path(".project-assistant/preview")
 
 DETERMINISTIC_DOCUMENTS = {
+    "AGENTS.md",
     "README.md",
+    "README_DEV.md",
     "docs/api.md",
     "docs/architecture.md",
     "docs/deployment.md",

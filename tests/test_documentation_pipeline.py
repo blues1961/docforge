@@ -134,9 +134,19 @@ test:
     ("document_path", "generator_name", "heading"),
     [
         (
+            "AGENTS.md",
+            "agents-déterministe",
+            "## Portée",
+        ),
+        (
             "README.md",
             "readme-déterministe",
             "## Résumé du projet",
+        ),
+        (
+            "README_DEV.md",
+            "readme-dev-déterministe",
+            "## Prérequis",
         ),
         (
             "docs/api.md",
@@ -204,5 +214,5 @@ def test_pipeline_rejects_unsupported_document(
     ):
         pipeline.generate(
             project,
-            "README_DEV.md",
+            "CHANGELOG.md",
         )

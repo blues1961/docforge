@@ -260,8 +260,18 @@ def test_refresh_regenerates_existing_deterministic_documents(
     )
 
     assert (
+        by_path["AGENTS.md"].generator
+        == "agents-déterministe"
+    )
+
+    assert (
         by_path["README.md"].generator
         == "readme-déterministe"
+    )
+
+    assert (
+        by_path["README_DEV.md"].generator
+        == "readme-dev-déterministe"
     )
 
     preview_architecture = (
