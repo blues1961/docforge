@@ -38,6 +38,9 @@ from project_assistant.knowledge import (
     ProjectKnowledgeBuilder,
     write_project_knowledge,
 )
+from project_assistant.profiles import (
+    ProfileDetector,
+)
 from project_assistant.remediation import generate_remediation_plan
 
 app = typer.Typer(
@@ -502,6 +505,14 @@ def apply_command(
         ...,
         help="Documents d'aperçu à intégrer.",
     ),
+    owner_approved: bool = typer.Option(
+        False,
+        "--owner-approved",
+        help=(
+            "Confirmer l’autorisation explicite du propriétaire "
+            "pour appliquer un document protégé."
+        ),
+    ),
     allow_dirty: bool = typer.Option(
         False,
         "--allow-dirty",
@@ -515,6 +526,7 @@ def apply_command(
             root=path,
             document_paths=documents,
             require_clean_git=not allow_dirty,
+        owner_approved=owner_approved,
         )
     except (
         RuntimeError,
@@ -1709,3 +1721,75 @@ def knowledge_command(
         console.print_json(
             knowledge.to_json()
         )
+
+
+@app.command("profile")
+def profile_command(
+    path: Path = typer.Argument(
+        Path("."),
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Projet dont le profil doit être détecté.",
+    ),
+) -> None:
+    """Détecter et afficher le profil d'un projet."""
+
+    project = FileSystemScanner().scan(path)
+    TechnologyDetector().detect(project)
+
+    profile = ProfileDetector().detect(project)
+
+    console.print(
+        f"[green]Profil détecté :[/green] "
+        f"{profile.name}"
+    )
+    console.print(
+        f"Libellé : {profile.label}"
+    )
+    console.print(
+        f"Confiance : {profile.confidence} %"
+    )
+    console.print(
+        f"Description : {profile.description}"
+    )
+
+    table = Table(title="Preuves de détection")
+    table.add_column("Preuve")
+
+    for evidence in profile.evidence:
+        table.add_row(evidence)
+
+    console.print(table)
+
+    documents = Table(
+        title="Politique documentaire"
+    )
+    documents.add_column("Type")
+    documents.add_column("Documents")
+
+    policy = profile.document_policy
+
+    documents.add_row(
+        "obligatoires",
+        ", ".join(policy.required_documents) or "—",
+    )
+    documents.add_row(
+        "optionnels",
+        ", ".join(policy.optional_documents) or "—",
+    )
+    documents.add_row(
+        "déterministes",
+        ", ".join(
+            policy.deterministic_documents
+        )
+        or "—",
+    )
+    documents.add_row(
+        "protégés",
+        ", ".join(policy.protected_documents) or "—",
+    )
+
+    console.print(documents)

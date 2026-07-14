@@ -49,8 +49,25 @@ def apply_preview_documents(
     document_paths: list[str],
     *,
     require_clean_git: bool = True,
+    owner_approved: bool = False,
 ) -> list[AppliedDocument]:
     root = root.expanduser().resolve()
+
+    protected_documents = {
+        "INVARIANTS.md",
+    }
+
+    requested_protected = sorted(
+        protected_documents.intersection(document_paths)
+    )
+
+    if requested_protected and not owner_approved:
+        raise PermissionError(
+            "Document protégé : "
+            + ", ".join(requested_protected)
+            + ". Une autorisation explicite du propriétaire "
+            "est requise pour l'appliquer."
+        )
 
     if require_clean_git and not _git_is_clean(root):
         raise RuntimeError(

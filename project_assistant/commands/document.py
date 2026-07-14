@@ -32,6 +32,7 @@ PREVIEW_DIRECTORY = Path(".project-assistant/preview")
 DETERMINISTIC_DOCUMENTS = {
     "AGENTS.md",
     "CODEX_START.md",
+    "INVARIANTS.md",
     "README.md",
     "README_DEV.md",
     "docs/api.md",

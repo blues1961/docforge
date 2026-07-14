@@ -17,6 +17,9 @@ from project_assistant.generators.documentation import (
     DocumentationPreviewGenerator,
     GeneratedDocument,
 )
+from project_assistant.generators.invariants import (
+    InvariantsDocumentGenerator,
+)
 from project_assistant.generators.readme import (
     ReadmeDocumentGenerator,
 )
@@ -36,6 +39,7 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "InvariantsDocumentGenerator",
     "CodexStartDocumentGenerator",
     "AgentsDocumentGenerator",
     "ReadmeDocumentGenerator",

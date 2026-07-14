@@ -19,6 +19,10 @@ from project_assistant.analyzers import (
 )
 from project_assistant.detectors import TechnologyDetector
 from project_assistant.models import Project
+from project_assistant.profiles import (
+    ProfileDetector,
+    ProfileFacts,
+)
 from project_assistant.scanners import FileSystemScanner
 
 
@@ -35,6 +39,7 @@ class ProjectIdentity:
 class ProjectKnowledge:
     schema_version: int
     identity: ProjectIdentity
+    profile: ProfileFacts
 
     architecture: ArchitectureFacts
     deployment: DeploymentFacts
@@ -78,6 +83,8 @@ class ProjectKnowledgeBuilder:
         self,
         project: Project,
     ) -> ProjectKnowledge:
+        profile = ProfileDetector().detect(project)
+
         architecture = ArchitectureAnalyzer().analyze(
             project
         )
@@ -109,6 +116,7 @@ class ProjectKnowledgeBuilder:
                 frameworks=sorted(project.frameworks),
                 technologies=technologies,
             ),
+            profile=profile,
             architecture=architecture,
             deployment=deployment,
             api=api,

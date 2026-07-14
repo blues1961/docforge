@@ -8,6 +8,7 @@ from project_assistant.generators import (
     ArchitectureDocumentGenerator,
     CodexStartDocumentGenerator,
     DeploymentDocumentGenerator,
+    InvariantsDocumentGenerator,
     ReadmeDocumentGenerator,
     ReadmeDevDocumentGenerator,
     SpecificationDocumentGenerator,
@@ -32,6 +33,7 @@ class DocumentationPipeline:
         {
             "AGENTS.md",
             "CODEX_START.md",
+            "INVARIANTS.md",
             "README.md",
             "README_DEV.md",
             "docs/api.md",
@@ -87,6 +89,24 @@ class DocumentationPipeline:
                 existing_content=existing_content,
             )
             generator_name = "codex-start-déterministe"
+
+        elif document_path == "INVARIANTS.md":
+            existing_path = project.root / "INVARIANTS.md"
+            existing_content = (
+                existing_path.read_text(
+                    encoding="utf-8",
+                    errors="ignore",
+                )
+                if existing_path.is_file()
+                else None
+            )
+
+            content = InvariantsDocumentGenerator().generate(
+                project,
+                self.knowledge,
+                existing_content=existing_content,
+            )
+            generator_name = "invariants-déterministe-protégé"
 
         elif document_path == "README.md":
             content = ReadmeDocumentGenerator().generate(
