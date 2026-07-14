@@ -27,6 +27,7 @@ from project_assistant.audit_manager import (
     InvariantIntegrityError,
 )
 from project_assistant.invariant_integrity import InvariantIntegrityManager
+from project_assistant.audit_report import generate_audit_report
 
 app = typer.Typer(
     name="project-assistant",
@@ -1163,3 +1164,64 @@ def verify_invariants_command(
 
     console.print(table)
     raise typer.Exit(code=1)
+
+
+@app.command("audit-report")
+def audit_report_command(
+    template_path: Path = typer.Option(
+        Path.home() / "projets" / "app-template",
+        "--template",
+        help="Chemin du template canonique.",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+    ),
+    output_dir: Path = typer.Option(
+        Path("reports"),
+        "--output-dir",
+        "-o",
+        help="Répertoire de destination des rapports.",
+    ),
+) -> None:
+    """Générer un rapport persistant JSON et Markdown."""
+
+    try:
+        files = generate_audit_report(
+            template_path=template_path,
+            output_dir=output_dir,
+        )
+    except InvariantIntegrityError as error:
+        console.print(
+            "[red]Rapport bloqué.[/red]"
+        )
+
+        if not error.report.baseline_exists:
+            console.print(
+                "Aucune version approuvée des invariants "
+                "n'est enregistrée."
+            )
+            raise typer.Exit(code=2)
+
+        console.print(
+            "Les invariants protégés ont dérivé. "
+            "Aucun rapport n'a été généré."
+        )
+        raise typer.Exit(code=1)
+
+    console.print(
+        "[green]Rapport d'audit généré.[/green]"
+    )
+    console.print(
+        f"JSON courant : {files.latest_json}"
+    )
+    console.print(
+        f"Markdown courant : {files.latest_markdown}"
+    )
+    console.print(
+        f"Historique JSON : {files.history_json}"
+    )
+    console.print(
+        f"Historique Markdown : {files.history_markdown}"
+    )

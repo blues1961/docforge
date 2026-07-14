@@ -9,3 +9,7 @@ build/
 htmlcov/
 .projet-assistant/
 .project-assistant/
+
+# Rapports d'audit générés
+reports/*.json
+reports/history/
