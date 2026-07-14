@@ -4,25 +4,19 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from project_assistant.analyzers import (
-    ApiAnalyzer,
-    ArchitectureAnalyzer,
-    DeploymentAnalyzer,
-    ReadmeAnalyzer,
-    SpecificationAnalyzer,
-)
 from project_assistant.config import (
     DocumentationConfigLoader,
     ResolvedDocumentationConfig,
 )
 from project_assistant.detectors import TechnologyDetector
+from project_assistant.documentation_pipeline import (
+    DocumentationPipeline,
+)
+from project_assistant.knowledge import (
+    ProjectKnowledgeBuilder,
+)
 from project_assistant.generators import (
-    ApiDocumentGenerator,
-    ArchitectureDocumentGenerator,
-    DeploymentDocumentGenerator,
     DocumentationPreviewGenerator,
-    ReadmeDocumentGenerator,
-    SpecificationDocumentGenerator,
 )
 from project_assistant.models import Project
 from project_assistant.project_config import (
@@ -140,52 +134,21 @@ def generate_documentation_preview(
             if not (project.root / document_path).exists()
         }
 
+    knowledge = ProjectKnowledgeBuilder().build(
+        project
+    )
+    pipeline = DocumentationPipeline(knowledge)
+
     for document_path in sorted(deterministic_targets):
         preview_path = preview_root / document_path
         preview_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if document_path == "README.md":
-            facts = ReadmeAnalyzer().analyze(project)
-            content = ReadmeDocumentGenerator().generate(
-                project,
-                facts,
-            )
-            generator_name = "readme-déterministe"
-
-        elif document_path == "docs/specification.md":
-            facts = SpecificationAnalyzer().analyze(project)
-            content = SpecificationDocumentGenerator().generate(
-                project,
-                facts,
-            )
-            generator_name = "specification-déterministe"
-
-        elif document_path == "docs/api.md":
-            facts = ApiAnalyzer().analyze(project)
-            content = ApiDocumentGenerator().generate(
-                project,
-                facts,
-            )
-            generator_name = "api-déterministe"
-
-        elif document_path == "docs/architecture.md":
-            facts = ArchitectureAnalyzer().analyze(project)
-            content = ArchitectureDocumentGenerator().generate(
-                project,
-                facts,
-            )
-            generator_name = "architecture-déterministe"
-
-        elif document_path == "docs/deployment.md":
-            facts = DeploymentAnalyzer().analyze(project)
-            content = DeploymentDocumentGenerator().generate(
-                project,
-                facts,
-            )
-            generator_name = "deployment-déterministe"
-
-        else:
-            continue
+        generated_document = pipeline.generate(
+            project,
+            document_path,
+        )
+        content = generated_document.content
+        generator_name = generated_document.generator_name
 
         preview_path.write_text(
             content,
