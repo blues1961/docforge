@@ -259,6 +259,11 @@ def test_refresh_regenerates_existing_deterministic_documents(
         == "specification-déterministe"
     )
 
+    assert (
+        by_path["README.md"].generator
+        == "readme-déterministe"
+    )
+
     preview_architecture = (
         tmp_path
         / ".project-assistant"

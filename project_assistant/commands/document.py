@@ -8,6 +8,7 @@ from project_assistant.analyzers import (
     ApiAnalyzer,
     ArchitectureAnalyzer,
     DeploymentAnalyzer,
+    ReadmeAnalyzer,
     SpecificationAnalyzer,
 )
 from project_assistant.config import (
@@ -20,6 +21,7 @@ from project_assistant.generators import (
     ArchitectureDocumentGenerator,
     DeploymentDocumentGenerator,
     DocumentationPreviewGenerator,
+    ReadmeDocumentGenerator,
     SpecificationDocumentGenerator,
 )
 from project_assistant.models import Project
@@ -34,6 +36,7 @@ from project_assistant.validators import DocumentationValidator
 PREVIEW_DIRECTORY = Path(".project-assistant/preview")
 
 DETERMINISTIC_DOCUMENTS = {
+    "README.md",
     "docs/api.md",
     "docs/architecture.md",
     "docs/deployment.md",
@@ -141,7 +144,15 @@ def generate_documentation_preview(
         preview_path = preview_root / document_path
         preview_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if document_path == "docs/specification.md":
+        if document_path == "README.md":
+            facts = ReadmeAnalyzer().analyze(project)
+            content = ReadmeDocumentGenerator().generate(
+                project,
+                facts,
+            )
+            generator_name = "readme-déterministe"
+
+        elif document_path == "docs/specification.md":
             facts = SpecificationAnalyzer().analyze(project)
             content = SpecificationDocumentGenerator().generate(
                 project,

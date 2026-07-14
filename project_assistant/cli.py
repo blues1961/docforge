@@ -34,6 +34,10 @@ from project_assistant.audit_diff import (
     AuditDiffMarkdownGenerator,
 )
 from project_assistant.status_manager import StatusManager
+from project_assistant.knowledge import (
+    ProjectKnowledgeBuilder,
+    write_project_knowledge,
+)
 from project_assistant.remediation import generate_remediation_plan
 
 app = typer.Typer(
@@ -1625,3 +1629,83 @@ def remediation_plan_command(
         "[green]Plan de mise en conformité généré :[/green] "
         f"{output_path}"
     )
+
+
+@app.command("knowledge")
+def knowledge_command(
+    path: Path = typer.Argument(
+        Path("."),
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Projet à analyser.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help=(
+            "Fichier JSON de destination. Par défaut, utilise "
+            ".project-assistant/cache/project-knowledge.json."
+        ),
+    ),
+    print_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Afficher également le JSON dans le terminal.",
+    ),
+) -> None:
+    """Construire la connaissance structurée d'un projet."""
+
+    knowledge = ProjectKnowledgeBuilder().build_from_path(
+        path
+    )
+
+    output_path = output or (
+        path
+        / ".project-assistant"
+        / "cache"
+        / "project-knowledge.json"
+    )
+
+    written_path = write_project_knowledge(
+        knowledge,
+        output_path,
+    )
+
+    console.print(
+        "[green]Connaissance du projet générée.[/green]"
+    )
+    console.print(
+        f"Projet : {knowledge.identity.name}"
+    )
+    console.print(
+        f"Fichier : {written_path}"
+    )
+    console.print(
+        "Technologies : "
+        + (
+            ", ".join(
+                knowledge.identity.technologies
+            )
+            or "aucune"
+        )
+    )
+    console.print(
+        f"Services : "
+        f"{len(knowledge.architecture.services)}"
+    )
+    console.print(
+        f"Routes API : {len(knowledge.api.routes)}"
+    )
+    console.print(
+        f"Cibles Makefile : "
+        f"{len(knowledge.deployment.make_targets)}"
+    )
+
+    if print_json:
+        console.print_json(
+            knowledge.to_json()
+        )

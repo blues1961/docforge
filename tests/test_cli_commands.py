@@ -17,4 +17,5 @@ def test_cli_help_lists_main_commands() -> None:
     assert "audit-all" in result.stdout
     assert "audit-report" in result.stdout
     assert "remediation-plan" in result.stdout
+    assert "knowledge" in result.stdout
     assert "verify-invariants" in result.stdout

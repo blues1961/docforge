@@ -11,6 +11,9 @@ from project_assistant.generators.documentation import (
     DocumentationPreviewGenerator,
     GeneratedDocument,
 )
+from project_assistant.generators.readme import (
+    ReadmeDocumentGenerator,
+)
 from project_assistant.generators.specification import (
     SpecificationDocumentGenerator,
 )
@@ -24,6 +27,7 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "ReadmeDocumentGenerator",
     "SpecificationDocumentGenerator",
     "ApiDocumentGenerator",
     "ArchitectureDocumentGenerator",
