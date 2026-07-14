@@ -5,7 +5,7 @@ Document généré automatiquement par project-assistant.
 Ne pas modifier manuellement.
 -->
 
-- Généré le : `2026-07-14T13:50:25.407149+00:00`
+- Généré le : `2026-07-14T14:03:33.008962+00:00`
 - Template canonique : `/home/sylvain/projets/app-template`
 - Projets analysés : `9`
 - Applications admissibles : `6`
