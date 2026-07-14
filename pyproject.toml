@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-assistant"
+version = "0.1.0"
+description = "Assistant local d'analyse et de documentation de projets logiciels."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0",
+    "requests>=2.31",
+    "rich>=13.7",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+project-assistant = "project_assistant.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["project_assistant*"]
+exclude = ["defaults*", "docs*", "examples*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

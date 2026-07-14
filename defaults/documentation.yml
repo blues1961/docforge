@@ -1,0 +1,520 @@
+schema_version: 1
+defaults:
+  language: fr-CA
+  encoding: UTF-8
+  output:
+    preview_directory: .project-assistant/preview
+    backup_directory: .project-assistant/backups
+    report_directory: .project-assistant/reports
+  safety:
+    require_clean_git_for_write: true
+    create_backup_before_write: true
+    overwrite_existing_files: false
+    read_secret_files: false
+  excluded_paths:
+  - .git
+  - .venv
+  - node_modules
+  - dist
+  - build
+  - coverage
+  - __pycache__
+  - .pytest_cache
+  - .mypy_cache
+  - .ruff_cache
+  - .project-assistant
+  - volumes
+  - data
+  - backups
+  excluded_patterns:
+  - '*.local'
+  - '*.secret'
+  - '*.sqlite3'
+  - '*.db'
+  - '*.pem'
+  - '*.key'
+  - '*.crt'
+  - '*.p12'
+  - '*.pfx'
+  - id_rsa*
+  - id_ed25519*
+  - .env
+  - .env.*.local
+documents:
+  README.md:
+    required: true
+    category: overview
+    description: Présentation générale du projet destinée aux utilisateurs et contributeurs.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: summary
+      title: Résumé du projet
+      required: true
+      aliases:
+      - Résumé du projet
+      - Présentation
+      - Vue d'ensemble
+      - Démarrage rapide
+      - But du projet
+    - id: features
+      title: Fonctionnalités principales
+      required: true
+      aliases:
+      - Fonctionnalités principales
+      - Fonctionnement métier
+      - Fonctionnalités
+    - id: architecture
+      title: Architecture générale
+      required: true
+      aliases:
+      - Architecture générale
+      - Architecture
+      - Fonctionnement métier
+    - id: technologies
+      title: Technologies utilisées
+      required: true
+      aliases:
+      - Technologies utilisées
+      - Stack cible
+      - Stack technique
+      - Technologies
+    - id: installation
+      title: Installation
+      required: true
+      aliases:
+      - Installation
+      - Démarrage rapide
+      - Mise en route
+    - id: usage
+      title: Utilisation
+      required: true
+      aliases:
+      - Utilisation
+      - Démarrage rapide
+      - Fonctionnement métier
+    - id: configuration
+      title: Configuration
+      required: true
+      aliases:
+      - Configuration
+      - Conformité aux invariants
+      - Variables d'environnement
+    - id: documentation
+      title: Documentation complémentaire
+      required: true
+      aliases:
+      - Documentation complémentaire
+      - Conformité aux invariants
+      - Documentation
+    - id: license
+      title: Licence
+      required: false
+  README_DEV.md:
+    required: true
+    category: development
+    description: Guide destiné au développement local et à la maintenance du projet.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: prerequisites
+      title: Prérequis
+      required: true
+      aliases:
+      - Prérequis
+    - id: local_setup
+      title: Installation locale
+      required: true
+      aliases:
+      - Installation locale
+      - Initialisation locale
+      - Démarrage local
+    - id: environments
+      title: Environnements
+      required: true
+      aliases:
+      - Environnements
+      - Production
+      - Notes importantes
+    - id: commands
+      title: Commandes de développement
+      required: true
+      aliases:
+      - Commandes de développement
+      - Commandes courantes
+    - id: database
+      title: Base de données
+      required: false
+    - id: tests
+      title: Tests
+      required: true
+      aliases:
+      - Tests
+      - Vérification minimale
+      - Validation
+    - id: debugging
+      title: Débogage
+      required: false
+    - id: git_workflow
+      title: Flux de travail Git
+      required: true
+      aliases:
+      - Flux de travail Git
+      - Workflow Git
+      - Notes importantes
+  CODEX_START.md:
+    required: true
+    category: ai-context
+    description: Point d'entrée concis pour démarrer une session Codex dans le projet.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: mission
+      title: Mission
+      required: true
+      aliases:
+      - Mission
+      - Mandat
+    - id: read_first
+      title: Fichiers à lire en premier
+      required: true
+      aliases:
+      - Fichiers à lire en premier
+      - Ordre de lecture recommandé
+      - Fichiers critiques
+    - id: architecture
+      title: Architecture essentielle
+      required: true
+      aliases:
+      - Architecture essentielle
+      - Fichiers critiques
+    - id: invariants
+      title: Invariants à respecter
+      required: true
+      aliases:
+      - Invariants à respecter
+      - Règles à respecter avant de coder
+    - id: commands
+      title: Commandes importantes
+      required: true
+      aliases:
+      - Commandes importantes
+      - Commandes de vérification
+    - id: current_status
+      title: État actuel
+      required: true
+      aliases:
+      - État actuel
+      - Fichiers critiques
+    - id: validation
+      title: Validation avant de terminer
+      required: true
+      aliases:
+      - Validation avant de terminer
+      - Commandes de vérification
+      - Erreurs à éviter
+  AGENTS.md:
+    required: true
+    category: ai-instructions
+    description: Instructions permanentes destinées aux agents de développement.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: scope
+      title: Portée
+      required: true
+      aliases:
+      - Portée
+      - Rôle
+    - id: project_rules
+      title: Règles du projet
+      required: true
+      aliases:
+      - Règles du projet
+      - Règles non négociables
+      - Règles spécifiques au dépôt
+    - id: coding_conventions
+      title: Conventions de développement
+      required: true
+      aliases:
+      - Conventions de développement
+      - Style d'intervention attendu
+      - Architecture à respecter
+    - id: prohibited_actions
+      title: Actions interdites
+      required: true
+      aliases:
+      - Actions interdites
+      - Règles non négociables
+    - id: validation
+      title: Vérifications obligatoires
+      required: true
+      aliases:
+      - Vérifications obligatoires
+      - Lecture minimale obligatoire
+      - Priorité des sources
+  INVARIANTS.md:
+    required: true
+    category: governance
+    description: Contraintes architecturales et opérationnelles qui ne doivent pas être violées.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: architecture
+      title: Invariants d'architecture
+      required: true
+      aliases:
+      - Invariants d'architecture
+      - Conventions Docker Compose
+      - Règles frontend / backend
+    - id: environments
+      title: Invariants des environnements
+      required: true
+      aliases:
+      - Invariants des environnements
+      - Fichiers d'environnement
+      - Variables obligatoires
+    - id: containers
+      title: Invariants Docker
+      required: false
+    - id: database
+      title: Invariants de base de données
+      required: false
+    - id: security
+      title: Invariants de sécurité
+      required: true
+      aliases:
+      - Invariants de sécurité
+      - Règles de secrets
+      - Authentification
+      - Règles de sécurité spécifiques au gestionnaire de mots de passe
+      - Zero-knowledge
+    - id: deployment
+      title: Invariants de déploiement
+      required: false
+    - id: documentation
+      title: Invariants de documentation
+      required: true
+      aliases:
+      - Invariants de documentation
+      - Interface de commande
+      - Rôle
+  docs/architecture.md:
+    required: true
+    category: architecture
+    description: Description détaillée de l'architecture technique du projet.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: overview
+      title: Vue d'ensemble
+      required: true
+    - id: components
+      title: Composants
+      required: true
+    - id: data_flows
+      title: Flux de données
+      required: true
+    - id: network_flows
+      title: Flux réseau
+      required: false
+    - id: persistence
+      title: Persistance
+      required: false
+    - id: security
+      title: Sécurité
+      required: true
+    - id: decisions
+      title: Décisions d'architecture
+      required: true
+    - id: limitations
+      title: Limites et dette technique
+      required: false
+  docs/specification.md:
+    required: true
+    category: specification
+    description: Spécification fonctionnelle et technique du projet.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: objectives
+      title: Objectifs
+      required: true
+      aliases:
+      - Objectifs
+      - But de l'application
+    - id: scope
+      title: Portée
+      required: true
+      aliases:
+      - Portée
+      - Périmètre fonctionnel actuel
+    - id: actors
+      title: Utilisateurs et acteurs
+      required: false
+    - id: requirements
+      title: Exigences fonctionnelles
+      required: true
+      aliases:
+      - Exigences fonctionnelles
+      - Fonctionnalités visibles mais non pleinement intégrées
+      - Flux utilisateur
+    - id: technical_requirements
+      title: Exigences techniques
+      required: true
+      aliases:
+      - Exigences techniques
+      - Architecture
+      - Modèle de données
+    - id: constraints
+      title: Contraintes
+      required: true
+      aliases:
+      - Contraintes
+      - Sécurité
+      - Limites connues
+    - id: acceptance
+      title: Critères d'acceptation
+      required: true
+      aliases:
+      - Critères d'acceptation
+      - Prochaines étapes recommandées
+  docs/api.md:
+    required: false
+    category: api
+    profiles:
+    - django-react
+    - django-api
+    description: Documentation des interfaces HTTP et des contrats de données.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: overview
+      title: Vue d'ensemble de l'API
+      required: true
+      aliases:
+      - Vue d'ensemble de l'API
+      - Règles générales
+      - Santé
+    - id: authentication
+      title: Authentification
+      required: false
+    - id: endpoints
+      title: Points de terminaison
+      required: true
+      aliases:
+      - Points de terminaison
+      - Authentification JWT
+      - Authentification session legacy
+      - Catégories
+      - Mots de passe
+      - Bundles de secrets
+    - id: schemas
+      title: Schémas de données
+      required: true
+      aliases:
+      - Schémas de données
+      - Modèle d'entrée
+      - Modèle de données
+    - id: errors
+      title: Codes d'erreur
+      required: true
+      aliases:
+      - Codes d'erreur
+      - Contraintes d'authentification
+      - Règles générales
+    - id: examples
+      title: Exemples
+      required: false
+  docs/deployment.md:
+    required: false
+    category: operations
+    description: Procédure de déploiement et de mise à jour.
+    generation:
+      enabled: true
+      mode: merge
+    sections:
+    - id: prerequisites
+      title: Prérequis
+      required: true
+    - id: environments
+      title: Environnements
+      required: true
+    - id: deployment
+      title: Déploiement
+      required: true
+    - id: migrations
+      title: Migrations
+      required: false
+    - id: rollback
+      title: Retour arrière
+      required: true
+    - id: validation
+      title: Validation après déploiement
+      required: true
+  docs/troubleshooting.md:
+    required: false
+    category: operations
+    description: Problèmes connus, diagnostic et procédures de résolution.
+    generation:
+      enabled: true
+      mode: append
+    sections:
+    - id: diagnostics
+      title: Commandes de diagnostic
+      required: true
+    - id: common_issues
+      title: Problèmes courants
+      required: true
+    - id: recovery
+      title: Procédures de récupération
+      required: false
+profiles:
+  base:
+    required_documents:
+    - README.md
+    - README_DEV.md
+    - CODEX_START.md
+    - AGENTS.md
+    - INVARIANTS.md
+    - docs/architecture.md
+    - docs/specification.md
+  django-react:
+    extends: base
+    required_documents:
+    - docs/api.md
+    - docs/deployment.md
+  django-api:
+    extends: base
+    required_documents:
+    - docs/api.md
+    - docs/deployment.md
+  hugo:
+    extends: base
+    optional_documents:
+    - docs/deployment.md
+    - docs/troubleshooting.md
+    excluded_documents:
+    - docs/api.md
+  raspberry-dashboard:
+    extends: base
+    required_documents:
+    - docs/deployment.md
+    - docs/troubleshooting.md
+    additional_documents:
+    - docs/hardware.md
+    - docs/display.md
+validation:
+  fail_on_missing_required_document: true
+  fail_on_missing_required_section: false
+  warn_on_unknown_document: true
+  warn_on_empty_document: true
+  warn_on_outdated_document: true
