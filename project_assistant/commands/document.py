@@ -29,17 +29,6 @@ from project_assistant.validators import DocumentationValidator
 
 PREVIEW_DIRECTORY = Path(".project-assistant/preview")
 
-DETERMINISTIC_DOCUMENTS = {
-    "AGENTS.md",
-    "CODEX_START.md",
-    "INVARIANTS.md",
-    "README.md",
-    "README_DEV.md",
-    "docs/api.md",
-    "docs/architecture.md",
-    "docs/deployment.md",
-    "docs/specification.md",
-}
 
 
 @dataclass(slots=True)
@@ -127,8 +116,23 @@ def generate_documentation_preview(
 
     required_documents = set(config.required_documents)
 
+    knowledge = ProjectKnowledgeBuilder().build(
+        project
+    )
+    pipeline = DocumentationPipeline(knowledge)
+
+    profile_deterministic_documents = set(
+        knowledge.profile.document_policy.deterministic_documents
+    )
+
+    supported_deterministic_documents = (
+        profile_deterministic_documents
+        & DocumentationPipeline.SUPPORTED_DOCUMENTS
+    )
+
     deterministic_targets = (
-        DETERMINISTIC_DOCUMENTS & required_documents
+        supported_deterministic_documents
+        & required_documents
     )
 
     if not refresh:
@@ -137,11 +141,6 @@ def generate_documentation_preview(
             for document_path in deterministic_targets
             if not (project.root / document_path).exists()
         }
-
-    knowledge = ProjectKnowledgeBuilder().build(
-        project
-    )
-    pipeline = DocumentationPipeline(knowledge)
 
     for document_path in sorted(deterministic_targets):
         preview_path = preview_root / document_path

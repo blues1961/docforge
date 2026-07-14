@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from project_assistant.commands.document import (
-    DETERMINISTIC_DOCUMENTS,
     generate_documentation_preview,
 )
 from project_assistant.generators import (
@@ -37,7 +36,7 @@ def generate_preview_with_llm(
     results: list[GeneratedDocumentResult] = []
 
     for item in generated:
-        if item.document_path in DETERMINISTIC_DOCUMENTS:
+        if "déterministe" in item.generator:
             results.append(
                 GeneratedDocumentResult(
                     document_path=item.document_path,
