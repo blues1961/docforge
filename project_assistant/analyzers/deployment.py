@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from pathlib import Path
 from typing import Any
 
@@ -108,6 +109,10 @@ class DeploymentAnalyzer:
 
         targets: list[str] = []
 
+        assignment_pattern = re.compile(
+            r"^[A-Za-z_][A-Za-z0-9_]*\s*(?::=|\+=|\?=|=)"
+        )
+
         for line in lines:
             stripped = line.strip()
 
@@ -119,10 +124,10 @@ class DeploymentAnalyzer:
             ):
                 continue
 
-            declaration = line.split(":", 1)[0].strip()
-
-            if "=" in declaration:
+            if assignment_pattern.match(stripped):
                 continue
+
+            declaration = line.split(":", 1)[0].strip()
 
             for target in declaration.split():
                 if (

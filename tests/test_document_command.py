@@ -254,6 +254,11 @@ def test_refresh_regenerates_existing_deterministic_documents(
         == "deployment-déterministe"
     )
 
+    assert (
+        by_path["docs/specification.md"].generator
+        == "specification-déterministe"
+    )
+
     preview_architecture = (
         tmp_path
         / ".project-assistant"

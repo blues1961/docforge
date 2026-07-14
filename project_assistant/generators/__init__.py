@@ -11,6 +11,12 @@ from project_assistant.generators.documentation import (
     DocumentationPreviewGenerator,
     GeneratedDocument,
 )
+from project_assistant.generators.specification import (
+    SpecificationDocumentGenerator,
+)
+from project_assistant.generators.global_invariants import (
+    GlobalInvariantsGenerator,
+)
 from project_assistant.generators.llm_documentation import (
     GeneratedMarkdownDocument,
     GeneratedSection,
@@ -18,6 +24,7 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "SpecificationDocumentGenerator",
     "ApiDocumentGenerator",
     "ArchitectureDocumentGenerator",
     "DeploymentDocumentGenerator",
@@ -25,5 +32,6 @@ __all__ = [
     "GeneratedDocument",
     "GeneratedMarkdownDocument",
     "GeneratedSection",
+    "GlobalInvariantsGenerator",
     "LLMDocumentationGenerator",
 ]

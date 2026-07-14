@@ -20,6 +20,10 @@ from project_assistant.detectors import TechnologyDetector
 from project_assistant.scanners import FileSystemScanner
 from project_assistant.project_manager import ProjectManager
 from project_assistant.project_registry import ProjectRegistry
+from project_assistant.commands.template import analyze_template
+from project_assistant.commands.global_invariants import generate_global_invariants
+from project_assistant.audit_manager import AuditManager
+from project_assistant.invariant_integrity import InvariantIntegrityManager
 
 app = typer.Typer(
     name="project-assistant",
@@ -709,3 +713,403 @@ def refresh_all_command(
 
     if failure_count:
         raise typer.Exit(code=1)
+
+
+@app.command("analyze-template")
+def analyze_template_command(
+    path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du dépôt app-template.",
+    ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Analyser sans écrire template.json.",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Afficher l'analyse complète en JSON.",
+    ),
+) -> None:
+    """Analyser le modèle canonique des applications auto-hébergées."""
+
+    facts, cache_path = analyze_template(
+        path,
+        write_cache=not no_cache,
+    )
+
+    if json_output:
+        from dataclasses import asdict
+        import json
+
+        console.print_json(
+            json.dumps(
+                asdict(facts),
+                ensure_ascii=False,
+            )
+        )
+        return
+
+    console.print(
+        f"\n[bold]Template :[/bold] {facts.name}"
+    )
+    console.print(
+        f"[bold]Racine :[/bold] {facts.root}"
+    )
+
+    summary = Table(title="Résumé du template")
+    summary.add_column("Élément")
+    summary.add_column("Valeur")
+
+    summary.add_row(
+        "Langages",
+        ", ".join(facts.languages) or "aucun",
+    )
+    summary.add_row(
+        "Frameworks",
+        ", ".join(facts.frameworks) or "aucun",
+    )
+    summary.add_row(
+        "Technologies",
+        ", ".join(facts.technologies) or "aucune",
+    )
+    summary.add_row(
+        "Cibles Makefile",
+        str(len(facts.make_targets)),
+    )
+    summary.add_row(
+        "Scripts",
+        str(len(facts.scripts)),
+    )
+    summary.add_row(
+        "Workflows GitHub",
+        str(len(facts.github_workflows)),
+    )
+    summary.add_row(
+        "Politique de secrets",
+        "détectée"
+        if facts.secrets_policy_detected
+        else "non détectée",
+    )
+    summary.add_row(
+        "Lien .env",
+        facts.env_symlink_target or "absent",
+    )
+
+    console.print()
+    console.print(summary)
+
+    documents = Table(title="Documents canoniques")
+    documents.add_column("État")
+    documents.add_column("Document")
+
+    for rule in facts.documents:
+        documents.add_row(
+            "[green]✓[/green]"
+            if rule.exists
+            else "[red]✗[/red]",
+            rule.path,
+        )
+
+    console.print()
+    console.print(documents)
+
+    environment = Table(
+        title="Fichiers d'environnement canoniques"
+    )
+    environment.add_column("État")
+    environment.add_column("Fichier")
+
+    for rule in facts.environment_files:
+        environment.add_row(
+            "[green]✓[/green]"
+            if rule.exists
+            else "[yellow]—[/yellow]",
+            rule.path,
+        )
+
+    console.print()
+    console.print(environment)
+
+    if cache_path:
+        console.print(
+            f"\n[green]Cache créé :[/green] {cache_path}"
+        )
+
+
+@app.command("generate-global-invariants")
+def generate_global_invariants_command(
+    template_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du dépôt app-template.",
+    ),
+    output: Path = typer.Option(
+        Path("defaults/global-invariants.md"),
+        "--output",
+        "-o",
+        help="Fichier Markdown à générer.",
+    ),
+) -> None:
+    """Générer les invariants globaux depuis app-template."""
+
+    output_path = generate_global_invariants(
+        template_path=template_path,
+        output_path=output,
+    )
+
+    console.print(
+        f"[green]Invariants globaux générés :[/green] "
+        f"{output_path}"
+    )
+
+
+@app.command("audit-all")
+def audit_all_command(
+    template_path: Path = typer.Option(
+        Path.home() / "projets" / "app-template",
+        "--template",
+        help="Chemin du template canonique.",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+    ),
+    show_findings: bool = typer.Option(
+        False,
+        "--show-findings",
+        help="Afficher les écarts détaillés.",
+    ),
+) -> None:
+    """Comparer les applications enregistrées à app-template."""
+
+    results = AuditManager().audit_all(template_path)
+
+    table = Table(title="Conformité des applications auto-hébergées")
+    table.add_column("Projet")
+    table.add_column("État")
+    table.add_column("Score")
+    table.add_column("Écarts")
+    table.add_column("Détail")
+
+    errors = 0
+
+    for result in results:
+        if result.error:
+            errors += 1
+            table.add_row(
+                result.project.name,
+                "[red]erreur[/red]",
+                "—",
+                "—",
+                result.error,
+            )
+            continue
+
+        report = result.report
+
+        if report is None:
+            continue
+
+        if not report.eligible:
+            table.add_row(
+                result.project.name,
+                "[dim]ignoré[/dim]",
+                "—",
+                "—",
+                report.profile_reason,
+            )
+            continue
+
+        error_count = sum(
+            1
+            for finding in report.findings
+            if finding.severity == "error"
+        )
+        warning_count = sum(
+            1
+            for finding in report.findings
+            if finding.severity == "warning"
+        )
+
+        if error_count:
+            state = "[red]non conforme[/red]"
+        elif warning_count:
+            state = "[yellow]à vérifier[/yellow]"
+        else:
+            state = "[green]conforme[/green]"
+
+        table.add_row(
+            result.project.name,
+            state,
+            f"{report.score} %",
+            (
+                f"{error_count} erreur(s), "
+                f"{warning_count} avertissement(s)"
+            ),
+            report.profile_reason,
+        )
+
+    console.print(table)
+
+    if show_findings:
+        for result in results:
+            report = result.report
+
+            if (
+                report is None
+                or not report.eligible
+                or not report.findings
+            ):
+                continue
+
+            console.print(
+                f"\n[bold]{report.project_name}[/bold]"
+            )
+
+            findings = Table()
+            findings.add_column("Sévérité")
+            findings.add_column("Code")
+            findings.add_column("Catégorie")
+            findings.add_column("Message")
+            findings.add_column("Fichier")
+
+            for finding in report.findings:
+                findings.add_row(
+                    finding.severity,
+                    finding.code,
+                    finding.category,
+                    finding.message,
+                    finding.path or "—",
+                )
+
+            console.print(findings)
+
+    if errors:
+        raise typer.Exit(code=1)
+
+
+@app.command("approve-invariants")
+def approve_invariants_command(
+    template_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du dépôt app-template.",
+    ),
+    owner_approved: bool = typer.Option(
+        False,
+        "--owner-approved",
+        help=(
+            "Confirmer que le propriétaire autorise "
+            "l'enregistrement de cette version."
+        ),
+    ),
+) -> None:
+    """Enregistrer la version approuvée des invariants globaux."""
+
+    if not owner_approved:
+        console.print(
+            "[red]Approbation refusée.[/red] "
+            "Utilisez --owner-approved uniquement après "
+            "validation explicite du propriétaire."
+        )
+        raise typer.Exit(code=2)
+
+    baseline = InvariantIntegrityManager().approve(
+        template_path
+    )
+
+    console.print(
+        "[green]Version des invariants approuvée.[/green]"
+    )
+    console.print(
+        f"Template : {baseline.template_root}"
+    )
+    console.print(
+        f"Date : {baseline.approved_at}"
+    )
+
+    for state in baseline.files:
+        console.print(
+            f"  ✓ {state.path}  {state.sha256}"
+        )
+
+
+@app.command("verify-invariants")
+def verify_invariants_command(
+    template_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du dépôt app-template.",
+    ),
+) -> None:
+    """Vérifier que les invariants correspondent à la version approuvée."""
+
+    report = InvariantIntegrityManager().verify(
+        template_path
+    )
+
+    if not report.baseline_exists:
+        console.print(
+            "[red]Aucune référence approuvée n'existe.[/red]"
+        )
+        console.print(
+            "Exécutez approve-invariants avec "
+            "--owner-approved après validation."
+        )
+        raise typer.Exit(code=2)
+
+    if report.valid:
+        console.print(
+            "[green]Les invariants protégés sont intacts.[/green]"
+        )
+        console.print(
+            f"Référence : {report.baseline_path}"
+        )
+        return
+
+    console.print(
+        "[red]Dérive des invariants détectée.[/red]"
+    )
+    console.print(
+        "Aucune correction automatique ne doit être appliquée."
+    )
+    console.print(
+        "Une validation explicite du propriétaire est requise."
+    )
+
+    table = Table(title="Dérives détectées")
+    table.add_column("Fichier")
+    table.add_column("État")
+    table.add_column("Empreinte approuvée")
+    table.add_column("Empreinte actuelle")
+
+    for drift in report.drifts:
+        table.add_row(
+            drift.path,
+            drift.status,
+            drift.expected_sha256 or "—",
+            drift.actual_sha256 or "—",
+        )
+
+    console.print(table)
+    raise typer.Exit(code=1)

@@ -8,6 +8,7 @@ from project_assistant.analyzers import (
     ApiAnalyzer,
     ArchitectureAnalyzer,
     DeploymentAnalyzer,
+    SpecificationAnalyzer,
 )
 from project_assistant.config import (
     DocumentationConfigLoader,
@@ -19,6 +20,7 @@ from project_assistant.generators import (
     ArchitectureDocumentGenerator,
     DeploymentDocumentGenerator,
     DocumentationPreviewGenerator,
+    SpecificationDocumentGenerator,
 )
 from project_assistant.models import Project
 from project_assistant.project_config import (
@@ -35,6 +37,7 @@ DETERMINISTIC_DOCUMENTS = {
     "docs/api.md",
     "docs/architecture.md",
     "docs/deployment.md",
+    "docs/specification.md",
 }
 
 
@@ -138,7 +141,15 @@ def generate_documentation_preview(
         preview_path = preview_root / document_path
         preview_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if document_path == "docs/api.md":
+        if document_path == "docs/specification.md":
+            facts = SpecificationAnalyzer().analyze(project)
+            content = SpecificationDocumentGenerator().generate(
+                project,
+                facts,
+            )
+            generator_name = "specification-déterministe"
+
+        elif document_path == "docs/api.md":
             facts = ApiAnalyzer().analyze(project)
             content = ApiDocumentGenerator().generate(
                 project,
