@@ -4,17 +4,19 @@ from project_assistant.detectors import (
     TechnologyDetector,
 )
 from project_assistant.profiles import (
+    DjangoReactProfile,
+    GenericProfile,
     ProfileDetector,
+    ProfileFacts,
+    PythonCliProfile,
 )
 from project_assistant.scanners import (
     FileSystemScanner,
 )
 
 
-def test_detects_django_react_profile(
-    tmp_path: Path,
-) -> None:
-    backend = tmp_path / "backend"
+def _create_django_react_project(root: Path) -> None:
+    backend = root / "backend"
     backend.mkdir()
 
     (backend / "manage.py").write_text(
@@ -26,7 +28,7 @@ def test_detects_django_react_profile(
         encoding="utf-8",
     )
 
-    frontend = tmp_path / "frontend"
+    frontend = root / "frontend"
     frontend.mkdir()
 
     (frontend / "package.json").write_text(
@@ -43,27 +45,14 @@ def test_detects_django_react_profile(
         "docker-compose.dev.yml",
         "docker-compose.prod.yml",
     ):
-        (tmp_path / filename).write_text(
+        (root / filename).write_text(
             "services: {}\n",
             encoding="utf-8",
         )
 
-    project = FileSystemScanner().scan(tmp_path)
-    TechnologyDetector().detect(project)
 
-    profile = ProfileDetector().detect(project)
-
-    assert profile.name == "django-react"
-    assert profile.confidence >= 50
-    assert "docs/api.md" in (
-        profile.document_policy.required_documents
-    )
-
-
-def test_detects_python_cli_profile(
-    tmp_path: Path,
-) -> None:
-    package = tmp_path / "demo_cli"
+def _create_python_cli_project(root: Path) -> None:
+    package = root / "demo_cli"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -75,9 +64,9 @@ def test_detects_python_cli_profile(
         encoding="utf-8",
     )
 
-    (tmp_path / "tests").mkdir()
+    (root / "tests").mkdir()
 
-    (tmp_path / "pyproject.toml").write_text(
+    (root / "pyproject.toml").write_text(
         """
 [project]
 name = "demo-cli"
@@ -89,13 +78,48 @@ demo-cli = "demo_cli.cli:main"
         encoding="utf-8",
     )
 
-    project = FileSystemScanner().scan(tmp_path)
+
+def _scan_and_detect(root: Path):
+    project = FileSystemScanner().scan(root)
     TechnologyDetector().detect(project)
+    return project
 
-    profile = ProfileDetector().detect(project)
 
+def test_detects_django_react_profile(
+    tmp_path: Path,
+) -> None:
+    _create_django_react_project(tmp_path)
+    project = _scan_and_detect(tmp_path)
+
+    detector = ProfileDetector()
+    profile = detector.detect(project)
+    resolved = detector.resolve(project)
+
+    assert isinstance(profile, ProfileFacts)
+    assert profile.name == "django-react"
+    assert profile.confidence >= 50
+    assert isinstance(resolved, DjangoReactProfile)
+    assert resolved.name == profile.name
+    assert "docs/api.md" in (
+        profile.document_policy.required_documents
+    )
+
+
+def test_detects_python_cli_profile(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli_project(tmp_path)
+    project = _scan_and_detect(tmp_path)
+
+    detector = ProfileDetector()
+    profile = detector.detect(project)
+    resolved = detector.resolve(project)
+
+    assert isinstance(profile, ProfileFacts)
     assert profile.name == "python-cli"
     assert profile.confidence >= 50
+    assert isinstance(resolved, PythonCliProfile)
+    assert resolved.name == profile.name
     assert "docs/cli.md" in (
         profile.document_policy.required_documents
     )
@@ -112,10 +136,14 @@ def test_falls_back_to_generic_profile(
         encoding="utf-8",
     )
 
-    project = FileSystemScanner().scan(tmp_path)
-    TechnologyDetector().detect(project)
+    project = _scan_and_detect(tmp_path)
 
-    profile = ProfileDetector().detect(project)
+    detector = ProfileDetector()
+    profile = detector.detect(project)
+    resolved = detector.resolve(project)
 
+    assert isinstance(profile, ProfileFacts)
     assert profile.name == "generic"
     assert profile.confidence == 1
+    assert isinstance(resolved, GenericProfile)
+    assert resolved.name == profile.name

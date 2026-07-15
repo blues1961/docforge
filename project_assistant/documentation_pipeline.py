@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from project_assistant.default_document_generators import (
-    build_default_document_generator_registry,
-)
 from project_assistant.document_generator_registry import (
+    DocumentGeneratorRegistry,
     UnknownDocumentGeneratorError,
 )
 from project_assistant.knowledge import ProjectKnowledge
 from project_assistant.models import Project
+from project_assistant.profiles import (
+    ProfileDetector,
+    ProjectProfile,
+)
 
 
 @dataclass(slots=True)
@@ -27,12 +29,34 @@ class DocumentationPipeline:
     def __init__(
         self,
         knowledge: ProjectKnowledge,
+        *,
+        profile_instance: ProjectProfile | None = None,
+        registry: DocumentGeneratorRegistry | None = None,
     ) -> None:
         self.knowledge = knowledge
+
+        if registry is not None:
+            self.registry = registry
+            return
+
+        profile_instance = (
+            profile_instance
+            or ProfileDetector().profile_named(
+                knowledge.profile.name
+            )
+        )
         self.registry = (
-            build_default_document_generator_registry(
+            profile_instance
+            .build_document_generator_registry(
                 knowledge
             )
+        )
+
+    def supported_documents(
+        self,
+    ) -> frozenset[str]:
+        return self.registry.supported_documents(
+            self.knowledge.profile.name
         )
 
     def generate(

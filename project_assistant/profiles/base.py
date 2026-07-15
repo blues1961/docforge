@@ -5,6 +5,17 @@ from dataclasses import dataclass, field
 
 from project_assistant.models import Project
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from project_assistant.analyzer_registry import (
+        AnalyzerRegistry,
+    )
+    from project_assistant.document_generator_registry import (
+        DocumentGeneratorRegistry,
+    )
+    from project_assistant.knowledge import ProjectKnowledge
+
 
 @dataclass(frozen=True, slots=True)
 class ProfileDocumentPolicy:
@@ -51,6 +62,28 @@ class ProjectProfile(ABC):
         self,
     ) -> ProfileDocumentPolicy:
         """Retourner la politique documentaire du profil."""
+
+    def build_analyzer_registry(
+        self,
+    ) -> "AnalyzerRegistry":
+        from project_assistant.default_analyzers import (
+            build_default_analyzer_registry,
+        )
+
+        return build_default_analyzer_registry()
+
+    def build_document_generator_registry(
+        self,
+        knowledge: "ProjectKnowledge",
+    ) -> "DocumentGeneratorRegistry":
+        from project_assistant.default_document_generators import (
+            build_default_document_generator_registry,
+        )
+
+        return build_default_document_generator_registry(
+            knowledge
+        )
+
 
     def analyze(
         self,

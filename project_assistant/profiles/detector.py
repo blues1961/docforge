@@ -37,10 +37,22 @@ class ProfileDetector:
             GenericProfile(),
         ]
 
-    def detect(
+    def profile_named(
+        self,
+        name: str,
+    ) -> ProjectProfile:
+        for profile in self.profiles:
+            if profile.name == name:
+                return profile
+
+        raise ValueError(
+            f"Profil inconnu : {name}"
+        )
+
+    def resolve(
         self,
         project: Project,
-    ) -> ProfileFacts:
+    ) -> ProjectProfile:
         candidates = [
             ProfileCandidate(
                 profile=profile,
@@ -65,7 +77,7 @@ class ProfileDetector:
                     candidate.profile.priority,
                 ),
             )
-            return winner.facts
+            return winner.profile
 
         generic = next(
             candidate
@@ -73,4 +85,10 @@ class ProfileDetector:
             if candidate.profile.name == "generic"
         )
 
-        return generic.facts
+        return generic.profile
+
+    def detect(
+        self,
+        project: Project,
+    ) -> ProfileFacts:
+        return self.resolve(project).analyze(project)

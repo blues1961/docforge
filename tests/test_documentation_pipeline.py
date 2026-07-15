@@ -6,9 +6,11 @@ from project_assistant.documentation_pipeline import (
     DocumentationPipeline,
     UnsupportedDeterministicDocumentError,
 )
+from project_assistant.detectors import TechnologyDetector
 from project_assistant.knowledge import (
     ProjectKnowledgeBuilder,
 )
+from project_assistant.profiles import PythonCliProfile
 from project_assistant.scanners import FileSystemScanner
 
 
@@ -310,3 +312,126 @@ def test_pipeline_registry_does_not_expose_python_cli_only_document(
             project,
             "docs/security.md",
         )
+
+
+
+class SpyPythonCliProfile(PythonCliProfile):
+    def __init__(self) -> None:
+        self.generator_registry_built = False
+
+    def build_document_generator_registry(
+        self,
+        knowledge,
+    ):
+        self.generator_registry_built = True
+        return super().build_document_generator_registry(
+            knowledge
+        )
+
+
+def test_pipeline_uses_profile_document_registry(
+    tmp_path: Path,
+) -> None:
+    package = tmp_path / "demo_cli"
+    package.mkdir()
+
+    (package / "__init__.py").write_text(
+        "",
+        encoding="utf-8",
+    )
+    (package / "cli.py").write_text(
+        "def main(): pass\n",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "tests").mkdir()
+
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+
+[project.scripts]
+demo-cli = "demo_cli.cli:main"
+""",
+        encoding="utf-8",
+    )
+
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+
+    profile = SpyPythonCliProfile()
+    knowledge = ProjectKnowledgeBuilder().build(
+        project,
+        profile_instance=profile,
+    )
+    pipeline = DocumentationPipeline(
+        knowledge,
+        profile_instance=profile,
+    )
+
+    result = pipeline.generate(
+        project,
+        "docs/cli.md",
+    )
+
+    assert profile.generator_registry_built is True
+    assert (
+        result.generator_name
+        == "cli-python-cli-déterministe"
+    )
+
+
+def test_pipeline_uses_generic_generator_fallback_for_python_cli_project(
+    tmp_path: Path,
+) -> None:
+    package = tmp_path / "project_assistant"
+    package.mkdir()
+
+    (package / "__init__.py").write_text(
+        "",
+        encoding="utf-8",
+    )
+    (package / "cli.py").write_text(
+        """
+import typer
+
+app = typer.Typer()
+
+
+@app.command()
+def check() -> None:
+    pass
+""",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "tests").mkdir()
+
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+
+[project.scripts]
+demo-cli = "project_assistant.cli:app"
+""",
+        encoding="utf-8",
+    )
+
+    project = FileSystemScanner().scan(tmp_path)
+    knowledge = (
+        ProjectKnowledgeBuilder()
+        .build_from_path(tmp_path)
+    )
+
+    pipeline = DocumentationPipeline(knowledge)
+    result = pipeline.generate(
+        project,
+        "docs/deployment.md",
+    )
+
+    assert result.generator_name == "deployment-déterministe"
+    assert "# Déploiement" in result.content

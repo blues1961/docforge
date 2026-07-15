@@ -8,23 +8,15 @@ from typing import Any
 from project_assistant.analyzer_registry import (
     AnalysisContext,
 )
-from project_assistant.default_analyzers import (
-    build_default_analyzer_registry,
-)
 from project_assistant.analyzers import (
-    ApiAnalyzer,
     ApiFacts,
+    ArchitectureFacts,
     CliFacts,
     ConfigurationFacts,
-    ArchitectureAnalyzer,
-    ArchitectureFacts,
-    DeploymentAnalyzer,
     DeploymentFacts,
     PyprojectFacts,
-    ReadmeAnalyzer,
     ReadmeFacts,
     SecurityFacts,
-    SpecificationAnalyzer,
     SpecificationFacts,
 )
 from project_assistant.detectors import TechnologyDetector
@@ -32,6 +24,7 @@ from project_assistant.models import Project
 from project_assistant.profiles import (
     ProfileDetector,
     ProfileFacts,
+    ProjectProfile,
 )
 from project_assistant.scanners import FileSystemScanner
 
@@ -96,8 +89,14 @@ class ProjectKnowledgeBuilder:
     def build(
         self,
         project: Project,
+        *,
+        profile_instance: ProjectProfile | None = None,
     ) -> ProjectKnowledge:
-        profile = ProfileDetector().detect(project)
+        profile_instance = (
+            profile_instance
+            or ProfileDetector().resolve(project)
+        )
+        profile = profile_instance.analyze(project)
 
         analyzer_context = AnalysisContext(
             project=project,
@@ -107,7 +106,7 @@ class ProjectKnowledgeBuilder:
             ),
         )
         analyzer_results = (
-            build_default_analyzer_registry()
+            profile_instance.build_analyzer_registry()
             .analyze_all(analyzer_context)
         )
 
@@ -124,7 +123,6 @@ class ProjectKnowledgeBuilder:
 
         if cli is None:
             cli = CliFacts()
-
 
         technologies = sorted(
             technology.name

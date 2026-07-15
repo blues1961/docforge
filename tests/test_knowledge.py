@@ -1,10 +1,13 @@
 import json
 from pathlib import Path
 
+from project_assistant.detectors import TechnologyDetector
 from project_assistant.knowledge import (
     ProjectKnowledgeBuilder,
     write_project_knowledge,
 )
+from project_assistant.profiles import PythonCliProfile
+from project_assistant.scanners import FileSystemScanner
 
 
 def _create_application(root: Path) -> None:
@@ -192,3 +195,59 @@ def test_project_knowledge_is_json_serializable(
     assert "api" in data
     assert "specification" in data
     assert "readme" in data
+
+
+
+def _create_python_cli(root: Path) -> None:
+    package = root / "demo_cli"
+    package.mkdir()
+
+    (package / "__init__.py").write_text(
+        "",
+        encoding="utf-8",
+    )
+    (package / "cli.py").write_text(
+        "def main(): pass\n",
+        encoding="utf-8",
+    )
+
+    (root / "tests").mkdir()
+
+    (root / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+
+[project.scripts]
+demo-cli = "demo_cli.cli:main"
+""",
+        encoding="utf-8",
+    )
+
+
+class SpyPythonCliProfile(PythonCliProfile):
+    def __init__(self) -> None:
+        self.analyzer_registry_built = False
+
+    def build_analyzer_registry(self):
+        self.analyzer_registry_built = True
+        return super().build_analyzer_registry()
+
+
+def test_knowledge_builder_uses_profile_analyzer_registry(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli(tmp_path)
+
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+
+    profile = SpyPythonCliProfile()
+    knowledge = ProjectKnowledgeBuilder().build(
+        project,
+        profile_instance=profile,
+    )
+
+    assert profile.analyzer_registry_built is True
+    assert knowledge.profile.name == "python-cli"

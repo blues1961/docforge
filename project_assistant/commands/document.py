@@ -9,19 +9,17 @@ from project_assistant.config import (
     ResolvedDocumentationConfig,
 )
 from project_assistant.detectors import TechnologyDetector
-from project_assistant.default_document_generators import (
-    build_default_document_generator_registry,
-)
 from project_assistant.documentation_pipeline import (
     DocumentationPipeline,
-)
-from project_assistant.knowledge import (
-    ProjectKnowledgeBuilder,
 )
 from project_assistant.generators import (
     DocumentationPreviewGenerator,
 )
+from project_assistant.knowledge import (
+    ProjectKnowledgeBuilder,
+)
 from project_assistant.models import Project
+from project_assistant.profiles import ProfileDetector
 from project_assistant.project_config import (
     detect_profile,
     load_project_config,
@@ -31,7 +29,6 @@ from project_assistant.validators import DocumentationValidator
 
 
 PREVIEW_DIRECTORY = Path(".project-assistant/preview")
-
 
 
 @dataclass(slots=True)
@@ -119,26 +116,23 @@ def generate_documentation_preview(
 
     required_documents = set(config.required_documents)
 
+    profile_instance = ProfileDetector().resolve(project)
     knowledge = ProjectKnowledgeBuilder().build(
-        project
+        project,
+        profile_instance=profile_instance,
     )
-    pipeline = DocumentationPipeline(knowledge)
+    pipeline = DocumentationPipeline(
+        knowledge,
+        profile_instance=profile_instance,
+    )
 
     profile_deterministic_documents = set(
         knowledge.profile.document_policy.deterministic_documents
     )
 
-    generator_registry = (
-        build_default_document_generator_registry(
-            knowledge
-        )
-    )
-
     supported_deterministic_documents = (
         profile_deterministic_documents
-        & generator_registry.supported_documents(
-            knowledge.profile.name
-        )
+        & pipeline.supported_documents()
     )
 
     if refresh:
