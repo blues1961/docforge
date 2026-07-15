@@ -20,6 +20,30 @@ from project_assistant.generators.documentation import (
 from project_assistant.generators.invariants import (
     InvariantsDocumentGenerator,
 )
+from project_assistant.generators.python_cli_agents import (
+    PythonCliAgentsDocumentGenerator,
+)
+from project_assistant.generators.python_cli_architecture import (
+    PythonCliArchitectureDocumentGenerator,
+)
+from project_assistant.generators.python_cli_cli import (
+    PythonCliCliDocumentGenerator,
+)
+from project_assistant.generators.python_cli_configuration import (
+    PythonCliConfigurationDocumentGenerator,
+)
+from project_assistant.generators.python_cli_codex_start import (
+    PythonCliCodexStartDocumentGenerator,
+)
+from project_assistant.generators.python_cli_invariants import (
+    PythonCliInvariantsDocumentGenerator,
+)
+from project_assistant.generators.python_cli_security import (
+    PythonCliSecurityDocumentGenerator,
+)
+from project_assistant.generators.python_cli_specification import (
+    PythonCliSpecificationDocumentGenerator,
+)
 from project_assistant.generators.python_cli_readme import (
     PythonCliReadmeDocumentGenerator,
 )
@@ -45,6 +69,14 @@ from project_assistant.generators.llm_documentation import (
 )
 
 __all__ = [
+    "PythonCliSecurityDocumentGenerator",
+    "PythonCliConfigurationDocumentGenerator",
+    "PythonCliCliDocumentGenerator",
+    "PythonCliSpecificationDocumentGenerator",
+    "PythonCliArchitectureDocumentGenerator",
+    "PythonCliInvariantsDocumentGenerator",
+    "PythonCliCodexStartDocumentGenerator",
+    "PythonCliAgentsDocumentGenerator",
     "PythonCliReadmeDevDocumentGenerator",
     "PythonCliReadmeDocumentGenerator",
     "InvariantsDocumentGenerator",

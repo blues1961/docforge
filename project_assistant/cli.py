@@ -42,6 +42,7 @@ from project_assistant.profiles import (
     ProfileDetector,
 )
 from project_assistant.remediation import generate_remediation_plan
+from project_assistant.knowledge import ProjectKnowledgeBuilder
 
 app = typer.Typer(
     name="project-assistant",
@@ -378,7 +379,19 @@ def document(
         f"\n[bold]Projet :[/bold] {project.name}"
     )
     console.print(
-        f"[bold]Profil :[/bold] {config.profile}"
+        "[bold]Profil documentaire :[/bold] "
+        f"{config.profile}"
+    )
+
+    detected_profile = (
+        ProjectKnowledgeBuilder()
+        .build(project)
+        .profile.name
+    )
+
+    console.print(
+        "[bold]Profil logiciel détecté :[/bold] "
+        f"{detected_profile}"
     )
     console.print(
         "[bold]Mode :[/bold] aperçu sécurisé\n"

@@ -130,16 +130,20 @@ def generate_documentation_preview(
         & DocumentationPipeline.SUPPORTED_DOCUMENTS
     )
 
-    deterministic_targets = (
-        supported_deterministic_documents
-        & required_documents
-    )
-
-    if not refresh:
+    if refresh:
+        deterministic_targets = set(
+            supported_deterministic_documents
+        )
+    else:
         deterministic_targets = {
             document_path
-            for document_path in deterministic_targets
-            if not (project.root / document_path).exists()
+            for document_path in supported_deterministic_documents
+            if (
+                document_path in required_documents
+                and not (
+                    project.root / document_path
+                ).exists()
+            )
         }
 
     for document_path in sorted(deterministic_targets):

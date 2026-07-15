@@ -2,13 +2,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from project_assistant.analyzers.python_cli_specification import (
+    PythonCliSpecificationAnalyzer,
+)
 from project_assistant.generators import (
+    PythonCliSecurityDocumentGenerator,
+    PythonCliConfigurationDocumentGenerator,
+    PythonCliCliDocumentGenerator,
+    PythonCliSpecificationDocumentGenerator,
     AgentsDocumentGenerator,
     ApiDocumentGenerator,
     ArchitectureDocumentGenerator,
     CodexStartDocumentGenerator,
     DeploymentDocumentGenerator,
     InvariantsDocumentGenerator,
+    PythonCliAgentsDocumentGenerator,
+    PythonCliArchitectureDocumentGenerator,
+    PythonCliCodexStartDocumentGenerator,
+    PythonCliInvariantsDocumentGenerator,
     PythonCliReadmeDocumentGenerator,
     PythonCliReadmeDevDocumentGenerator,
     ReadmeDocumentGenerator,
@@ -40,7 +51,10 @@ class DocumentationPipeline:
             "README_DEV.md",
             "docs/api.md",
             "docs/architecture.md",
+            "docs/cli.md",
+            "docs/configuration.md",
             "docs/deployment.md",
+            "docs/security.md",
             "docs/specification.md",
         }
     )
@@ -67,12 +81,25 @@ class DocumentationPipeline:
                 else None
             )
 
-            content = AgentsDocumentGenerator().generate(
-                project,
-                self.knowledge,
-                existing_content=existing_content,
-            )
-            generator_name = "agents-déterministe"
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliAgentsDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                        existing_content=existing_content,
+                    )
+                )
+                generator_name = (
+                    "agents-python-cli-déterministe"
+                )
+            else:
+                content = AgentsDocumentGenerator().generate(
+                    project,
+                    self.knowledge,
+                    existing_content=existing_content,
+                )
+                generator_name = "agents-déterministe"
 
         elif document_path == "CODEX_START.md":
             existing_path = project.root / "CODEX_START.md"
@@ -85,12 +112,25 @@ class DocumentationPipeline:
                 else None
             )
 
-            content = CodexStartDocumentGenerator().generate(
-                project,
-                self.knowledge,
-                existing_content=existing_content,
-            )
-            generator_name = "codex-start-déterministe"
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliCodexStartDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                        existing_content=existing_content,
+                    )
+                )
+                generator_name = (
+                    "codex-start-python-cli-déterministe"
+                )
+            else:
+                content = CodexStartDocumentGenerator().generate(
+                    project,
+                    self.knowledge,
+                    existing_content=existing_content,
+                )
+                generator_name = "codex-start-déterministe"
 
         elif document_path == "INVARIANTS.md":
             existing_path = project.root / "INVARIANTS.md"
@@ -103,12 +143,27 @@ class DocumentationPipeline:
                 else None
             )
 
-            content = InvariantsDocumentGenerator().generate(
-                project,
-                self.knowledge,
-                existing_content=existing_content,
-            )
-            generator_name = "invariants-déterministe-protégé"
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliInvariantsDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                        existing_content=existing_content,
+                    )
+                )
+                generator_name = (
+                    "invariants-python-cli-déterministe-protégé"
+                )
+            else:
+                content = InvariantsDocumentGenerator().generate(
+                    project,
+                    self.knowledge,
+                    existing_content=existing_content,
+                )
+                generator_name = (
+                    "invariants-déterministe-protégé"
+                )
 
         elif document_path == "README.md":
             if self.knowledge.profile.name == "python-cli":
@@ -156,11 +211,56 @@ class DocumentationPipeline:
             generator_name = "api-déterministe"
 
         elif document_path == "docs/architecture.md":
-            content = ArchitectureDocumentGenerator().generate(
-                project,
-                self.knowledge.architecture,
+            if self.knowledge.profile.name == "python-cli":
+                content = (
+                    PythonCliArchitectureDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge,
+                    )
+                )
+                generator_name = (
+                    "architecture-python-cli-déterministe"
+                )
+            else:
+                content = ArchitectureDocumentGenerator().generate(
+                    project,
+                    self.knowledge.architecture,
+                )
+                generator_name = "architecture-déterministe"
+
+        elif document_path == "docs/cli.md":
+            if self.knowledge.profile.name != "python-cli":
+                raise UnsupportedDeterministicDocumentError(
+                    "docs/cli.md est réservé au profil python-cli."
+                )
+
+            content = (
+                PythonCliCliDocumentGenerator()
+                .generate(
+                    project,
+                    self.knowledge,
+                )
             )
-            generator_name = "architecture-déterministe"
+            generator_name = "cli-python-cli-déterministe"
+
+        elif document_path == "docs/configuration.md":
+            if self.knowledge.profile.name != "python-cli":
+                raise UnsupportedDeterministicDocumentError(
+                    "docs/configuration.md est réservé au profil "
+                    "python-cli."
+                )
+
+            content = (
+                PythonCliConfigurationDocumentGenerator()
+                .generate(
+                    project,
+                    self.knowledge,
+                )
+            )
+            generator_name = (
+                "configuration-python-cli-déterministe"
+            )
 
         elif document_path == "docs/deployment.md":
             content = DeploymentDocumentGenerator().generate(
@@ -169,12 +269,51 @@ class DocumentationPipeline:
             )
             generator_name = "deployment-déterministe"
 
-        elif document_path == "docs/specification.md":
-            content = SpecificationDocumentGenerator().generate(
-                project,
-                self.knowledge.specification,
+        elif document_path == "docs/security.md":
+            if self.knowledge.profile.name != "python-cli":
+                raise UnsupportedDeterministicDocumentError(
+                    "docs/security.md est réservé au profil "
+                    "python-cli."
+                )
+
+            content = (
+                PythonCliSecurityDocumentGenerator()
+                .generate(
+                    project,
+                    self.knowledge,
+                )
             )
-            generator_name = "specification-déterministe"
+            generator_name = (
+                "security-python-cli-déterministe"
+            )
+
+        elif document_path == "docs/specification.md":
+            if self.knowledge.profile.name == "python-cli":
+                facts = (
+                    PythonCliSpecificationAnalyzer()
+                    .analyze(self.knowledge)
+                )
+                content = (
+                    PythonCliSpecificationDocumentGenerator()
+                    .generate(
+                        project,
+                        facts,
+                    )
+                )
+                generator_name = (
+                    "specification-python-cli-déterministe"
+                )
+            else:
+                content = (
+                    SpecificationDocumentGenerator()
+                    .generate(
+                        project,
+                        self.knowledge.specification,
+                    )
+                )
+                generator_name = (
+                    "specification-déterministe"
+                )
 
         else:
             raise UnsupportedDeterministicDocumentError(

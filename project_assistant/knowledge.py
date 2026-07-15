@@ -8,6 +8,10 @@ from typing import Any
 from project_assistant.analyzers import (
     ApiAnalyzer,
     ApiFacts,
+    CliAnalyzer,
+    CliFacts,
+    ConfigurationAnalyzer,
+    ConfigurationFacts,
     ArchitectureAnalyzer,
     ArchitectureFacts,
     DeploymentAnalyzer,
@@ -16,6 +20,8 @@ from project_assistant.analyzers import (
     PyprojectFacts,
     ReadmeAnalyzer,
     ReadmeFacts,
+    SecurityAnalyzer,
+    SecurityFacts,
     SpecificationAnalyzer,
     SpecificationFacts,
 )
@@ -46,6 +52,9 @@ class ProjectKnowledge:
     architecture: ArchitectureFacts
     deployment: DeploymentFacts
     pyproject: PyprojectFacts
+    cli: CliFacts
+    configuration: ConfigurationFacts
+    security: SecurityFacts
     api: ApiFacts
     specification: SpecificationFacts
     readme: ReadmeFacts
@@ -95,6 +104,19 @@ class ProjectKnowledgeBuilder:
             project
         )
         pyproject = PyprojectAnalyzer().analyze(project)
+        cli = CliAnalyzer().analyze(
+            project,
+            entry_points=pyproject.scripts,
+        )
+        configuration = (
+            ConfigurationAnalyzer().analyze(project)
+        )
+        security = SecurityAnalyzer().analyze(
+            project,
+            protected_documents=(
+                profile.document_policy.protected_documents
+            ),
+        )
         api = ApiAnalyzer().analyze(project)
         specification = SpecificationAnalyzer().analyze(
             project
@@ -124,6 +146,9 @@ class ProjectKnowledgeBuilder:
             architecture=architecture,
             deployment=deployment,
             pyproject=pyproject,
+            cli=cli,
+            configuration=configuration,
+            security=security,
             api=api,
             specification=specification,
             readme=readme,

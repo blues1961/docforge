@@ -15,9 +15,24 @@ from project_assistant.analyzers.compliance import (
     TemplateComplianceAnalyzer,
     TemplateComplianceReport,
 )
+from project_assistant.analyzers.cli import (
+    CliAnalyzer,
+    CliCommandFacts,
+    CliFacts,
+    CliParameterFacts,
+)
+from project_assistant.analyzers.configuration import (
+    ConfigurationAnalyzer,
+    ConfigurationFacts,
+    ConfigurationFileFacts,
+)
 from project_assistant.analyzers.deployment import (
     DeploymentAnalyzer,
     DeploymentFacts,
+)
+from project_assistant.analyzers.python_cli_specification import (
+    PythonCliSpecificationAnalyzer,
+    PythonCliSpecificationFacts,
 )
 from project_assistant.analyzers.pyproject import (
     PyprojectAnalyzer,
@@ -26,6 +41,11 @@ from project_assistant.analyzers.pyproject import (
 from project_assistant.analyzers.readme import (
     ReadmeAnalyzer,
     ReadmeFacts,
+)
+from project_assistant.analyzers.security import (
+    SecurityAnalyzer,
+    SecurityControlFacts,
+    SecurityFacts,
 )
 from project_assistant.analyzers.specification import (
     SpecificationAnalyzer,
@@ -39,6 +59,18 @@ from project_assistant.analyzers.template import (
 )
 
 __all__ = [
+    "SecurityFacts",
+    "SecurityControlFacts",
+    "SecurityAnalyzer",
+    "ConfigurationFileFacts",
+    "ConfigurationFacts",
+    "ConfigurationAnalyzer",
+    "CliParameterFacts",
+    "CliFacts",
+    "CliCommandFacts",
+    "CliAnalyzer",
+    "PythonCliSpecificationFacts",
+    "PythonCliSpecificationAnalyzer",
     "PyprojectFacts",
     "PyprojectAnalyzer",
     "ReadmeFacts",
