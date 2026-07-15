@@ -85,3 +85,70 @@ def test_deleted_protected_file_is_detected(
         and drift.status == "deleted"
         for drift in report.drifts
     )
+
+
+def test_verify_migrates_legacy_manifest_path(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    from docforge import storage_paths
+
+    monkeypatch.setattr(
+        storage_paths.Path,
+        "home",
+        classmethod(lambda cls: tmp_path),
+    )
+
+    template = tmp_path / "template"
+    template.mkdir()
+    _write_protected_files(template)
+
+    legacy_root = tmp_path / ".config" / "project-assistant"
+    legacy_root.mkdir(parents=True)
+    legacy_manifest = legacy_root / "invariant-baseline.json"
+
+    legacy_manifest.write_text(
+        """
+{
+  "schema_version": 1,
+  "template_root": "%s",
+  "approved_at": "2026-01-01T00:00:00+00:00",
+  "files": [
+    {
+      "path": "INVARIANTS.md",
+      "exists": true,
+      "sha256": "%s"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "sha256": "%s"
+    },
+    {
+      "path": "CODEX_START.md",
+      "exists": true,
+      "sha256": "%s"
+    }
+  ]
+}
+"""
+        % (
+            str(template.resolve()),
+            __import__("hashlib").sha256((template / "INVARIANTS.md").read_bytes()).hexdigest(),
+            __import__("hashlib").sha256((template / "AGENTS.md").read_bytes()).hexdigest(),
+            __import__("hashlib").sha256((template / "CODEX_START.md").read_bytes()).hexdigest(),
+        ),
+        encoding="utf-8",
+    )
+
+    migrated_manager = InvariantIntegrityManager(
+        storage_paths.invariant_manifest_path()
+    )
+    report = migrated_manager.verify(template)
+
+    assert report.baseline_exists is True
+    assert report.valid is True
+    assert (
+        tmp_path / ".config" / "docforge" / "invariant-baseline.json"
+    ).is_file()
+    assert legacy_manifest.exists() is False

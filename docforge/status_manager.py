@@ -4,6 +4,8 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from docforge.storage_paths import ensure_project_storage_migrated
+
 from docforge.analyzers import (
     TemplateComplianceReport,
 )
@@ -259,6 +261,7 @@ class StatusManager:
     def _read_documentation_status(
         root: Path,
     ) -> DocumentationPreviewStatus:
+        ensure_project_storage_migrated(root)
         preview_root = (
             root
             / ".docforge"

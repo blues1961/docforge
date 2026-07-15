@@ -152,9 +152,10 @@ class DeploymentAnalyzer:
         project: Project,
         facts: DeploymentFacts,
     ) -> None:
-        facts.prerequisites.append(
-            "Docker et le plugin Docker Compose doivent être installés."
-        )
+        if facts.compose_files:
+            facts.prerequisites.append(
+                "Docker et le plugin Docker Compose doivent être installés."
+            )
 
         if facts.traefik_enabled:
             facts.prerequisites.append(

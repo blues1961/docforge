@@ -16,6 +16,8 @@ from pathlib import Path
 import typer
 
 app = typer.Typer()
+projects_app = typer.Typer()
+app.add_typer(projects_app, name="projects")
 
 
 @app.command()
@@ -34,6 +36,24 @@ def analyze(
     pass
 
 
+@projects_app.command("add")
+def projects_add() -> None:
+    """Ajouter un projet."""
+    pass
+
+
+@projects_app.command("list")
+def projects_list() -> None:
+    """Lister les projets."""
+    pass
+
+
+@projects_app.command("remove")
+def projects_remove() -> None:
+    """Retirer un projet."""
+    pass
+
+
 @app.command("status-all")
 def status_all_command() -> None:
     """Afficher l’état de tous les projets."""
@@ -46,13 +66,12 @@ def status_all_command() -> None:
     facts = CliAnalyzer().analyze(
         project,
         entry_points={
-            "docforge":
-            "docforge.cli:app"
+            "docforge": "docforge.cli:app"
         },
     )
 
     assert facts.framework == "Typer"
-    assert facts.command_count == 2
+    assert facts.command_count == 5
 
     analyze = next(
         command
@@ -62,6 +81,7 @@ def status_all_command() -> None:
 
     assert analyze.help == "Analyser un projet local."
     assert analyze.module == "docforge.cli"
+    assert analyze.command_path == "analyze"
 
     path_parameter = next(
         parameter
@@ -81,9 +101,12 @@ def status_all_command() -> None:
     assert clean_parameter.required is False
     assert "--clean" in clean_parameter.flags
 
-    assert any(
-        command.name == "status-all"
+    command_paths = {
+        command.command_path
         for command in facts.commands
+    }
+    assert {"projects add", "projects list", "projects remove"}.issubset(
+        command_paths
     )
 
 

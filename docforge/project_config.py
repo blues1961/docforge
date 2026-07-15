@@ -7,9 +7,10 @@ from typing import Any
 import yaml
 
 from docforge.models import Project
-
-
-PROJECT_CONFIG_FILENAME = ".docforge.yml"
+from docforge.storage_paths import (
+    PROJECT_CONFIG_FILENAME,
+    ensure_project_storage_migrated,
+)
 
 
 class ProjectConfigError(RuntimeError):
@@ -41,6 +42,8 @@ def detect_profile(project: Project) -> str:
 
 
 def load_project_config(root: Path) -> ProjectConfig | None:
+    root = root.expanduser().resolve()
+    ensure_project_storage_migrated(root)
     path = root / PROJECT_CONFIG_FILENAME
 
     if not path.exists():
@@ -94,6 +97,7 @@ def write_project_config(
     *,
     force: bool = False,
 ) -> Path:
+    ensure_project_storage_migrated(project.root)
     path = project.root / PROJECT_CONFIG_FILENAME
 
     if path.exists() and not force:

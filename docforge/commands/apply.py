@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from docforge.storage_paths import ensure_project_storage_migrated
+
 
 PREVIEW_DIRECTORY = Path(".docforge/preview")
 BACKUP_DIRECTORY = Path(".docforge/backups")
@@ -52,6 +54,7 @@ def apply_preview_documents(
     owner_approved: bool = False,
 ) -> list[AppliedDocument]:
     root = root.expanduser().resolve()
+    ensure_project_storage_migrated(root)
 
     protected_documents = {
         "INVARIANTS.md",

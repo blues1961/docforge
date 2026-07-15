@@ -4,6 +4,8 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from docforge.storage_paths import ensure_project_storage_migrated
+
 from docforge.analyzers import (
     TemplateAnalyzer,
     TemplateFacts,
@@ -25,6 +27,7 @@ def analyze_template(
         return facts, None
 
     root = Path(facts.root)
+    ensure_project_storage_migrated(root)
     output = (
         root
         / CACHE_DIRECTORY

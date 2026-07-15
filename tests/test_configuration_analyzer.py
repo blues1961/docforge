@@ -49,6 +49,7 @@ __pycache__/
 
     assert by_path["reports/"].exists is True
     assert by_path["pyproject.toml"].exists is True
+    assert by_path[".docforge.yml"].exists is False
 
     assert ".docforge/" in facts.ignored_paths
     assert ".venv/" in facts.ignored_paths
@@ -61,5 +62,6 @@ def test_configuration_analyzer_handles_missing_files(
     facts = ConfigurationAnalyzer().analyze(project)
 
     assert facts.project_state_root == ".docforge"
+    assert facts.project_config_file == ".docforge.yml"
     assert facts.existing_file_count >= 0
     assert facts.ignored_paths == []

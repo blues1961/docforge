@@ -24,6 +24,8 @@ from pathlib import Path
 import typer
 
 app = typer.Typer()
+projects_app = typer.Typer()
+app.add_typer(projects_app, name="projects")
 
 
 @app.command()
@@ -34,6 +36,12 @@ def profile(
     ),
 ) -> None:
     """Détecter le profil d’un projet."""
+    pass
+
+
+@projects_app.command("list")
+def projects_list() -> None:
+    """Lister les projets enregistrés."""
     pass
 ''',
         encoding="utf-8",
@@ -79,6 +87,8 @@ def test_python_cli_cli_document_is_generated(
     )
     assert "# Référence CLI" in result.content
     assert "### `profile`" in result.content
+    assert "### `projects list`" in result.content
+    assert "- Commande : `projects list`." in result.content
     assert "Détecter le profil d’un projet." in result.content
     assert "Projet à inspecter." in result.content
     assert "demo-cli" in result.content
@@ -96,5 +106,11 @@ def test_project_knowledge_contains_cli_facts(
     )
 
     assert knowledge.cli.framework == "Typer"
-    assert knowledge.cli.command_count == 1
-    assert knowledge.cli.commands[0].name == "profile"
+    assert knowledge.cli.command_count == 2
+
+    command_paths = {
+        command.command_path
+        for command in knowledge.cli.commands
+    }
+    assert "profile" in command_paths
+    assert "projects list" in command_paths

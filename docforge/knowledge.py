@@ -20,7 +20,7 @@ from docforge.analyzers import (
     SpecificationFacts,
 )
 from docforge.detectors import TechnologyDetector
-from docforge.models import Project
+from docforge.models import Finding, Project
 from docforge.profiles import (
     ProfileDetector,
     ProfileFacts,
@@ -74,6 +74,11 @@ class ProjectKnowledge:
 
 class ProjectKnowledgeBuilder:
     SCHEMA_VERSION = 1
+    SUPPRESSED_PYTHON_CLI_FINDINGS = {
+        "ENV002",
+        "ENV003",
+        "ENV004",
+    }
 
     def build_from_path(
         self,
@@ -97,6 +102,10 @@ class ProjectKnowledgeBuilder:
             or ProfileDetector().resolve(project)
         )
         profile = profile_instance.analyze(project)
+        project.findings = self._filtered_findings(
+            project.findings,
+            profile.name,
+        )
 
         analyzer_context = AnalysisContext(
             project=project,
@@ -155,6 +164,23 @@ class ProjectKnowledgeBuilder:
             readme=readme,
             findings=findings,
         )
+
+    def _filtered_findings(
+        self,
+        findings: list[Finding],
+        profile_name: str,
+    ) -> list[Finding]:
+        if profile_name != "python-cli":
+            return list(findings)
+
+        return [
+            finding
+            for finding in findings
+            if (
+                finding.code
+                not in self.SUPPRESSED_PYTHON_CLI_FINDINGS
+            )
+        ]
 
     @staticmethod
     def _finding_to_dict(

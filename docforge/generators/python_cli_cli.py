@@ -56,11 +56,7 @@ class PythonCliCliDocumentGenerator:
             )
         else:
             for command in facts.commands:
-                full_name = (
-                    f"{command.group} {command.name}"
-                    if command.group
-                    else command.name
-                )
+                full_name = command.command_path
 
                 lines.extend(
                     [
@@ -73,6 +69,7 @@ class PythonCliCliDocumentGenerator:
                         "",
                         f"- Fonction : `{command.function_name}`.",
                         f"- Module : `{command.module}`.",
+                        f"- Commande : `{command.command_path}`.",
                     ]
                 )
 

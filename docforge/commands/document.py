@@ -26,6 +26,7 @@ from docforge.project_config import (
 )
 from docforge.scanners import FileSystemScanner
 from docforge.validators import DocumentationValidator
+from docforge.storage_paths import ensure_project_storage_migrated
 
 
 PREVIEW_DIRECTORY = Path(".docforge/preview")
@@ -62,6 +63,13 @@ def prepare_project_documentation(
         add_documents = []
         remove_documents = []
 
+    if selected_profile == "python-cli":
+        project.findings = [
+            finding
+            for finding in project.findings
+            if finding.code not in {"ENV002", "ENV003", "ENV004"}
+        ]
+
     config = DocumentationConfigLoader().resolve_project_profile(
         profile_name=selected_profile,
         add_documents=add_documents,
@@ -87,6 +95,7 @@ def generate_documentation_preview(
     ResolvedDocumentationConfig,
     list[PreviewDocumentResult],
 ]:
+    ensure_project_storage_migrated(path)
     project, config = prepare_project_documentation(
         path=path,
         profile=profile,

@@ -6,6 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 from docforge.models import Project
+from docforge.storage_paths import ensure_project_storage_migrated
 
 
 DEFAULT_EXCLUDED_PATHS = {
@@ -54,6 +55,7 @@ class FileSystemScanner:
 
     def scan(self, root: Path) -> Project:
         root = root.expanduser().resolve()
+        ensure_project_storage_migrated(root)
 
         if not root.exists():
             raise FileNotFoundError(f"Le projet n'existe pas : {root}")

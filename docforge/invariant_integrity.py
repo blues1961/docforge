@@ -6,6 +6,11 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+from docforge.storage_paths import (
+    ensure_user_storage_migrated,
+    invariant_manifest_path,
+)
+
 
 PROTECTED_FILES = (
     "INVARIANTS.md",
@@ -13,12 +18,7 @@ PROTECTED_FILES = (
     "CODEX_START.md",
 )
 
-DEFAULT_MANIFEST = (
-    Path.home()
-    / ".config"
-    / "docforge"
-    / "invariant-baseline.json"
-)
+DEFAULT_MANIFEST = invariant_manifest_path()
 
 
 @dataclass(slots=True)
@@ -66,6 +66,7 @@ class InvariantIntegrityManager:
         self,
         template_root: Path,
     ) -> InvariantBaseline:
+        ensure_user_storage_migrated()
         root = template_root.expanduser().resolve()
 
         states = [
@@ -115,6 +116,7 @@ class InvariantIntegrityManager:
         self,
         template_root: Path,
     ) -> InvariantIntegrityReport:
+        ensure_user_storage_migrated()
         root = template_root.expanduser().resolve()
 
         if not self.manifest_path.exists():

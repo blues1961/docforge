@@ -21,6 +21,7 @@ class CliParameterFacts:
 @dataclass(slots=True)
 class CliCommandFacts:
     name: str
+    command_path: str
     function_name: str
     module: str
     group: str | None = None
@@ -66,6 +67,7 @@ class CliAnalyzer:
                 tree,
                 path=path,
                 root=project.root,
+                typer_groups=self._typer_groups_from_tree(tree),
             )
 
             if file_commands:
@@ -110,6 +112,7 @@ class CliAnalyzer:
         *,
         path: Path,
         root: Path,
+        typer_groups: dict[str, str],
     ) -> list[CliCommandFacts]:
         results: list[CliCommandFacts] = []
         module = path.relative_to(root).with_suffix(
@@ -136,11 +139,20 @@ class CliAnalyzer:
                 or node.name.replace("_", "-")
             )
 
-            group = None if owner == "app" else owner
+            group = None if owner == "app" else typer_groups.get(
+                owner,
+                owner,
+            )
+            command_path = (
+                command_name
+                if group is None
+                else f"{group} {command_name}"
+            )
 
             results.append(
                 CliCommandFacts(
                     name=command_name,
+                    command_path=command_path,
                     function_name=node.name,
                     module=module,
                     group=group,
@@ -150,6 +162,46 @@ class CliAnalyzer:
             )
 
         return results
+
+    def _typer_groups_from_tree(
+        self,
+        tree: ast.AST,
+    ) -> dict[str, str]:
+        groups: dict[str, str] = {}
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+
+            if not isinstance(node.func, ast.Attribute):
+                continue
+
+            if node.func.attr != "add_typer":
+                continue
+
+            owner = self._expression_name(node.func.value)
+
+            if owner != "app" or not node.args:
+                continue
+
+            child_owner = self._expression_name(node.args[0])
+
+            if not child_owner:
+                continue
+
+            explicit_name = None
+
+            for keyword in node.keywords:
+                if keyword.arg == "name":
+                    explicit_name = self._literal_string(
+                        keyword.value
+                    )
+                    break
+
+            if explicit_name:
+                groups[child_owner] = explicit_name
+
+        return groups
 
     def _command_decorator(
         self,

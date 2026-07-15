@@ -67,3 +67,37 @@ def test_registry_removes_project(
 
     assert registry.remove("demo") is True
     assert registry.load() == []
+
+
+def test_registry_load_migrates_legacy_user_path(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    from docforge import storage_paths
+
+    monkeypatch.setattr(
+        storage_paths.Path,
+        "home",
+        classmethod(lambda cls: tmp_path),
+    )
+
+    legacy_root = tmp_path / ".config" / "project-assistant"
+    legacy_root.mkdir(parents=True)
+    (legacy_root / "projects.yml").write_text(
+        """
+schema_version: 1
+projects:
+  - name: demo
+    path: /tmp/demo
+    enabled: true
+""",
+        encoding="utf-8",
+    )
+
+    registry = ProjectRegistry(storage_paths.registry_path())
+    projects = registry.load()
+
+    assert len(projects) == 1
+    assert projects[0].name == "demo"
+    assert (tmp_path / ".config" / "docforge" / "projects.yml").is_file()
+    assert (legacy_root / "projects.yml").exists() is False

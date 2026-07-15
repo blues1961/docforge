@@ -6,13 +6,13 @@ from typing import Any
 
 import yaml
 
-
-DEFAULT_REGISTRY_PATH = (
-    Path.home()
-    / ".config"
-    / "docforge"
-    / "projects.yml"
+from docforge.storage_paths import (
+    ensure_user_storage_migrated,
+    registry_path,
 )
+
+
+DEFAULT_REGISTRY_PATH = registry_path()
 
 
 class ProjectRegistryError(RuntimeError):
@@ -37,6 +37,8 @@ class ProjectRegistry:
         ).expanduser()
 
     def load(self) -> list[RegisteredProject]:
+        ensure_user_storage_migrated()
+
         if not self.registry_path.exists():
             return []
 
@@ -106,6 +108,7 @@ class ProjectRegistry:
         self,
         projects: list[RegisteredProject],
     ) -> None:
+        ensure_user_storage_migrated()
         self.registry_path.parent.mkdir(
             parents=True,
             exist_ok=True,

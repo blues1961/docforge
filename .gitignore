@@ -7,8 +7,7 @@ dist/
 build/
 .coverage
 htmlcov/
-.projet-assistant/
-.project-assistant/
+.docforge/
 
 # Rapports d'audit générés
 reports/*.json

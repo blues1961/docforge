@@ -4,6 +4,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from docforge.models import Project
+from docforge.storage_paths import (
+    PROJECT_CONFIG_FILENAME,
+    ensure_project_storage_migrated,
+    ensure_user_storage_migrated,
+    project_config_path,
+    project_state_root,
+    user_config_root,
+)
 
 
 @dataclass(slots=True)
@@ -19,6 +27,7 @@ class ConfigurationFileFacts:
 class ConfigurationFacts:
     user_config_root: str
     project_state_root: str
+    project_config_file: str
     report_root: str
 
     files: list[ConfigurationFileFacts] = field(
@@ -41,12 +50,16 @@ class ConfigurationFacts:
 class ConfigurationAnalyzer:
     USER_CONFIG_ROOT = "~/.config/docforge"
     PROJECT_STATE_ROOT = ".docforge"
+    PROJECT_CONFIG_FILE = PROJECT_CONFIG_FILENAME
     REPORT_ROOT = "reports"
 
     def analyze(
         self,
         project: Project,
     ) -> ConfigurationFacts:
+        ensure_user_storage_migrated()
+        ensure_project_storage_migrated(project.root)
+
         gitignore = self._read_gitignore(project.root)
         ignored_paths = self._detect_ignored_paths(
             gitignore
@@ -84,11 +97,20 @@ class ConfigurationAnalyzer:
                 ),
             ),
             ConfigurationFileFacts(
+                path=self.PROJECT_CONFIG_FILE,
+                scope="projet",
+                exists=project_config_path(project.root).is_file(),
+                tracked_candidate=True,
+                description=(
+                    "Configuration locale du projet pour le profil, "
+                    "la sélection documentaire et les exclusions de scan."
+                ),
+            ),
+            ConfigurationFileFacts(
                 path=".docforge/cache/",
                 scope="projet",
                 exists=(
-                    project.root
-                    / ".docforge"
+                    project_state_root(project.root)
                     / "cache"
                 ).exists(),
                 tracked_candidate=False,
@@ -101,8 +123,7 @@ class ConfigurationAnalyzer:
                 path=".docforge/preview/",
                 scope="projet",
                 exists=(
-                    project.root
-                    / ".docforge"
+                    project_state_root(project.root)
                     / "preview"
                 ).exists(),
                 tracked_candidate=False,
@@ -152,6 +173,7 @@ class ConfigurationAnalyzer:
         return ConfigurationFacts(
             user_config_root=self.USER_CONFIG_ROOT,
             project_state_root=self.PROJECT_STATE_ROOT,
+            project_config_file=self.PROJECT_CONFIG_FILE,
             report_root=self.REPORT_ROOT,
             files=files,
             ignored_paths=ignored_paths,
@@ -162,12 +184,7 @@ class ConfigurationAnalyzer:
 
     @staticmethod
     def _user_path_exists(filename: str) -> bool:
-        return (
-            Path.home()
-            / ".config"
-            / "docforge"
-            / filename
-        ).exists()
+        return (user_config_root() / filename).exists()
 
     @staticmethod
     def _read_gitignore(root: Path) -> list[str]:

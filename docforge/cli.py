@@ -42,7 +42,7 @@ from docforge.profiles import (
     ProfileDetector,
 )
 from docforge.remediation import generate_remediation_plan
-from docforge.knowledge import ProjectKnowledgeBuilder
+from docforge.storage_paths import ensure_project_storage_migrated
 
 app = typer.Typer(
     name="docforge",
@@ -1679,11 +1679,12 @@ def knowledge_command(
     print_json: bool = typer.Option(
         False,
         "--json",
-        help="Afficher également le JSON dans le terminal.",
+        help="Afficher le JSON pur sur la sortie standard.",
     ),
 ) -> None:
     """Construire la connaissance structurée d'un projet."""
 
+    ensure_project_storage_migrated(path)
     knowledge = ProjectKnowledgeBuilder().build_from_path(
         path
     )
@@ -1699,6 +1700,10 @@ def knowledge_command(
         knowledge,
         output_path,
     )
+
+    if print_json:
+        typer.echo(knowledge.to_json(), nl=False)
+        return
 
     console.print(
         "[green]Connaissance du projet générée.[/green]"
@@ -1729,11 +1734,6 @@ def knowledge_command(
         f"Cibles Makefile : "
         f"{len(knowledge.deployment.make_targets)}"
     )
-
-    if print_json:
-        console.print_json(
-            knowledge.to_json()
-        )
 
 
 @app.command("profile")

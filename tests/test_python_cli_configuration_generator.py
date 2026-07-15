@@ -91,6 +91,7 @@ def test_python_cli_configuration_document_is_generated(
     assert "## Exclusions Git attendues" in result.content
     assert "projects.yml" in result.content
     assert "invariant-baseline.json" in result.content
+    assert ".docforge.yml" in result.content
     assert ".docforge/cache/" in result.content
     assert ".docforge/preview/" in result.content
     assert "demo-cli" in result.content
@@ -114,4 +115,5 @@ def test_project_knowledge_contains_configuration_facts(
         knowledge.configuration.project_state_root
         == ".docforge"
     )
+    assert knowledge.configuration.project_config_file == ".docforge.yml"
     assert knowledge.configuration.files

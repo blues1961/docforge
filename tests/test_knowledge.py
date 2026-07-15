@@ -251,3 +251,38 @@ def test_knowledge_builder_uses_profile_analyzer_registry(
 
     assert profile.analyzer_registry_built is True
     assert knowledge.profile.name == "python-cli"
+
+
+def test_project_knowledge_exposes_docforge_storage_paths(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli(tmp_path)
+
+    knowledge = (
+        ProjectKnowledgeBuilder()
+        .build_from_path(tmp_path)
+    )
+
+    assert knowledge.configuration.user_config_root == "~/.config/docforge"
+    assert knowledge.configuration.project_state_root == ".docforge"
+    assert knowledge.configuration.project_config_file == ".docforge.yml"
+
+
+def test_python_cli_knowledge_suppresses_env_convention_findings(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli(tmp_path)
+
+    knowledge = (
+        ProjectKnowledgeBuilder()
+        .build_from_path(tmp_path)
+    )
+
+    finding_codes = {
+        finding["code"]
+        for finding in knowledge.findings
+    }
+
+    assert "ENV002" not in finding_codes
+    assert "ENV003" not in finding_codes
+    assert "ENV004" not in finding_codes

@@ -35,6 +35,13 @@ def verify_project(
         add_documents = []
         remove_documents = []
 
+    if selected_profile == "python-cli":
+        project.findings = [
+            finding
+            for finding in project.findings
+            if finding.code not in {"ENV002", "ENV003", "ENV004"}
+        ]
+
     config = DocumentationConfigLoader().resolve_project_profile(
         profile_name=selected_profile,
         add_documents=add_documents,

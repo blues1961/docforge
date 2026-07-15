@@ -179,3 +179,25 @@ def test_scanner_reports_broken_environment_symlink(
 
     assert "ENV005" in codes
     assert "ENV006" in codes
+
+
+def test_scanner_migrates_legacy_project_storage(
+    tmp_path: Path,
+) -> None:
+    legacy_state = tmp_path / ".project-assistant" / "cache"
+    legacy_state.mkdir(parents=True)
+    (legacy_state / "project-knowledge.json").write_text(
+        "{}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".project-assistant.yml").write_text(
+        "schema_version: 1\nproject:\n  name: demo\n  profile: base\n",
+        encoding="utf-8",
+    )
+
+    FileSystemScanner().scan(tmp_path)
+
+    assert (tmp_path / ".docforge" / "cache" / "project-knowledge.json").is_file()
+    assert (tmp_path / ".docforge.yml").is_file()
+    assert (tmp_path / ".project-assistant").exists() is False
+    assert (tmp_path / ".project-assistant.yml").exists() is False

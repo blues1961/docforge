@@ -64,3 +64,30 @@ def test_write_project_config_refuses_overwrite(
 
     with pytest.raises(FileExistsError):
         write_project_config(project)
+
+
+def test_load_project_config_migrates_legacy_filename(
+    tmp_path: Path,
+) -> None:
+    legacy_path = tmp_path / ".project-assistant.yml"
+    legacy_path.write_text(
+        """
+schema_version: 1
+project:
+  name: migrated
+  profile: python-cli
+documentation:
+  add: []
+  remove: []
+scan:
+  exclude: []
+""",
+        encoding="utf-8",
+    )
+
+    config = load_project_config(tmp_path)
+
+    assert config is not None
+    assert config.profile == "python-cli"
+    assert legacy_path.exists() is False
+    assert (tmp_path / ".docforge.yml").is_file()
