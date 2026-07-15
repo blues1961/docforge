@@ -147,7 +147,7 @@ test:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
-    (root / ".project-assistant.yml").write_text(
+    (root / ".docforge.yml").write_text(
         """
 schema_version: 1
 project:
@@ -281,7 +281,7 @@ def test_refresh_regenerates_existing_deterministic_documents(
 
     preview_architecture = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "docs"
         / "architecture.md"
@@ -289,7 +289,7 @@ def test_refresh_regenerates_existing_deterministic_documents(
 
     preview_deployment = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "docs"
         / "deployment.md"
@@ -356,7 +356,7 @@ demo-cli = "docforge.cli:app"
         """
 .env.local
 .env.*.local
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/

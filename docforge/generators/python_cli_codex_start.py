@@ -84,7 +84,7 @@ class PythonCliCodexStartDocumentGenerator:
             "3. `ProfileDetector` sélectionne un profil;",
             "4. `ProjectKnowledgeBuilder` construit la connaissance;",
             "5. `DocumentationPipeline` choisit le générateur;",
-            "6. le document est écrit dans `.project-assistant/preview`;",
+            "6. le document est écrit dans `.docforge/preview`;",
             "7. `apply` intègre uniquement les aperçus validés.",
             "",
             "Composants principaux :",

@@ -40,7 +40,7 @@ DocumentationPipeline
     └── Générateur LLM optionnel
              │
              ▼
-.project-assistant/preview
+.docforge/preview
              │
              ▼
 Application explicite
@@ -171,7 +171,7 @@ Conséquences :
 Les documents générés sont écrits dans :
 
 ```text
-.project-assistant/preview/
+.docforge/preview/
 ```
 
 La génération ne doit jamais modifier automatiquement les documents suivis par Git.
@@ -202,7 +202,7 @@ Les versions approuvées des invariants peuvent également être enregistrées e
 ### Configuration utilisateur
 
 ```text
-~/.config/project-assistant/
+~/.config/docforge/
 ├── projects.yml
 └── invariant-baseline.json
 ```
@@ -210,7 +210,7 @@ Les versions approuvées des invariants peuvent également être enregistrées e
 ### Données propres à un projet
 
 ```text
-.project-assistant/
+.docforge/
 ├── cache/
 └── preview/
 ```

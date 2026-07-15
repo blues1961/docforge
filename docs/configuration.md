@@ -11,18 +11,18 @@ Le contenu est dérivé de ConfigurationFacts.
 
 Principales racines :
 
-- configuration utilisateur : `~/.config/project-assistant/`;
-- état local du projet : `.project-assistant/`;
+- configuration utilisateur : `~/.config/docforge/`;
+- état local du projet : `.docforge/`;
 - rapports du dépôt : `reports/`.
 
 ## Fichiers et répertoires
 
 | Chemin | Portée | Présent | Suivi Git possible | Rôle |
 |---|---|---:|---:|---|
-| `~/.config/project-assistant/projects.yml` | utilisateur | oui | non | Registre des projets connus par docforge. |
-| `~/.config/project-assistant/invariant-baseline.json` | utilisateur | oui | non | Empreintes approuvées des documents d’invariants protégés. |
-| `.project-assistant/cache/` | projet | oui | non | Cache local des faits et de ProjectKnowledge. |
-| `.project-assistant/preview/` | projet | oui | non | Aperçus documentaires générés avant application. |
+| `~/.config/docforge/projects.yml` | utilisateur | oui | non | Registre des projets connus par docforge. |
+| `~/.config/docforge/invariant-baseline.json` | utilisateur | oui | non | Empreintes approuvées des documents d’invariants protégés. |
+| `.docforge/cache/` | projet | oui | non | Cache local des faits et de ProjectKnowledge. |
+| `.docforge/preview/` | projet | oui | non | Aperçus documentaires générés avant application. |
 | `reports/` | dépôt | oui | oui | Rapports durables pouvant être suivis par Git. |
 | `pyproject.toml` | dépôt | oui | oui | Métadonnées du paquet, dépendances et point d’entrée CLI. |
 | `.gitignore` | dépôt | oui | oui | Exclusions Git, notamment caches, aperçus et environnements virtuels. |
@@ -34,7 +34,7 @@ Principales racines :
 Chemin :
 
 ```text
-~/.config/project-assistant/projects.yml
+~/.config/docforge/projects.yml
 ```
 
 Ce fichier conserve la liste des projets enregistrés, leur chemin local, leur profil configuré et leur état actif.
@@ -46,7 +46,7 @@ Il est modifié par les commandes de gestion du registre.
 Chemin :
 
 ```text
-~/.config/project-assistant/invariant-baseline.json
+~/.config/docforge/invariant-baseline.json
 ```
 
 Ce fichier conserve les empreintes des documents d’invariants explicitement approuvés.
@@ -58,7 +58,7 @@ Il ne doit pas être copié dans un dépôt de projet ni utilisé comme substitu
 ### Cache
 
 ```text
-.project-assistant/cache/
+.docforge/cache/
 ```
 
 Le cache peut contenir notamment :
@@ -73,7 +73,7 @@ Le cache est reconstructible et ne constitue pas une source d’autorité.
 ### Aperçus
 
 ```text
-.project-assistant/preview/
+.docforge/preview/
 ```
 
 Les documents sont générés dans ce répertoire avant toute application explicite.
@@ -120,7 +120,7 @@ Une variable détectée n’est pas nécessairement obligatoire. Son comportemen
 
 ## Exclusions Git attendues
 
-- `.project-assistant/`
+- `.docforge/`
 - `.pytest_cache/`
 - `.venv/`
 - `__pycache__/`
@@ -128,7 +128,7 @@ Une variable détectée n’est pas nécessairement obligatoire. Son comportemen
 Les exclusions minimales recommandées sont :
 
 ```gitignore
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 *.pyc

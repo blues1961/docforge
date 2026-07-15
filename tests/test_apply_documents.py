@@ -44,7 +44,7 @@ def test_apply_preview_document_to_clean_repository(
 
     preview = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "docs"
         / "architecture.md"
@@ -103,7 +103,7 @@ def test_apply_protected_invariants_requires_owner_approval(
 
     preview = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "INVARIANTS.md"
     )

@@ -47,7 +47,7 @@ demo-cli = "docforge.cli:app"
 
     (root / ".gitignore").write_text(
         """
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/
@@ -111,7 +111,7 @@ def test_default_registry_analyzes_python_cli(
         "demo-cli"
     )
     assert results["configuration"].project_state_root == (
-        ".project-assistant"
+        ".docforge"
     )
     assert results["cli"].framework == "Typer"
     assert results["cli"].command_count == 1

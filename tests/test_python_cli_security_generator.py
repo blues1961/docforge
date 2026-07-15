@@ -51,7 +51,7 @@ demo-cli = "docforge.cli:app"
         """
 .env.local
 .env.*.local
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/
@@ -94,7 +94,7 @@ def test_python_cli_security_document_is_generated(
     assert "SEC-001" in result.content
     assert "--owner-approved" in result.content
     assert "invariant-baseline.json" in result.content
-    assert ".project-assistant/preview/" in result.content
+    assert ".docforge/preview/" in result.content
 
     assert "Traefik" not in result.content
     assert "PostgreSQL" not in result.content

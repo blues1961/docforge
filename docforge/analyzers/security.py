@@ -27,7 +27,7 @@ class SecurityAnalyzer:
     SENSITIVE_PATHS = (
         ".env.local",
         ".env.*.local",
-        ".project-assistant/",
+        ".docforge/",
         ".venv/",
         "__pycache__/",
         ".pytest_cache/",
@@ -67,9 +67,9 @@ class SecurityAnalyzer:
                 category="aperçu",
                 description=(
                     "La génération documentaire doit écrire dans "
-                    ".project-assistant/preview avant toute application."
+                    ".docforge/preview avant toute application."
                 ),
-                evidence=".project-assistant/preview/",
+                evidence=".docforge/preview/",
             ),
             SecurityControlFacts(
                 identifier="SEC-003",

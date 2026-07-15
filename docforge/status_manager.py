@@ -261,7 +261,7 @@ class StatusManager:
     ) -> DocumentationPreviewStatus:
         preview_root = (
             root
-            / ".project-assistant"
+            / ".docforge"
             / "preview"
         )
 

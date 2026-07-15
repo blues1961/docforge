@@ -9,7 +9,7 @@ import yaml
 from docforge.models import Project
 
 
-PROJECT_CONFIG_FILENAME = ".project-assistant.yml"
+PROJECT_CONFIG_FILENAME = ".docforge.yml"
 
 
 class ProjectConfigError(RuntimeError):

@@ -8,7 +8,7 @@ from docforge.config import ResolvedDocumentationConfig
 from docforge.models import Project
 
 
-PREVIEW_DIRECTORY = Path(".project-assistant/preview")
+PREVIEW_DIRECTORY = Path(".docforge/preview")
 
 
 @dataclass(slots=True)

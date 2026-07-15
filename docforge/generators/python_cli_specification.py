@@ -80,7 +80,7 @@ class PythonCliSpecificationDocumentGenerator:
                 "### Aperçu",
                 "",
                 (
-                    "Document généré sous `.project-assistant/preview` "
+                    "Document généré sous `.docforge/preview` "
                     "sans modification du fichier cible."
                 ),
                 "",

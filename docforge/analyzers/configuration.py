@@ -39,8 +39,8 @@ class ConfigurationFacts:
 
 
 class ConfigurationAnalyzer:
-    USER_CONFIG_ROOT = "~/.config/project-assistant"
-    PROJECT_STATE_ROOT = ".project-assistant"
+    USER_CONFIG_ROOT = "~/.config/docforge"
+    PROJECT_STATE_ROOT = ".docforge"
     REPORT_ROOT = "reports"
 
     def analyze(
@@ -55,7 +55,7 @@ class ConfigurationAnalyzer:
         files = [
             ConfigurationFileFacts(
                 path=(
-                    "~/.config/project-assistant/"
+                    "~/.config/docforge/"
                     "projects.yml"
                 ),
                 scope="utilisateur",
@@ -70,7 +70,7 @@ class ConfigurationAnalyzer:
             ),
             ConfigurationFileFacts(
                 path=(
-                    "~/.config/project-assistant/"
+                    "~/.config/docforge/"
                     "invariant-baseline.json"
                 ),
                 scope="utilisateur",
@@ -84,11 +84,11 @@ class ConfigurationAnalyzer:
                 ),
             ),
             ConfigurationFileFacts(
-                path=".project-assistant/cache/",
+                path=".docforge/cache/",
                 scope="projet",
                 exists=(
                     project.root
-                    / ".project-assistant"
+                    / ".docforge"
                     / "cache"
                 ).exists(),
                 tracked_candidate=False,
@@ -98,11 +98,11 @@ class ConfigurationAnalyzer:
                 ),
             ),
             ConfigurationFileFacts(
-                path=".project-assistant/preview/",
+                path=".docforge/preview/",
                 scope="projet",
                 exists=(
                     project.root
-                    / ".project-assistant"
+                    / ".docforge"
                     / "preview"
                 ).exists(),
                 tracked_candidate=False,
@@ -189,7 +189,7 @@ class ConfigurationAnalyzer:
         lines: list[str],
     ) -> list[str]:
         relevant = {
-            ".project-assistant/",
+            ".docforge/",
             ".venv/",
             "__pycache__/",
             "*.pyc",

@@ -109,7 +109,7 @@ def test_python_cli_specification_generator_uses_product_contract(
     assert "ENF-001" in result.content
     assert "SEC-001" in result.content
     assert "ProjectKnowledge" in result.content
-    assert ".project-assistant/preview" in result.content
+    assert ".docforge/preview" in result.content
     assert "owner-approved" in result.content
     assert "demo-cli" in result.content
     assert "demo_cli.cli:app" in result.content

@@ -51,7 +51,7 @@ demo-cli = "docforge.cli:app"
         """
 .env.local
 .env.*.local
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/

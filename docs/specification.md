@@ -57,7 +57,7 @@ Liste des documents obligatoires, optionnels, déterministes et protégés pour 
 
 ### Aperçu
 
-Document généré sous `.project-assistant/preview` sans modification du fichier cible.
+Document généré sous `.docforge/preview` sans modification du fichier cible.
 
 ### Application
 
@@ -115,7 +115,7 @@ Copie explicite d’un aperçu validé vers le dépôt à l’aide de la command
 - **EF-006** — Le système doit construire ProjectKnowledge une seule fois par cycle documentaire.
 - **EF-007** — Le système doit sélectionner les documents selon la politique du profil.
 - **EF-008** — Le système doit privilégier les générateurs déterministes.
-- **EF-009** — Le système doit écrire les documents dans .project-assistant/preview.
+- **EF-009** — Le système doit écrire les documents dans .docforge/preview.
 - **EF-010** — Le système doit exiger une action apply explicite.
 - **EF-011** — Le système doit préserver les sections locales balisées.
 - **EF-012** — Le système doit refuser l’application d’un document protégé sans autorisation explicite.

@@ -113,7 +113,7 @@ class PythonCliSpecificationAnalyzer:
                 "Le système doit privilégier les générateurs "
                 "déterministes.",
                 "Le système doit écrire les documents dans "
-                ".project-assistant/preview.",
+                ".docforge/preview.",
                 "Le système doit exiger une action apply explicite.",
                 "Le système doit préserver les sections locales balisées.",
                 "Le système doit refuser l’application d’un document "

@@ -40,7 +40,7 @@ def test_generator_creates_missing_documents_in_preview(
 
     preview_readme = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "README.md"
     )
@@ -89,7 +89,7 @@ def test_generator_can_clean_previous_preview(
 
     old_file = (
         tmp_path
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "obsolete.md"
     )

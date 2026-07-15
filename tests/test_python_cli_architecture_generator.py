@@ -79,7 +79,7 @@ def test_python_cli_architecture_describes_internal_pipeline(
     assert "ProfileDetector" in result.content
     assert "ProjectKnowledgeBuilder" in result.content
     assert "DocumentationPipeline" in result.content
-    assert ".project-assistant/preview" in result.content
+    assert ".docforge/preview" in result.content
 
     assert "demo-cli" in result.content
     assert "demo_cli.cli:app" in result.content

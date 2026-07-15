@@ -164,7 +164,7 @@ class AgentsDocumentGenerator:
                 "",
                 "- `git diff` ne contient aucun secret;",
                 "- les fichiers modifiés correspondent exactement à la demande;",
-                "- les documents générés restent dans `.project-assistant/preview` tant qu’ils ne sont pas validés;",
+                "- les documents générés restent dans `.docforge/preview` tant qu’ils ne sont pas validés;",
                 "- les changements de structure sont cohérents avec `app-template`;",
                 "- toute dérogation est explicitement documentée et approuvée.",
                 "",

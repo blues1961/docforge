@@ -102,7 +102,7 @@ def test_documentation_status_detects_changed_and_new_files(
 
     preview = (
         root
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "docs"
     )
@@ -146,7 +146,7 @@ def test_documentation_status_reports_identical_preview(
 
     preview = (
         root
-        / ".project-assistant"
+        / ".docforge"
         / "preview"
         / "README.md"
     )

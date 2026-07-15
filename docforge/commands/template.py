@@ -10,7 +10,7 @@ from docforge.analyzers import (
 )
 
 
-CACHE_DIRECTORY = Path(".project-assistant/cache")
+CACHE_DIRECTORY = Path(".docforge/cache")
 TEMPLATE_CACHE_FILENAME = "template.json"
 
 

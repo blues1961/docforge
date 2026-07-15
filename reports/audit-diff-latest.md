@@ -4,8 +4,8 @@
 Document généré automatiquement par docforge.
 -->
 
-- Rapport précédent : `/home/sylvain/projets/project-assistant/reports/history/audit-2026-07-14T14-03-33.008962_00-00.json`
-- Rapport courant : `/home/sylvain/projets/project-assistant/reports/audit-latest.json`
+- Rapport précédent : `/home/sylvain/projets/docforge/reports/history/audit-2026-07-14T14-03-33.008962_00-00.json`
+- Rapport courant : `/home/sylvain/projets/docforge/reports/audit-latest.json`
 
 ## Résumé
 

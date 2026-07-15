@@ -44,7 +44,7 @@ Backend de construction : `setuptools.build_meta`.
 Les caches et aperçus de test utilisent :
 
 ```text
-.project-assistant/
+.docforge/
 ├── cache/
 └── preview/
 ```
@@ -132,7 +132,7 @@ git commit -m "type: description"
 Ne pas ajouter au commit :
 
 - `.venv/`;
-- `.project-assistant/`;
+- `.docforge/`;
 - les caches Python;
 - les rapports temporaires JSON;
 - les fichiers de secrets provenant des projets analysés.

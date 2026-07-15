@@ -200,7 +200,7 @@ class InvariantsDocumentGenerator:
                 "",
                 "- la documentation doit refléter l’état réel du dépôt;",
                 "- les faits techniques déterministes prévalent sur les descriptions inventées;",
-                "- les documents générés restent dans `.project-assistant/preview` jusqu’à validation;",
+                "- les documents générés restent dans `.docforge/preview` jusqu’à validation;",
                 "- `docforge apply` ne doit pas intégrer `INVARIANTS.md` sans approbation explicite;",
                 "- toute règle locale doit être placée dans la section réservée;",
                 "- toute dérogation doit être placée dans la section des dérogations approuvées.",

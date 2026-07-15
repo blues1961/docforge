@@ -740,7 +740,7 @@ def refresh_all_command(
             documents,
             str(
                 result.project.path
-                / ".project-assistant"
+                / ".docforge"
                 / "preview"
             ),
         )
@@ -1673,7 +1673,7 @@ def knowledge_command(
         "-o",
         help=(
             "Fichier JSON de destination. Par défaut, utilise "
-            ".project-assistant/cache/project-knowledge.json."
+            ".docforge/cache/project-knowledge.json."
         ),
     ),
     print_json: bool = typer.Option(
@@ -1690,7 +1690,7 @@ def knowledge_command(
 
     output_path = output or (
         path
-        / ".project-assistant"
+        / ".docforge"
         / "cache"
         / "project-knowledge.json"
     )

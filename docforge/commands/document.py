@@ -28,7 +28,7 @@ from docforge.scanners import FileSystemScanner
 from docforge.validators import DocumentationValidator
 
 
-PREVIEW_DIRECTORY = Path(".project-assistant/preview")
+PREVIEW_DIRECTORY = Path(".docforge/preview")
 
 
 @dataclass(slots=True)

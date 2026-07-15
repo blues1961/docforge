@@ -3,9 +3,9 @@ defaults:
   language: fr-CA
   encoding: UTF-8
   output:
-    preview_directory: .project-assistant/preview
-    backup_directory: .project-assistant/backups
-    report_directory: .project-assistant/reports
+    preview_directory: .docforge/preview
+    backup_directory: .docforge/backups
+    report_directory: .docforge/reports
   safety:
     require_clean_git_for_write: true
     create_backup_before_write: true
@@ -22,7 +22,7 @@ defaults:
   - .pytest_cache
   - .mypy_cache
   - .ruff_cache
-  - .project-assistant
+  - .docforge
   - volumes
   - data
   - backups

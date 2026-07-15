@@ -59,7 +59,7 @@ class PythonCliReadmeDocumentGenerator:
             "4. construction de `ProjectKnowledge`;",
             "5. sélection des documents selon le profil;",
             "6. génération déterministe ou assistée par LLM;",
-            "7. écriture dans `.project-assistant/preview`;",
+            "7. écriture dans `.docforge/preview`;",
             "8. validation puis application explicite.",
             "",
             "Les détails sont documentés dans "
@@ -150,11 +150,11 @@ class PythonCliReadmeDocumentGenerator:
             "## Configuration",
             "",
             "- Registre multi-projets : "
-            "`~/.config/project-assistant/projects.yml`.",
+            "`~/.config/docforge/projects.yml`.",
             "- Référence des invariants approuvés : "
-            "`~/.config/project-assistant/invariant-baseline.json`.",
-            "- Cache d’un projet : `.project-assistant/cache/`.",
-            "- Aperçus documentaires : `.project-assistant/preview/`.",
+            "`~/.config/docforge/invariant-baseline.json`.",
+            "- Cache d’un projet : `.docforge/cache/`.",
+            "- Aperçus documentaires : `.docforge/preview/`.",
             "- Rapports du dépôt : `reports/`.",
             "",
             "Les fichiers de secrets des projets analysés ne doivent "

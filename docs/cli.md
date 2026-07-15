@@ -192,7 +192,7 @@ Construire la connaissance structurée d'un projet.
 | Nom | Type | Nature | Requis | Défaut | Options | Description |
 |---|---|---|---|---|---|---|
 | path | Path | argument | non | Path('.') | — | Projet à analyser. |
-| output | Path \| None | option | non | None | --output, -o | Fichier JSON de destination. Par défaut, utilise .project-assistant/cache/project-knowledge.json. |
+| output | Path \| None | option | non | None | --output, -o | Fichier JSON de destination. Par défaut, utilise .docforge/cache/project-knowledge.json. |
 | print_json | bool | option | non | False | --json | Afficher également le JSON dans le terminal. |
 
 ### `profile`

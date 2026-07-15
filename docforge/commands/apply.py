@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-PREVIEW_DIRECTORY = Path(".project-assistant/preview")
-BACKUP_DIRECTORY = Path(".project-assistant/backups")
+PREVIEW_DIRECTORY = Path(".docforge/preview")
+BACKUP_DIRECTORY = Path(".docforge/backups")
 
 
 @dataclass(slots=True)
@@ -27,8 +27,8 @@ def _git_is_clean(root: Path) -> bool:
             "--porcelain",
             "--",
             ".",
-            ":(exclude).project-assistant",
-            ":(exclude).project-assistant/**",
+            ":(exclude).docforge",
+            ":(exclude).docforge/**",
         ],
         cwd=root,
         capture_output=True,

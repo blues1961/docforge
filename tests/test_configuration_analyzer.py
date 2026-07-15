@@ -9,10 +9,10 @@ from docforge.scanners import FileSystemScanner
 def test_configuration_analyzer_detects_project_paths(
     tmp_path: Path,
 ) -> None:
-    (tmp_path / ".project-assistant" / "cache").mkdir(
+    (tmp_path / ".docforge" / "cache").mkdir(
         parents=True
     )
-    (tmp_path / ".project-assistant" / "preview").mkdir()
+    (tmp_path / ".docforge" / "preview").mkdir()
     (tmp_path / "reports").mkdir()
 
     (tmp_path / "pyproject.toml").write_text(
@@ -22,7 +22,7 @@ def test_configuration_analyzer_detects_project_paths(
 
     (tmp_path / ".gitignore").write_text(
         """
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 *.pyc
@@ -40,17 +40,17 @@ __pycache__/
     }
 
     assert by_path[
-        ".project-assistant/cache/"
+        ".docforge/cache/"
     ].exists is True
 
     assert by_path[
-        ".project-assistant/preview/"
+        ".docforge/preview/"
     ].exists is True
 
     assert by_path["reports/"].exists is True
     assert by_path["pyproject.toml"].exists is True
 
-    assert ".project-assistant/" in facts.ignored_paths
+    assert ".docforge/" in facts.ignored_paths
     assert ".venv/" in facts.ignored_paths
 
 
@@ -60,6 +60,6 @@ def test_configuration_analyzer_handles_missing_files(
     project = FileSystemScanner().scan(tmp_path)
     facts = ConfigurationAnalyzer().analyze(project)
 
-    assert facts.project_state_root == ".project-assistant"
+    assert facts.project_state_root == ".docforge"
     assert facts.existing_file_count >= 0
     assert facts.ignored_paths == []

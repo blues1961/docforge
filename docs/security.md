@@ -51,7 +51,7 @@ docforge apply \
 | Identifiant | Catégorie | Contrôle | Preuve |
 |---|---|---|---|
 | `SEC-001` | secrets | Le contenu des fichiers de secrets ne doit jamais être lu, reproduit ou sérialisé. | .env.local exclu des analyses documentaires. |
-| `SEC-002` | aperçu | La génération documentaire doit écrire dans .project-assistant/preview avant toute application. | .project-assistant/preview/ |
+| `SEC-002` | aperçu | La génération documentaire doit écrire dans .docforge/preview avant toute application. | .docforge/preview/ |
 | `SEC-003` | application | Un document généré ne doit être appliqué qu’après une commande explicite. | docforge apply |
 | `SEC-004` | invariants | Les documents protégés doivent exiger une autorisation explicite du propriétaire. | --owner-approved |
 | `SEC-005` | intégrité | Les invariants approuvés doivent pouvoir être vérifiés par empreinte. | invariant-baseline.json |
@@ -96,7 +96,7 @@ Un analyseur ne doit pas :
 Les documents générés sont écrits dans :
 
 ```text
-.project-assistant/preview/
+.docforge/preview/
 ```
 
 Ce mécanisme garantit que :
@@ -113,7 +113,7 @@ Les invariants approuvés peuvent être enregistrés dans une référence d’em
 Chemin utilisateur :
 
 ```text
-~/.config/project-assistant/invariant-baseline.json
+~/.config/docforge/invariant-baseline.json
 ```
 
 Commandes associées :
@@ -127,7 +127,7 @@ Une différence d’empreinte doit être signalée comme une modification potent
 
 ## Fichiers sensibles ignorés
 
-- `.project-assistant/`
+- `.docforge/`
 - `.pytest_cache/`
 - `.venv/`
 - `__pycache__/`
@@ -137,7 +137,7 @@ Exclusions recommandées :
 ```gitignore
 .env.local
 .env.*.local
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/
@@ -174,7 +174,7 @@ __pycache__/
 
 ## Sécurité Git
 
-- ne pas suivre `.project-assistant/`;
+- ne pas suivre `.docforge/`;
 - ne pas suivre `.venv/`;
 - ne pas suivre les fichiers `.env.*.local`;
 - examiner les fichiers non suivis avant un commit;

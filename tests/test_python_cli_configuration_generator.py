@@ -52,7 +52,7 @@ demo-cli = "docforge.cli:app"
 
     (root / ".gitignore").write_text(
         """
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 *.pyc
@@ -91,8 +91,8 @@ def test_python_cli_configuration_document_is_generated(
     assert "## Exclusions Git attendues" in result.content
     assert "projects.yml" in result.content
     assert "invariant-baseline.json" in result.content
-    assert ".project-assistant/cache/" in result.content
-    assert ".project-assistant/preview/" in result.content
+    assert ".docforge/cache/" in result.content
+    assert ".docforge/preview/" in result.content
     assert "demo-cli" in result.content
 
     assert "Traefik" not in result.content
@@ -112,6 +112,6 @@ def test_project_knowledge_contains_configuration_facts(
 
     assert (
         knowledge.configuration.project_state_root
-        == ".project-assistant"
+        == ".docforge"
     )
     assert knowledge.configuration.files

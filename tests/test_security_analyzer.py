@@ -11,7 +11,7 @@ def test_security_analyzer_detects_controls_and_ignored_paths(
         """
 .env.local
 .env.*.local
-.project-assistant/
+.docforge/
 .venv/
 __pycache__/
 .pytest_cache/
@@ -28,7 +28,7 @@ __pycache__/
 
     assert "INVARIANTS.md" in facts.protected_documents
     assert ".env.local" in facts.ignored_sensitive_paths
-    assert ".project-assistant/" in (
+    assert ".docforge/" in (
         facts.ignored_sensitive_paths
     )
     assert any(

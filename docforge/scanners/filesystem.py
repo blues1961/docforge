@@ -19,7 +19,7 @@ DEFAULT_EXCLUDED_PATHS = {
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
-    ".project-assistant",
+    ".docforge",
     "data",
     "volumes",
     "backups",

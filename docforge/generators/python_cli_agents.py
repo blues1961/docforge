@@ -160,7 +160,7 @@ class PythonCliAgentsDocumentGenerator:
                 "marqueurs `docforge`;"
             ),
             (
-                "- écrire les résultats dans `.project-assistant/preview`;"
+                "- écrire les résultats dans `.docforge/preview`;"
             ),
             (
                 "- exiger une action `apply` explicite pour intégrer "
@@ -230,7 +230,7 @@ class PythonCliAgentsDocumentGenerator:
             "- utiliser une recherche/remplacement non vérifiée sur plusieurs blocs;",
             "- introduire un chemin absolu propre à une machine;",
             "- coder en dur les métadonnées présentes dans `pyproject.toml`;",
-            "- ajouter `.project-assistant/` ou `.venv/` au dépôt;",
+            "- ajouter `.docforge/` ou `.venv/` au dépôt;",
             "- reproduire les secrets provenant des projets analysés;",
             "- contourner le mode aperçu sécurisé;",
             "",
