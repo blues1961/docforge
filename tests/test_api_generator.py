@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     ApiFacts,
     ApiRoute,
 )
-from project_assistant.generators import (
+from docforge.generators import (
     ApiDocumentGenerator,
 )
-from project_assistant.models import Project
+from docforge.models import Project
 
 
 def test_api_generator_creates_endpoint_table() -> None:

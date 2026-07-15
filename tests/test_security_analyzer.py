@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.analyzers import SecurityAnalyzer
-from project_assistant.scanners import FileSystemScanner
+from docforge.analyzers import SecurityAnalyzer
+from docforge.scanners import FileSystemScanner
 
 
 def test_security_analyzer_detects_controls_and_ignored_paths(

@@ -2,13 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.project_config import (
+from docforge.detectors import TechnologyDetector
+from docforge.project_config import (
     detect_profile,
     load_project_config,
     write_project_config,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def test_detect_profile_for_django_react(

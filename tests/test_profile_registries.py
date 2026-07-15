@@ -1,19 +1,19 @@
 from pathlib import Path
 
-from project_assistant.analyzer_registry import (
+from docforge.analyzer_registry import (
     AnalyzerRegistry,
 )
-from project_assistant.document_generator_registry import (
+from docforge.document_generator_registry import (
     DocumentGeneratorRegistry,
 )
-from project_assistant.knowledge import (
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.profiles import (
+from docforge.profiles import (
     GenericProfile,
     PythonCliProfile,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_python_cli(root: Path) -> None:

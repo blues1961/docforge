@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     ComplianceFinding,
     TemplateComplianceReport,
 )
-from project_assistant.audit_manager import (
+from docforge.audit_manager import (
     ProjectAuditResult,
 )
-from project_assistant.project_registry import (
+from docforge.project_registry import (
     RegisteredProject,
 )
-from project_assistant.remediation import (
+from docforge.remediation import (
     RemediationMarkdownGenerator,
     RemediationPlanner,
 )

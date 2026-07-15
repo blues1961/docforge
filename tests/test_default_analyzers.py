@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from project_assistant.analyzer_registry import (
+from docforge.analyzer_registry import (
     AnalysisContext,
 )
-from project_assistant.default_analyzers import (
+from docforge.default_analyzers import (
     build_default_analyzer_registry,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_python_cli(root: Path) -> None:
-    package = root / "project_assistant"
+    package = root / "docforge"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -40,7 +40,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 
 [project.scripts]
-demo-cli = "project_assistant.cli:app"
+demo-cli = "docforge.cli:app"
 """,
         encoding="utf-8",
     )
@@ -116,7 +116,7 @@ def test_default_registry_analyzes_python_cli(
     assert results["cli"].framework == "Typer"
     assert results["cli"].command_count == 1
     assert results["cli"].entry_points == {
-        "demo-cli": "project_assistant.cli:app",
+        "demo-cli": "docforge.cli:app",
     }
 
 

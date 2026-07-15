@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from project_assistant.analyzers import DeploymentFacts
-from project_assistant.generators import DeploymentDocumentGenerator
-from project_assistant.models import Project
+from docforge.analyzers import DeploymentFacts
+from docforge.generators import DeploymentDocumentGenerator
+from docforge.models import Project
 
 
 def test_deployment_generator_uses_only_structured_facts() -> None:

@@ -1,14 +1,14 @@
 # AGENTS.md
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Les instructions locales placées entre les marqueurs
-project-assistant sont conservées lors des régénérations.
+docforge sont conservées lors des régénérations.
 -->
 
 ## Portée
 
-Ces instructions s’appliquent à tout agent logiciel intervenant dans le dépôt `project-assistant`.
+Ces instructions s’appliquent à tout agent logiciel intervenant dans le dépôt `docforge`.
 
 Le dépôt contient un outil Python en ligne de commande chargé d’analyser, documenter et auditer d’autres projets.
 
@@ -40,24 +40,24 @@ Le code existant ne constitue jamais une justification pour contourner un invari
 
 ## Contexte technique
 
-- Paquet : `project-assistant`.
+- Paquet : `docforge`.
 - Version : `0.1.0`.
 - Version Python requise : `>=3.11`.
 - Backend de construction : `setuptools.build_meta`.
 - Dépendances principales : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Points d’entrée CLI : `docforge` → `project_assistant.cli:app`.
+- Points d’entrée CLI : `docforge` → `docforge.cli:app`.
 
 ## Architecture interne
 
-- `project_assistant/scanners/` découvre les fichiers;
-- `project_assistant/detectors/` détecte les technologies;
-- `project_assistant/analyzers/` extrait des faits structurés;
-- `project_assistant/profiles/` détermine la famille du projet;
-- `project_assistant/knowledge.py` construit `ProjectKnowledge`;
-- `project_assistant/documentation_pipeline.py` sélectionne les générateurs;
-- `project_assistant/generators/` produit le Markdown;
-- `project_assistant/commands/` contient les opérations;
-- `project_assistant/cli.py` expose les commandes Typer;
+- `docforge/scanners/` découvre les fichiers;
+- `docforge/detectors/` détecte les technologies;
+- `docforge/analyzers/` extrait des faits structurés;
+- `docforge/profiles/` détermine la famille du projet;
+- `docforge/knowledge.py` construit `ProjectKnowledge`;
+- `docforge/documentation_pipeline.py` sélectionne les générateurs;
+- `docforge/generators/` produit le Markdown;
+- `docforge/commands/` contient les opérations;
+- `docforge/cli.py` expose les commandes Typer;
 - `tests/` valide les comportements.
 
 ## Règles non négociables
@@ -76,7 +76,7 @@ Le code existant ne constitue jamais une justification pour contourner un invari
 - construire `ProjectKnowledge` avant de générer les documents déterministes;
 - sélectionner les documents selon la politique du profil;
 - déclarer tout document déterministe dans `DocumentationPipeline.SUPPORTED_DOCUMENTS`;
-- conserver les sections locales délimitées par les marqueurs `project-assistant`;
+- conserver les sections locales délimitées par les marqueurs `docforge`;
 - écrire les résultats dans `.project-assistant/preview`;
 - exiger une action `apply` explicite pour intégrer un aperçu;
 - protéger `INVARIANTS.md` par une approbation explicite du propriétaire;
@@ -123,7 +123,7 @@ Toute modification doit inclure les tests appropriés :
 Avant de terminer :
 
 ```bash
-python -m py_compile project_assistant/cli.py
+python -m py_compile docforge/cli.py
 pytest -q
 ```
 

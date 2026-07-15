@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.scanners import FileSystemScanner
+from docforge.detectors import TechnologyDetector
+from docforge.scanners import FileSystemScanner
 
 
 def test_detector_finds_django_react_vite_and_docker(

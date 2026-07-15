@@ -1,7 +1,7 @@
-# project-assistant — Guide de développement
+# docforge — Guide de développement
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 -->
 
 ## Prérequis
@@ -22,15 +22,15 @@ python -m pip install -e ".[dev]"
 
 ## Structure du code
 
-- `project_assistant/scanners/` : découverte des fichiers;
-- `project_assistant/detectors/` : technologies;
-- `project_assistant/analyzers/` : extraction des faits;
-- `project_assistant/profiles/` : familles de projets;
-- `project_assistant/generators/` : génération Markdown;
-- `project_assistant/commands/` : opérations applicatives;
-- `project_assistant/knowledge.py` : modèle central;
-- `project_assistant/documentation_pipeline.py` : pipeline;
-- `project_assistant/cli.py` : commandes Typer;
+- `docforge/scanners/` : découverte des fichiers;
+- `docforge/detectors/` : technologies;
+- `docforge/analyzers/` : extraction des faits;
+- `docforge/profiles/` : familles de projets;
+- `docforge/generators/` : génération Markdown;
+- `docforge/commands/` : opérations applicatives;
+- `docforge/knowledge.py` : modèle central;
+- `docforge/documentation_pipeline.py` : pipeline;
+- `docforge/cli.py` : commandes Typer;
 - `tests/` : tests automatisés.
 
 ## Environnement de développement
@@ -104,7 +104,7 @@ Tout document déclaré déterministe doit être supporté par `DocumentationPip
 Avant tout commit :
 
 ```bash
-python -m py_compile project_assistant/cli.py
+python -m py_compile docforge/cli.py
 pytest -q
 ```
 

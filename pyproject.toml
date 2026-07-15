@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "project-assistant"
+name = "docforge"
 version = "0.1.0"
 description = "Assistant local d'analyse et de documentation de projets logiciels."
 readme = "README.md"
@@ -21,11 +21,11 @@ dev = [
 ]
 
 [project.scripts]
-docforge = "project_assistant.cli:app"
+docforge = "docforge.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["project_assistant*"]
+include = ["docforge*"]
 exclude = ["defaults*", "docs*", "examples*", "tests*"]
 
 [tool.pytest.ini_options]

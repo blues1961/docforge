@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from project_assistant.invariant_integrity import (
+from docforge.invariant_integrity import (
     InvariantIntegrityManager,
 )
 

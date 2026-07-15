@@ -1,13 +1,13 @@
-# Configuration — project-assistant
+# Configuration — docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Le contenu est dérivé de ConfigurationFacts.
 -->
 
 ## Vue d’ensemble
 
-`project-assistant` sépare la configuration utilisateur, l’état local propre à un projet et les rapports pouvant être suivis par Git.
+`docforge` sépare la configuration utilisateur, l’état local propre à un projet et les rapports pouvant être suivis par Git.
 
 Principales racines :
 
@@ -19,7 +19,7 @@ Principales racines :
 
 | Chemin | Portée | Présent | Suivi Git possible | Rôle |
 |---|---|---:|---:|---|
-| `~/.config/project-assistant/projects.yml` | utilisateur | oui | non | Registre des projets connus par project-assistant. |
+| `~/.config/project-assistant/projects.yml` | utilisateur | oui | non | Registre des projets connus par docforge. |
 | `~/.config/project-assistant/invariant-baseline.json` | utilisateur | oui | non | Empreintes approuvées des documents d’invariants protégés. |
 | `.project-assistant/cache/` | projet | oui | non | Cache local des faits et de ProjectKnowledge. |
 | `.project-assistant/preview/` | projet | oui | non | Aperçus documentaires générés avant application. |
@@ -106,11 +106,11 @@ Les rapports temporaires ou contenant des données sensibles ne doivent pas êtr
 
 `pyproject.toml` définit notamment :
 
-- paquet : `project-assistant`;
+- paquet : `docforge`;
 - version : `0.1.0`;
 - Python requis : `>=3.11`;
 - backend de construction : `setuptools.build_meta`;
-- points d’entrée : `docforge` → `project_assistant.cli:app`.
+- points d’entrée : `docforge` → `docforge.cli:app`.
 
 ## Variables d’environnement détectées
 

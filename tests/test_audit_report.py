@@ -1,17 +1,17 @@
 import json
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     ComplianceFinding,
     TemplateComplianceReport,
 )
-from project_assistant.audit_manager import (
+from docforge.audit_manager import (
     ProjectAuditResult,
 )
-from project_assistant.audit_report import (
+from docforge.audit_report import (
     AuditReportGenerator,
 )
-from project_assistant.project_registry import (
+from docforge.project_registry import (
     RegisteredProject,
 )
 

@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.knowledge import (
+from docforge.detectors import TechnologyDetector
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
     write_project_knowledge,
 )
-from project_assistant.profiles import PythonCliProfile
-from project_assistant.scanners import FileSystemScanner
+from docforge.profiles import PythonCliProfile
+from docforge.scanners import FileSystemScanner
 
 
 def _create_application(root: Path) -> None:

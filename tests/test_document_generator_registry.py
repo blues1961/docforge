@@ -2,13 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.document_generator_registry import (
+from docforge.document_generator_registry import (
     DocumentGeneratorRegistry,
     DuplicateDocumentGeneratorError,
     RegisteredDocumentGenerator,
     UnknownDocumentGeneratorError,
 )
-from project_assistant.models import Project
+from docforge.models import Project
 
 
 def _generator(

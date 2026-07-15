@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     ConfigurationAnalyzer,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def test_configuration_analyzer_detects_project_paths(

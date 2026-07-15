@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from project_assistant.analyzers import ReadmeAnalyzer
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.generators import (
+from docforge.analyzers import ReadmeAnalyzer
+from docforge.detectors import TechnologyDetector
+from docforge.generators import (
     ReadmeDocumentGenerator,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def test_readme_generator_uses_detected_project_facts(

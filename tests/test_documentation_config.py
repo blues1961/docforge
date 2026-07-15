@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.config import (
+from docforge.config import (
     ConfigurationError,
     DocumentationConfigLoader,
 )

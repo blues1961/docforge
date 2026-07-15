@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def test_scanner_discovers_files_and_languages(

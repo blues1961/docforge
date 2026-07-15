@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from project_assistant.commands.document import (
+from docforge.commands.document import (
     generate_documentation_preview,
 )
 
@@ -315,7 +315,7 @@ def test_refresh_regenerates_existing_deterministic_documents(
 def _create_python_cli_for_document_test(
     root: Path,
 ) -> None:
-    package = root / "project_assistant"
+    package = root / "docforge"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -347,7 +347,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 
 [project.scripts]
-demo-cli = "project_assistant.cli:app"
+demo-cli = "docforge.cli:app"
 """,
         encoding="utf-8",
     )

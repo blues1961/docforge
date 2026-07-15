@@ -1,4 +1,4 @@
-from project_assistant.generators.llm_documentation import (
+from docforge.generators.llm_documentation import (
     LLMDocumentationGenerator,
 )
 

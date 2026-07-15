@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     SpecificationAnalyzer,
 )
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.generators import (
+from docforge.detectors import TechnologyDetector
+from docforge.generators import (
     SpecificationDocumentGenerator,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def test_specification_generator_uses_detected_facts(

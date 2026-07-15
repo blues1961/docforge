@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from project_assistant.analyzers import TemplateAnalyzer
+from docforge.analyzers import TemplateAnalyzer
 
 
 def test_template_analyzer_extracts_canonical_structure(

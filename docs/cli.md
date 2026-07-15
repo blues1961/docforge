@@ -1,7 +1,7 @@
-# Référence CLI — project-assistant
+# Référence CLI — docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Les commandes sont extraites du code Python avec ast.
 -->
 
@@ -9,11 +9,11 @@ Les commandes sont extraites du code Python avec ast.
 
 - Framework détecté : `Typer`.
 - Nombre de commandes : `21`.
-- Fichiers contenant des commandes : `project_assistant/cli.py`.
+- Fichiers contenant des commandes : `docforge/cli.py`.
 
 ## Points d’entrée
 
-- `docforge` → `project_assistant.cli:app`
+- `docforge` → `docforge.cli:app`
 
 ## Commandes
 
@@ -22,7 +22,7 @@ Les commandes sont extraites du code Python avec ast.
 Analyser un projet sans modifier ses fichiers.
 
 - Fonction : `analyze`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -36,7 +36,7 @@ Analyser un projet sans modifier ses fichiers.
 Analyser le modèle canonique des applications auto-hébergées.
 
 - Fonction : `analyze_template_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -51,7 +51,7 @@ Analyser le modèle canonique des applications auto-hébergées.
 Copier des documents validés de l'aperçu vers le projet.
 
 - Fonction : `apply_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -67,7 +67,7 @@ Copier des documents validés de l'aperçu vers le projet.
 Enregistrer la version approuvée des invariants globaux.
 
 - Fonction : `approve_invariants_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -81,7 +81,7 @@ Enregistrer la version approuvée des invariants globaux.
 Comparer les applications enregistrées à app-template.
 
 - Fonction : `audit_all_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -95,7 +95,7 @@ Comparer les applications enregistrées à app-template.
 Comparer deux rapports de conformité.
 
 - Fonction : `audit_diff_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -110,7 +110,7 @@ Comparer deux rapports de conformité.
 Générer un rapport persistant JSON et Markdown.
 
 - Fonction : `audit_report_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -124,7 +124,7 @@ Générer un rapport persistant JSON et Markdown.
 Générer un aperçu des documents obligatoires manquants.
 
 - Fonction : `document`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -141,7 +141,7 @@ Générer un aperçu des documents obligatoires manquants.
 Remplir avec Ollama les documents manquants en aperçu.
 
 - Fonction : `generate_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -157,7 +157,7 @@ Remplir avec Ollama les documents manquants en aperçu.
 Générer les invariants globaux depuis app-template.
 
 - Fonction : `generate_global_invariants_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -171,7 +171,7 @@ Générer les invariants globaux depuis app-template.
 Créer la configuration locale d'un projet.
 
 - Fonction : `init_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -185,7 +185,7 @@ Créer la configuration locale d'un projet.
 Construire la connaissance structurée d'un projet.
 
 - Fonction : `knowledge_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -200,7 +200,7 @@ Construire la connaissance structurée d'un projet.
 Détecter et afficher le profil d'un projet.
 
 - Fonction : `profile_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -213,7 +213,7 @@ Détecter et afficher le profil d'un projet.
 Actualiser les aperçus de tous les projets enregistrés.
 
 - Fonction : `refresh_all_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -226,7 +226,7 @@ Actualiser les aperçus de tous les projets enregistrés.
 Générer un plan de mise en conformité sans appliquer de changement.
 
 - Fonction : `remediation_plan_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -240,7 +240,7 @@ Générer un plan de mise en conformité sans appliquer de changement.
 Afficher l’état quotidien de tous les projets.
 
 - Fonction : `status_all_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -254,7 +254,7 @@ Afficher l’état quotidien de tous les projets.
 Comparer un projet au standard documentaire.
 
 - Fonction : `verify`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -268,7 +268,7 @@ Comparer un projet au standard documentaire.
 Vérifier que les invariants correspondent à la version approuvée.
 
 - Fonction : `verify_invariants_command`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 
 #### Paramètres
 
@@ -281,7 +281,7 @@ Vérifier que les invariants correspondent à la version approuvée.
 Ajouter ou mettre à jour un projet dans le registre.
 
 - Fonction : `projects_add`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 - Groupe Typer : `projects_app`.
 
 #### Paramètres
@@ -297,7 +297,7 @@ Ajouter ou mettre à jour un projet dans le registre.
 Afficher les projets enregistrés.
 
 - Fonction : `projects_list`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 - Groupe Typer : `projects_app`.
 
 #### Paramètres
@@ -309,7 +309,7 @@ Afficher les projets enregistrés.
 Retirer un projet du registre.
 
 - Fonction : `projects_remove`.
-- Module : `project_assistant.cli`.
+- Module : `docforge.cli`.
 - Groupe Typer : `projects_app`.
 
 #### Paramètres

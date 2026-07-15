@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.analyzers import TemplateAnalyzer
-from project_assistant.generators import (
+from docforge.analyzers import TemplateAnalyzer
+from docforge.generators import (
     GlobalInvariantsGenerator,
 )
 

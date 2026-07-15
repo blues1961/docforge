@@ -1,15 +1,15 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     PythonCliSpecificationAnalyzer,
 )
-from project_assistant.documentation_pipeline import (
+from docforge.documentation_pipeline import (
     DocumentationPipeline,
 )
-from project_assistant.knowledge import (
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_python_cli(root: Path) -> None:

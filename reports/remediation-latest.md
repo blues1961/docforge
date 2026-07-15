@@ -1,7 +1,7 @@
 # Plan de mise en conformité
 
 <!--
-Document généré par project-assistant.
+Document généré par docforge.
 Aucune modification n’a été appliquée automatiquement.
 -->
 
@@ -45,7 +45,7 @@ Score actuel : `100 %`
 
 Aucune action requise.
 
-## project-assistant
+## docforge
 
 _Projet ignoré ou bloqué : projet hors du profil applicatif Django/React canonique._
 

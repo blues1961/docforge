@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.analyzers import ApiAnalyzer
-from project_assistant.scanners import FileSystemScanner
+from docforge.analyzers import ApiAnalyzer
+from docforge.scanners import FileSystemScanner
 
 
 def test_api_analyzer_discovers_paths_and_router_registrations(

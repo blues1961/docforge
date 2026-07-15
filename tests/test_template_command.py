@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from project_assistant.commands.template import (
+from docforge.commands.template import (
     analyze_template,
 )
 

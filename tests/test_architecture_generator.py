@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     ArchitectureFacts,
     ArchitectureService,
 )
-from project_assistant.generators import (
+from docforge.generators import (
     ArchitectureDocumentGenerator,
 )
-from project_assistant.models import Project
+from docforge.models import Project
 
 
 def test_architecture_generator_uses_structured_facts() -> None:

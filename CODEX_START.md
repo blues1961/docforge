@@ -1,15 +1,15 @@
 # CODEX_START.md
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Ce fichier fournit le contexte initial aux agents logiciels.
 -->
 
 ## Mission
 
-Intervenir dans `project-assistant` avec des changements minimaux, testés et conformes aux invariants du dépôt.
+Intervenir dans `docforge` avec des changements minimaux, testés et conformes aux invariants du dépôt.
 
-`project-assistant` est un outil Python en ligne de commande qui analyse des dépôts, construit `ProjectKnowledge`, détecte leur profil et génère leur documentation en aperçu sécurisé.
+`docforge` est un outil Python en ligne de commande qui analyse des dépôts, construit `ProjectKnowledge`, détecte leur profil et génère leur documentation en aperçu sécurisé.
 
 ## Ordre de lecture
 
@@ -26,12 +26,12 @@ Avant toute modification, lire :
 
 ## Contexte technique
 
-- Paquet : `project-assistant`.
+- Paquet : `docforge`.
 - Version : `0.1.0`.
 - Python requis : `>=3.11`.
 - Backend de construction : `setuptools.build_meta`.
 - Dépendances : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Commandes CLI : `docforge` → `project_assistant.cli:app`.
+- Commandes CLI : `docforge` → `docforge.cli:app`.
 
 ## Architecture essentielle
 
@@ -47,11 +47,11 @@ Flux principal :
 
 Composants principaux :
 
-- `project_assistant/analyzers/` : faits structurés;
-- `project_assistant/profiles/` : politiques par famille;
-- `project_assistant/generators/` : documents Markdown;
-- `project_assistant/commands/` : logique applicative;
-- `project_assistant/cli.py` : interface Typer;
+- `docforge/analyzers/` : faits structurés;
+- `docforge/profiles/` : politiques par famille;
+- `docforge/generators/` : documents Markdown;
+- `docforge/commands/` : logique applicative;
+- `docforge/cli.py` : interface Typer;
 - `tests/` : tests unitaires et d’intégration.
 
 ## Invariants absolus
@@ -92,7 +92,7 @@ python -m pip install -e ".[dev]"
 Validation :
 
 ```bash
-python -m py_compile project_assistant/cli.py
+python -m py_compile docforge/cli.py
 pytest -q
 docforge --help
 ```

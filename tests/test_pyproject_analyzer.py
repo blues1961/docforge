@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     PyprojectAnalyzer,
 )
-from project_assistant.scanners import (
+from docforge.scanners import (
     FileSystemScanner,
 )
 

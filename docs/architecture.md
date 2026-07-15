@@ -1,20 +1,20 @@
-# Architecture — project-assistant
+# Architecture — docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Le contenu est dérivé de ProjectKnowledge.
 -->
 
 ## Vue d’ensemble
 
-`project-assistant` est un outil Python en ligne de commande qui analyse des dépôts logiciels, construit une connaissance structurée, sélectionne un profil documentaire et génère des aperçus validables.
+`docforge` est un outil Python en ligne de commande qui analyse des dépôts logiciels, construit une connaissance structurée, sélectionne un profil documentaire et génère des aperçus validables.
 
 - Profil détecté : `python-cli`.
-- Paquet : `project-assistant`.
+- Paquet : `docforge`.
 - Version : `0.1.0`.
 - Python requis : `>=3.11`.
 - Dépendances principales : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Points d’entrée CLI : `docforge` → `project_assistant.cli:app`.
+- Points d’entrée CLI : `docforge` → `docforge.cli:app`.
 
 ## Architecture logique
 
@@ -122,7 +122,7 @@ Le pipeline :
 
 ### Commandes
 
-Le dossier `project_assistant/commands/` contient les opérations réutilisables appelées par l’interface CLI.
+Le dossier `docforge/commands/` contient les opérations réutilisables appelées par l’interface CLI.
 
 `cli.py` doit rester une couche d’exposition Typer et ne doit pas accumuler toute la logique métier.
 

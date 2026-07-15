@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from project_assistant.audit_diff import (
+from docforge.audit_diff import (
     AuditDiffAnalyzer,
     AuditDiffMarkdownGenerator,
 )

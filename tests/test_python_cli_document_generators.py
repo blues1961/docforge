@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from project_assistant.documentation_pipeline import (
+from docforge.documentation_pipeline import (
     DocumentationPipeline,
 )
-from project_assistant.knowledge import (
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_python_cli(root: Path) -> None:
@@ -111,7 +111,7 @@ def test_python_cli_readme_dev_uses_python_workflow(
     )
     assert "python -m venv .venv" in result.content
     assert "pytest -q" in result.content
-    assert "project_assistant/profiles/" in result.content
+    assert "docforge/profiles/" in result.content
     assert "PostgreSQL" not in result.content
     assert "make dev" not in result.content
 

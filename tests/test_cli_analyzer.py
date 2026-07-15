@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from project_assistant.analyzers import CliAnalyzer
-from project_assistant.scanners import FileSystemScanner
+from docforge.analyzers import CliAnalyzer
+from docforge.scanners import FileSystemScanner
 
 
 def test_cli_analyzer_extracts_typer_commands(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "project_assistant"
+    package = tmp_path / "docforge"
     package.mkdir()
 
     (package / "cli.py").write_text(
@@ -47,7 +47,7 @@ def status_all_command() -> None:
         project,
         entry_points={
             "docforge":
-            "project_assistant.cli:app"
+            "docforge.cli:app"
         },
     )
 
@@ -61,7 +61,7 @@ def status_all_command() -> None:
     )
 
     assert analyze.help == "Analyser un projet local."
-    assert analyze.module == "project_assistant.cli"
+    assert analyze.module == "docforge.cli"
 
     path_parameter = next(
         parameter
@@ -90,7 +90,7 @@ def status_all_command() -> None:
 def test_cli_analyzer_does_not_execute_module(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "project_assistant"
+    package = tmp_path / "docforge"
     package.mkdir()
 
     marker = tmp_path / "executed.txt"
@@ -122,7 +122,7 @@ def check() -> None:
 def test_cli_analyzer_recognizes_explicit_ellipsis_marker(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "project_assistant"
+    package = tmp_path / "docforge"
     package.mkdir()
 
     (package / "cli.py").write_text(

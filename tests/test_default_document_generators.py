@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from project_assistant.default_document_generators import (
+from docforge.default_document_generators import (
     build_default_document_generator_registry,
 )
-from project_assistant.knowledge import (
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_python_cli(root: Path) -> None:
-    package = root / "project_assistant"
+    package = root / "docforge"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -42,7 +42,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 
 [project.scripts]
-demo-cli = "project_assistant.cli:app"
+demo-cli = "docforge.cli:app"
 """,
         encoding="utf-8",
     )

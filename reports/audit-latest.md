@@ -1,7 +1,7 @@
 # Rapport de conformité des applications auto-hébergées
 
 <!--
-Document généré automatiquement par project-assistant.
+Document généré automatiquement par docforge.
 Ne pas modifier manuellement.
 -->
 
@@ -32,5 +32,5 @@ Ne pas modifier manuellement.
 | meteo | ignoré | — | 0 | 0 |
 | mon-site.ca | ignoré | — | 0 | 0 |
 | pense_bete | conforme | 100 % | 0 | 0 |
-| project-assistant | ignoré | — | 0 | 0 |
+| docforge | ignoré | — | 0 | 0 |
 | suivi-diabete | conforme | 100 % | 0 | 0 |

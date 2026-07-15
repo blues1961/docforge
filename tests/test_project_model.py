@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from project_assistant.models import Project, Technology
+from docforge.models import Project, Technology
 
 
 def test_project_can_register_languages_and_frameworks() -> None:

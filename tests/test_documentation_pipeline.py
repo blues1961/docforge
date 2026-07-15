@@ -2,16 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.documentation_pipeline import (
+from docforge.documentation_pipeline import (
     DocumentationPipeline,
     UnsupportedDeterministicDocumentError,
 )
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.knowledge import (
+from docforge.detectors import TechnologyDetector
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.profiles import PythonCliProfile
-from project_assistant.scanners import FileSystemScanner
+from docforge.profiles import PythonCliProfile
+from docforge.scanners import FileSystemScanner
 
 
 def _create_application(root: Path) -> None:
@@ -228,7 +228,7 @@ def test_pipeline_rejects_unsupported_document(
 def test_pipeline_registry_generates_python_cli_documents(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "project_assistant"
+    package = tmp_path / "docforge"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -258,7 +258,7 @@ name = "demo-cli"
 version = "0.1.0"
 
 [project.scripts]
-demo-cli = "project_assistant.cli:app"
+demo-cli = "docforge.cli:app"
 """,
         encoding="utf-8",
     )
@@ -386,7 +386,7 @@ demo-cli = "demo_cli.cli:main"
 def test_pipeline_uses_generic_generator_fallback_for_python_cli_project(
     tmp_path: Path,
 ) -> None:
-    package = tmp_path / "project_assistant"
+    package = tmp_path / "docforge"
     package.mkdir()
 
     (package / "__init__.py").write_text(
@@ -416,7 +416,7 @@ name = "demo-cli"
 version = "0.1.0"
 
 [project.scripts]
-demo-cli = "project_assistant.cli:app"
+demo-cli = "docforge.cli:app"
 """,
         encoding="utf-8",
     )

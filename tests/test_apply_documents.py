@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 import subprocess
 
-from project_assistant.commands.apply import (
+from docforge.commands.apply import (
     apply_preview_documents,
 )
 

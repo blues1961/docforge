@@ -1,7 +1,7 @@
 # Évolution de la conformité
 
 <!--
-Document généré automatiquement par project-assistant.
+Document généré automatiquement par docforge.
 -->
 
 - Rapport précédent : `/home/sylvain/projets/project-assistant/reports/history/audit-2026-07-14T14-03-33.008962_00-00.json`
@@ -44,5 +44,5 @@ _Aucun projet._
 | meteo | ignored | ignored | — | — | — |
 | mon-site.ca | ignored | ignored | — | — | — |
 | pense_bete | compliant | compliant | 100 | 100 | +0 |
-| project-assistant | ignored | ignored | — | — | — |
+| docforge | ignored | ignored | — | — | — |
 | suivi-diabete | compliant | compliant | 100 | 100 | +0 |

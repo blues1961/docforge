@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.analyzer_registry import (
+from docforge.analyzer_registry import (
     AnalysisContext,
     AnalyzerRegistry,
     CircularAnalyzerDependencyError,
@@ -11,7 +11,7 @@ from project_assistant.analyzer_registry import (
     RegisteredAnalyzer,
     UnknownAnalyzerError,
 )
-from project_assistant.models import Project
+from docforge.models import Project
 
 
 def _project(tmp_path: Path) -> Project:

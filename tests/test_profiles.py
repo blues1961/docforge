@@ -1,16 +1,16 @@
 from pathlib import Path
 
-from project_assistant.detectors import (
+from docforge.detectors import (
     TechnologyDetector,
 )
-from project_assistant.profiles import (
+from docforge.profiles import (
     DjangoReactProfile,
     GenericProfile,
     ProfileDetector,
     ProfileFacts,
     PythonCliProfile,
 )
-from project_assistant.scanners import (
+from docforge.scanners import (
     FileSystemScanner,
 )
 

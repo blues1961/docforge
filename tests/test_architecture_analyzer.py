@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from project_assistant.analyzers import ArchitectureAnalyzer
-from project_assistant.detectors import TechnologyDetector
-from project_assistant.scanners import FileSystemScanner
+from docforge.analyzers import ArchitectureAnalyzer
+from docforge.detectors import TechnologyDetector
+from docforge.scanners import FileSystemScanner
 
 
 def test_architecture_analyzer_reads_compose_services(

@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from project_assistant.audit_manager import (
+from docforge.audit_manager import (
     AuditManager,
     InvariantIntegrityError,
 )
-from project_assistant.invariant_integrity import (
+from docforge.invariant_integrity import (
     InvariantIntegrityManager,
 )
-from project_assistant.project_registry import (
+from docforge.project_registry import (
     ProjectRegistry,
 )
 

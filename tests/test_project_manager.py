@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.project_manager import ProjectManager
-from project_assistant.project_registry import (
+from docforge.project_manager import ProjectManager
+from docforge.project_registry import (
     ProjectRegistry,
 )
 

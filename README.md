@@ -1,13 +1,13 @@
-# project-assistant
+# docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Le contenu est dérivé de l’état actuel du dépôt.
 -->
 
 ## Résumé du projet
 
-`project-assistant` est un outil Python en ligne de commande qui analyse, documente et audite des dépôts logiciels.
+`docforge` est un outil Python en ligne de commande qui analyse, documente et audite des dépôts logiciels.
 
 Il construit une représentation structurée des projets, sélectionne une politique documentaire selon leur profil et génère les documents dans un aperçu sécurisé avant toute intégration.
 
@@ -44,7 +44,7 @@ Les détails sont documentés dans `docs/architecture.md`.
 - Langages : `JSON`, `Markdown`, `Python`, `YAML`.
 - Frameworks détectés : `aucun`.
 - Technologies détectées : `aucun`.
-- Paquet : `project-assistant`.
+- Paquet : `docforge`.
 - Version : `0.1.0`.
 - Python requis : `>=3.11`.
 - Backend de construction : `setuptools.build_meta`.
@@ -125,7 +125,7 @@ Les fichiers de secrets des projets analysés ne doivent jamais être lus ni rep
 
 ## Commandes CLI déclarées
 
-- `docforge` → `project_assistant.cli:app`
+- `docforge` → `docforge.cli:app`
 
 ## Dépendances optionnelles
 

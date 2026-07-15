@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from project_assistant.config import DocumentationConfigLoader
-from project_assistant.scanners import FileSystemScanner
-from project_assistant.validators import DocumentationValidator
+from docforge.config import DocumentationConfigLoader
+from docforge.scanners import FileSystemScanner
+from docforge.validators import DocumentationValidator
 
 
 def test_validator_reports_missing_required_documents(

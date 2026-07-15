@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from project_assistant.generators import (
+from docforge.generators import (
     CodexStartDocumentGenerator,
 )
-from project_assistant.knowledge import (
+from docforge.knowledge import (
     ProjectKnowledgeBuilder,
 )
-from project_assistant.scanners import FileSystemScanner
+from docforge.scanners import FileSystemScanner
 
 
 def _create_application(root: Path) -> None:

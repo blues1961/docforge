@@ -1,10 +1,10 @@
 import subprocess
 from pathlib import Path
 
-from project_assistant.project_registry import (
+from docforge.project_registry import (
     ProjectRegistry,
 )
-from project_assistant.status_manager import (
+from docforge.status_manager import (
     StatusManager,
 )
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typer.testing import CliRunner
 
-from project_assistant.cli import app
+from docforge.cli import app
 
 
 runner = CliRunner()
@@ -25,7 +25,7 @@ def test_cli_help_lists_main_commands() -> None:
 
 def test_document_command_distinguishes_profiles() -> None:
     source = Path(
-        "project_assistant/cli.py"
+        "docforge/cli.py"
     ).read_text(encoding="utf-8")
 
     assert "Profil documentaire :[/bold]" in source

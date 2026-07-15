@@ -1,7 +1,7 @@
-# Spécification — project-assistant
+# Spécification — docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Ce document définit les exigences du produit.
 -->
 
@@ -11,8 +11,8 @@ Analyser des dépôts logiciels, construire une connaissance structurée, géné
 
 ## Identité du produit
 
-- Projet : `project-assistant`.
-- Paquet : `project-assistant`.
+- Projet : `docforge`.
+- Paquet : `docforge`.
 - Version : `0.1.0`.
 - Python requis : `>=3.11`.
 
@@ -41,7 +41,7 @@ Analyser des dépôts logiciels, construire une connaissance structurée, géné
 
 ### Projet
 
-Dépôt local analysé par project-assistant. Le projet reste la source des faits techniques.
+Dépôt local analysé par docforge. Le projet reste la source des faits techniques.
 
 ### Profil
 
@@ -103,7 +103,7 @@ Copie explicite d’un aperçu validé vers le dépôt à l’aide de la command
 
 ## Interface CLI
 
-- `docforge` → `project_assistant.cli:app`
+- `docforge` → `docforge.cli:app`
 
 ## Exigences fonctionnelles
 
@@ -188,7 +188,7 @@ Copie explicite d’un aperçu validé vers le dépôt à l’aide de la command
 La spécification est considérée respectée lorsque :
 
 ```bash
-python -m py_compile project_assistant/cli.py
+python -m py_compile docforge/cli.py
 pytest -q
 docforge --help
 docforge profile .

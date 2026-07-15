@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from project_assistant.analyzers import (
+from docforge.analyzers import (
     TemplateAnalyzer,
     TemplateComplianceAnalyzer,
 )

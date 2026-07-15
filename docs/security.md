@@ -1,7 +1,7 @@
-# Sécurité — project-assistant
+# Sécurité — docforge
 
 <!--
-Document généré en aperçu par project-assistant.
+Document généré en aperçu par docforge.
 Le contenu est dérivé de SecurityFacts.
 -->
 

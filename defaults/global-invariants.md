@@ -1,7 +1,7 @@
 # Invariants globaux des applications auto-hébergées
 
 <!--
-Document généré par project-assistant à partir du dépôt app-template.
+Document généré par docforge à partir du dépôt app-template.
 Ne pas modifier manuellement sans mettre également à jour app-template.
 -->
 

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from project_assistant.config import DocumentationConfigLoader
-from project_assistant.generators import DocumentationPreviewGenerator
-from project_assistant.scanners import FileSystemScanner
+from docforge.config import DocumentationConfigLoader
+from docforge.generators import DocumentationPreviewGenerator
+from docforge.scanners import FileSystemScanner
 
 
 def _create_environment_files(root: Path) -> None:

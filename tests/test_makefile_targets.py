@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from project_assistant.analyzers import DeploymentAnalyzer
-from project_assistant.scanners import FileSystemScanner
+from docforge.analyzers import DeploymentAnalyzer
+from docforge.scanners import FileSystemScanner
 
 
 def test_makefile_variables_are_not_detected_as_targets(
