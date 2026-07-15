@@ -5,22 +5,24 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from project_assistant.analyzer_registry import (
+    AnalysisContext,
+)
+from project_assistant.default_analyzers import (
+    build_default_analyzer_registry,
+)
 from project_assistant.analyzers import (
     ApiAnalyzer,
     ApiFacts,
-    CliAnalyzer,
     CliFacts,
-    ConfigurationAnalyzer,
     ConfigurationFacts,
     ArchitectureAnalyzer,
     ArchitectureFacts,
     DeploymentAnalyzer,
     DeploymentFacts,
-    PyprojectAnalyzer,
     PyprojectFacts,
     ReadmeAnalyzer,
     ReadmeFacts,
-    SecurityAnalyzer,
     SecurityFacts,
     SpecificationAnalyzer,
     SpecificationFacts,
@@ -97,31 +99,32 @@ class ProjectKnowledgeBuilder:
     ) -> ProjectKnowledge:
         profile = ProfileDetector().detect(project)
 
-        architecture = ArchitectureAnalyzer().analyze(
-            project
-        )
-        deployment = DeploymentAnalyzer().analyze(
-            project
-        )
-        pyproject = PyprojectAnalyzer().analyze(project)
-        cli = CliAnalyzer().analyze(
-            project,
-            entry_points=pyproject.scripts,
-        )
-        configuration = (
-            ConfigurationAnalyzer().analyze(project)
-        )
-        security = SecurityAnalyzer().analyze(
-            project,
+        analyzer_context = AnalysisContext(
+            project=project,
+            profile_name=profile.name,
             protected_documents=(
                 profile.document_policy.protected_documents
             ),
         )
-        api = ApiAnalyzer().analyze(project)
-        specification = SpecificationAnalyzer().analyze(
-            project
+        analyzer_results = (
+            build_default_analyzer_registry()
+            .analyze_all(analyzer_context)
         )
-        readme = ReadmeAnalyzer().analyze(project)
+
+        architecture = analyzer_results["architecture"]
+        deployment = analyzer_results["deployment"]
+        pyproject = analyzer_results["pyproject"]
+        configuration = analyzer_results["configuration"]
+        api = analyzer_results["api"]
+        specification = analyzer_results["specification"]
+        readme = analyzer_results["readme"]
+        security = analyzer_results["security"]
+
+        cli = analyzer_results.get("cli")
+
+        if cli is None:
+            cli = CliFacts()
+
 
         technologies = sorted(
             technology.name

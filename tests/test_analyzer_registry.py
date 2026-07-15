@@ -3,8 +3,11 @@ from pathlib import Path
 import pytest
 
 from project_assistant.analyzer_registry import (
+    AnalysisContext,
     AnalyzerRegistry,
+    CircularAnalyzerDependencyError,
     DuplicateAnalyzerError,
+    MissingAnalyzerDependencyError,
     RegisteredAnalyzer,
     UnknownAnalyzerError,
 )
@@ -18,27 +21,40 @@ def _project(tmp_path: Path) -> Project:
     )
 
 
-def test_registry_resolves_analyzer(
+def _context(
+    tmp_path: Path,
+    *,
+    profile_name: str = "generic",
+) -> AnalysisContext:
+    return AnalysisContext(
+        project=_project(tmp_path),
+        profile_name=profile_name,
+    )
+
+
+def test_registry_resolves_and_runs_analyzer(
     tmp_path: Path,
 ) -> None:
     registry = AnalyzerRegistry()
 
     registration = RegisteredAnalyzer(
         name="identity",
-        analyze=lambda project: {
-            "name": project.name,
+        analyze=lambda context: {
+            "name": context.project.name,
         },
     )
 
     registry.register(registration)
 
-    resolved = registry.resolve("identity")
+    context = _context(tmp_path)
 
-    assert resolved is registration
     assert registry.analyze(
         "identity",
-        _project(tmp_path),
+        context,
     ) == {
+        "name": "demo",
+    }
+    assert context.results["identity"] == {
         "name": "demo",
     }
 
@@ -48,7 +64,7 @@ def test_registry_rejects_duplicate_name() -> None:
 
     registration = RegisteredAnalyzer(
         name="identity",
-        analyze=lambda project: project.name,
+        analyze=lambda context: context.project.name,
     )
 
     registry.register(registration)
@@ -74,13 +90,13 @@ def test_registry_lists_analyzers_in_stable_order() -> None:
     registry.register(
         RegisteredAnalyzer(
             name="security",
-            analyze=lambda project: None,
+            analyze=lambda context: None,
         )
     )
     registry.register(
         RegisteredAnalyzer(
             name="architecture",
-            analyze=lambda project: None,
+            analyze=lambda context: None,
         )
     )
 
@@ -99,29 +115,21 @@ def test_registry_filters_analyzers_by_profile() -> None:
     registry.register(
         RegisteredAnalyzer(
             name="identity",
-            analyze=lambda project: None,
+            analyze=lambda context: None,
         )
     )
     registry.register(
         RegisteredAnalyzer(
             name="cli",
-            analyze=lambda project: None,
-            profiles=frozenset(
-                {
-                    "python-cli",
-                }
-            ),
+            analyze=lambda context: None,
+            profiles=frozenset({"python-cli"}),
         )
     )
     registry.register(
         RegisteredAnalyzer(
             name="api",
-            analyze=lambda project: None,
-            profiles=frozenset(
-                {
-                    "django-react",
-                }
-            ),
+            analyze=lambda context: None,
+            profiles=frozenset({"django-react"}),
         )
     )
 
@@ -144,18 +152,161 @@ def test_registry_filters_analyzers_by_profile() -> None:
     )
 
 
-def test_empty_profile_set_means_all_profiles() -> None:
-    registration = RegisteredAnalyzer(
-        name="identity",
-        analyze=lambda project: None,
+def test_registry_executes_dependencies_first(
+    tmp_path: Path,
+) -> None:
+    registry = AnalyzerRegistry()
+    execution_order: list[str] = []
+
+    registry.register(
+        RegisteredAnalyzer(
+            name="pyproject",
+            analyze=lambda context: (
+                execution_order.append("pyproject")
+                or {"scripts": {"demo": "demo.cli:app"}}
+            ),
+        )
     )
 
-    assert registration.supports_profile(
-        "python-cli"
+    registry.register(
+        RegisteredAnalyzer(
+            name="cli",
+            dependencies=("pyproject",),
+            analyze=lambda context: (
+                execution_order.append("cli")
+                or context.require("pyproject")["scripts"]
+            ),
+        )
     )
-    assert registration.supports_profile(
-        "django-react"
+
+    context = _context(
+        tmp_path,
+        profile_name="python-cli",
     )
-    assert registration.supports_profile(
-        "generic"
+
+    result = registry.analyze(
+        "cli",
+        context,
+    )
+
+    assert execution_order == [
+        "pyproject",
+        "cli",
+    ]
+    assert result == {
+        "demo": "demo.cli:app",
+    }
+
+
+def test_registry_analyzes_each_item_once(
+    tmp_path: Path,
+) -> None:
+    registry = AnalyzerRegistry()
+    calls = {"base": 0}
+
+    def analyze_base(
+        context: AnalysisContext,
+    ) -> str:
+        calls["base"] += 1
+        return "base"
+
+    registry.register(
+        RegisteredAnalyzer(
+            name="base",
+            analyze=analyze_base,
+        )
+    )
+    registry.register(
+        RegisteredAnalyzer(
+            name="first",
+            dependencies=("base",),
+            analyze=lambda context: "first",
+        )
+    )
+    registry.register(
+        RegisteredAnalyzer(
+            name="second",
+            dependencies=("base",),
+            analyze=lambda context: "second",
+        )
+    )
+
+    registry.analyze_all(_context(tmp_path))
+
+    assert calls["base"] == 1
+
+
+def test_registry_rejects_missing_dependency(
+    tmp_path: Path,
+) -> None:
+    registry = AnalyzerRegistry()
+
+    registry.register(
+        RegisteredAnalyzer(
+            name="cli",
+            dependencies=("pyproject",),
+            analyze=lambda context: None,
+        )
+    )
+
+    with pytest.raises(
+        MissingAnalyzerDependencyError
+    ):
+        registry.analyze(
+            "cli",
+            _context(tmp_path),
+        )
+
+
+def test_registry_rejects_circular_dependencies(
+    tmp_path: Path,
+) -> None:
+    registry = AnalyzerRegistry()
+
+    registry.register(
+        RegisteredAnalyzer(
+            name="first",
+            dependencies=("second",),
+            analyze=lambda context: None,
+        )
+    )
+    registry.register(
+        RegisteredAnalyzer(
+            name="second",
+            dependencies=("first",),
+            analyze=lambda context: None,
+        )
+    )
+
+    with pytest.raises(
+        CircularAnalyzerDependencyError
+    ):
+        registry.analyze(
+            "first",
+            _context(tmp_path),
+        )
+
+
+def test_context_require_rejects_missing_result(
+    tmp_path: Path,
+) -> None:
+    context = _context(tmp_path)
+
+    with pytest.raises(
+        MissingAnalyzerDependencyError
+    ):
+        context.require("missing")
+
+
+def test_analysis_context_carries_protected_documents(
+    tmp_path: Path,
+) -> None:
+    context = AnalysisContext(
+        project=_project(tmp_path),
+        profile_name="python-cli",
+        protected_documents=("INVARIANTS.md",),
+    )
+
+    assert context.protected_documents == (
+        "INVARIANTS.md",
     )
