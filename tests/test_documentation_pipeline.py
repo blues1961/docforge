@@ -221,3 +221,92 @@ def test_pipeline_rejects_unsupported_document(
             project,
             "CHANGELOG.md",
         )
+
+
+def test_pipeline_registry_generates_python_cli_documents(
+    tmp_path: Path,
+) -> None:
+    package = tmp_path / "project_assistant"
+    package.mkdir()
+
+    (package / "__init__.py").write_text(
+        "",
+        encoding="utf-8",
+    )
+    (package / "cli.py").write_text(
+        """
+import typer
+
+app = typer.Typer()
+
+
+@app.command()
+def check() -> None:
+    pass
+""",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "tests").mkdir()
+
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+
+[project.scripts]
+demo-cli = "project_assistant.cli:app"
+""",
+        encoding="utf-8",
+    )
+
+    project = FileSystemScanner().scan(tmp_path)
+    knowledge = (
+        ProjectKnowledgeBuilder()
+        .build_from_path(tmp_path)
+    )
+    pipeline = DocumentationPipeline(knowledge)
+
+    expected = {
+        "docs/cli.md": "cli-python-cli-déterministe",
+        "docs/configuration.md": (
+            "configuration-python-cli-déterministe"
+        ),
+        "docs/security.md": (
+            "security-python-cli-déterministe"
+        ),
+    }
+
+    for document_path, generator_name in expected.items():
+        result = pipeline.generate(
+            project,
+            document_path,
+        )
+
+        assert result.document_path == document_path
+        assert result.generator_name == generator_name
+
+
+def test_pipeline_registry_does_not_expose_python_cli_only_document(
+    tmp_path: Path,
+) -> None:
+    _create_application(tmp_path)
+
+    project = FileSystemScanner().scan(tmp_path)
+    knowledge = (
+        ProjectKnowledgeBuilder()
+        .build_from_path(tmp_path)
+    )
+
+    assert knowledge.profile.name != "python-cli"
+
+    pipeline = DocumentationPipeline(knowledge)
+
+    with pytest.raises(
+        UnsupportedDeterministicDocumentError
+    ):
+        pipeline.generate(
+            project,
+            "docs/security.md",
+        )

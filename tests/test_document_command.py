@@ -310,3 +310,77 @@ def test_refresh_regenerates_existing_deterministic_documents(
     assert deployment.read_text(
         encoding="utf-8"
     ) == "# Ancien déploiement\n"
+
+
+def _create_python_cli_for_document_test(
+    root: Path,
+) -> None:
+    package = root / "project_assistant"
+    package.mkdir()
+
+    (package / "__init__.py").write_text(
+        "",
+        encoding="utf-8",
+    )
+
+    (package / "cli.py").write_text(
+        """
+import typer
+
+app = typer.Typer()
+
+
+@app.command()
+def check() -> None:
+    pass
+""",
+        encoding="utf-8",
+    )
+
+    (root / "tests").mkdir()
+
+    (root / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.scripts]
+demo-cli = "project_assistant.cli:app"
+""",
+        encoding="utf-8",
+    )
+
+    (root / ".gitignore").write_text(
+        """
+.env.local
+.env.*.local
+.project-assistant/
+.venv/
+__pycache__/
+.pytest_cache/
+""",
+        encoding="utf-8",
+    )
+
+
+def test_refresh_uses_documents_supported_by_registry(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli_for_document_test(tmp_path)
+
+    _, _, generated = generate_documentation_preview(
+        path=tmp_path,
+        refresh=True,
+        clean=True,
+    )
+
+    generated_paths = {
+        item.document_path
+        for item in generated
+    }
+
+    assert "docs/cli.md" in generated_paths
+    assert "docs/configuration.md" in generated_paths
+    assert "docs/security.md" in generated_paths

@@ -9,6 +9,9 @@ from project_assistant.config import (
     ResolvedDocumentationConfig,
 )
 from project_assistant.detectors import TechnologyDetector
+from project_assistant.default_document_generators import (
+    build_default_document_generator_registry,
+)
 from project_assistant.documentation_pipeline import (
     DocumentationPipeline,
 )
@@ -125,9 +128,17 @@ def generate_documentation_preview(
         knowledge.profile.document_policy.deterministic_documents
     )
 
+    generator_registry = (
+        build_default_document_generator_registry(
+            knowledge
+        )
+    )
+
     supported_deterministic_documents = (
         profile_deterministic_documents
-        & DocumentationPipeline.SUPPORTED_DOCUMENTS
+        & generator_registry.supported_documents(
+            knowledge.profile.name
+        )
     )
 
     if refresh:
