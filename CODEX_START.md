@@ -31,7 +31,7 @@ Avant toute modification, lire :
 - Python requis : `>=3.11`.
 - Backend de construction : `setuptools.build_meta`.
 - Dépendances : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Commandes CLI : `project-assistant` → `project_assistant.cli:app`.
+- Commandes CLI : `docforge` → `project_assistant.cli:app`.
 
 ## Architecture essentielle
 
@@ -94,22 +94,22 @@ Validation :
 ```bash
 python -m py_compile project_assistant/cli.py
 pytest -q
-project-assistant --help
+docforge --help
 ```
 
 Génération documentaire :
 
 ```bash
-project-assistant profile /chemin/du/projet
-project-assistant knowledge /chemin/du/projet
-project-assistant document /chemin/du/projet --refresh --clean
+docforge profile /chemin/du/projet
+docforge knowledge /chemin/du/projet
+docforge document /chemin/du/projet --refresh --clean
 ```
 
 Audit :
 
 ```bash
-project-assistant audit-all --show-findings
-project-assistant status-all
+docforge audit-all --show-findings
+docforge status-all
 ```
 
 ## Règles pour les nouveaux profils

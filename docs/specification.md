@@ -103,7 +103,7 @@ Copie explicite d’un aperçu validé vers le dépôt à l’aide de la command
 
 ## Interface CLI
 
-- `project-assistant` → `project_assistant.cli:app`
+- `docforge` → `project_assistant.cli:app`
 
 ## Exigences fonctionnelles
 
@@ -155,10 +155,10 @@ Copie explicite d’un aperçu validé vers le dépôt à l’aide de la command
 
 ## Critères d’acceptation
 
-- [ ] project-assistant --help s’exécute sans erreur.
-- [ ] project-assistant profile détecte python-cli pour ce dépôt.
-- [ ] project-assistant knowledge produit un cache JSON valide.
-- [ ] project-assistant document --refresh --clean ne modifie aucun document cible.
+- [ ] docforge --help s’exécute sans erreur.
+- [ ] docforge profile détecte python-cli pour ce dépôt.
+- [ ] docforge knowledge produit un cache JSON valide.
+- [ ] docforge document --refresh --clean ne modifie aucun document cible.
 - [ ] Les documents générés correspondent à la politique du profil.
 - [ ] Une tentative d’application de INVARIANTS.md sans owner-approved échoue.
 - [ ] pytest -q réussit entièrement.
@@ -190,10 +190,10 @@ La spécification est considérée respectée lorsque :
 ```bash
 python -m py_compile project_assistant/cli.py
 pytest -q
-project-assistant --help
-project-assistant profile .
-project-assistant knowledge .
-project-assistant document . --refresh --clean
+docforge --help
+docforge profile .
+docforge knowledge .
+docforge document . --refresh --clean
 ```
 
 réussissent sans compromettre les protections, les secrets ou le comportement des profils existants.

@@ -46,7 +46,7 @@ def status_all_command() -> None:
     facts = CliAnalyzer().analyze(
         project,
         entry_points={
-            "project-assistant":
+            "docforge":
             "project_assistant.cli:app"
         },
     )

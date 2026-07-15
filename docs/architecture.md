@@ -14,7 +14,7 @@ Le contenu est dérivé de ProjectKnowledge.
 - Version : `0.1.0`.
 - Python requis : `>=3.11`.
 - Dépendances principales : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Points d’entrée CLI : `project-assistant` → `project_assistant.cli:app`.
+- Points d’entrée CLI : `docforge` → `project_assistant.cli:app`.
 
 ## Architecture logique
 
@@ -150,7 +150,7 @@ Aperçu sécurisé
 Diff et validation humaine
     │
     ▼
-project-assistant apply
+docforge apply
 ```
 
 ## Génération déterministe et LLM
@@ -179,7 +179,7 @@ La génération ne doit jamais modifier automatiquement les documents suivis par
 L’intégration se fait par une commande explicite :
 
 ```bash
-project-assistant apply /chemin/du/projet <document>
+docforge apply /chemin/du/projet <document>
 ```
 
 ## Protection des invariants
@@ -189,7 +189,7 @@ project-assistant apply /chemin/du/projet <document>
 Son application exige :
 
 ```bash
-project-assistant apply \
+docforge apply \
   /chemin/du/projet \
   INVARIANTS.md \
   --owner-approved

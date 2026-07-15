@@ -152,10 +152,10 @@ class PythonCliSpecificationAnalyzer:
                 "Les caches et aperçus ne doivent pas être suivis par Git.",
             ],
             acceptance_criteria=[
-                "project-assistant --help s’exécute sans erreur.",
-                "project-assistant profile détecte python-cli pour ce dépôt.",
-                "project-assistant knowledge produit un cache JSON valide.",
-                "project-assistant document --refresh --clean ne modifie "
+                "docforge --help s’exécute sans erreur.",
+                "docforge profile détecte python-cli pour ce dépôt.",
+                "docforge knowledge produit un cache JSON valide.",
+                "docforge document --refresh --clean ne modifie "
                 "aucun document cible.",
                 "Les documents générés correspondent à la politique du "
                 "profil.",

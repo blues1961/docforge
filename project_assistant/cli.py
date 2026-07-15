@@ -45,7 +45,7 @@ from project_assistant.remediation import generate_remediation_plan
 from project_assistant.knowledge import ProjectKnowledgeBuilder
 
 app = typer.Typer(
-    name="project-assistant",
+    name="docforge",
     help="Analyse et documente des projets logiciels.",
     no_args_is_help=True,
 )
@@ -952,7 +952,7 @@ def audit_all_command(
                 "Après validation explicite du propriétaire :"
             )
             console.print(
-                "project-assistant approve-invariants "
+                "docforge approve-invariants "
                 f"{template_path} --owner-approved"
             )
             raise typer.Exit(code=2)

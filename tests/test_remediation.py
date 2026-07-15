@@ -59,12 +59,12 @@ def test_remediation_plan_for_missing_specification(
 
     assert "docs/specification.md" in action.title
     assert any(
-        "project-assistant document"
+        "docforge document"
         in command
         for command in action.commands
     )
     assert any(
-        "project-assistant apply"
+        "docforge apply"
         in command
         for command in action.commands
     )

@@ -74,7 +74,7 @@ class PythonCliSecurityDocumentGenerator:
                 "Exemple :",
                 "",
                 "```bash",
-                "project-assistant apply \\",
+                "docforge apply \\",
                 "  /chemin/du/projet \\",
                 "  INVARIANTS.md \\",
                 "  --owner-approved",
@@ -174,11 +174,11 @@ class PythonCliSecurityDocumentGenerator:
                 "",
                 "```bash",
                 (
-                    "project-assistant approve-invariants "
+                    "docforge approve-invariants "
                     "/chemin/vers/app-template --owner-approved"
                 ),
                 (
-                    "project-assistant verify-invariants "
+                    "docforge verify-invariants "
                     "/chemin/vers/app-template"
                 ),
                 "```",

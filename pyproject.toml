@@ -21,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-project-assistant = "project_assistant.cli:app"
+docforge = "project_assistant.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -54,7 +54,7 @@ Les caches et aperçus de test utilisent :
 Afficher l’aide :
 
 ```bash
-project-assistant --help
+docforge --help
 ```
 
 Compiler les fichiers modifiés :
@@ -140,7 +140,7 @@ Ne pas ajouter au commit :
 ## Validation avant livraison
 
 - tous les tests réussissent;
-- `project-assistant --help` fonctionne;
+- `docforge --help` fonctionne;
 - les nouvelles commandes apparaissent dans le test CLI;
 - aucune ancienne référence supprimée ne subsiste;
 - les profils existants conservent leur comportement;

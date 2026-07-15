@@ -40,7 +40,7 @@ L’application d’un document protégé exige `--owner-approved`.
 Exemple :
 
 ```bash
-project-assistant apply \
+docforge apply \
   /chemin/du/projet \
   INVARIANTS.md \
   --owner-approved
@@ -52,7 +52,7 @@ project-assistant apply \
 |---|---|---|---|
 | `SEC-001` | secrets | Le contenu des fichiers de secrets ne doit jamais être lu, reproduit ou sérialisé. | .env.local exclu des analyses documentaires. |
 | `SEC-002` | aperçu | La génération documentaire doit écrire dans .project-assistant/preview avant toute application. | .project-assistant/preview/ |
-| `SEC-003` | application | Un document généré ne doit être appliqué qu’après une commande explicite. | project-assistant apply |
+| `SEC-003` | application | Un document généré ne doit être appliqué qu’après une commande explicite. | docforge apply |
 | `SEC-004` | invariants | Les documents protégés doivent exiger une autorisation explicite du propriétaire. | --owner-approved |
 | `SEC-005` | intégrité | Les invariants approuvés doivent pouvoir être vérifiés par empreinte. | invariant-baseline.json |
 | `SEC-006` | portabilité | Les documents générés ne doivent pas contenir de chemin absolu propre à une machine. | — |
@@ -119,8 +119,8 @@ Chemin utilisateur :
 Commandes associées :
 
 ```bash
-project-assistant approve-invariants /chemin/vers/app-template --owner-approved
-project-assistant verify-invariants /chemin/vers/app-template
+docforge approve-invariants /chemin/vers/app-template --owner-approved
+docforge verify-invariants /chemin/vers/app-template
 ```
 
 Une différence d’empreinte doit être signalée comme une modification potentiellement non autorisée.
@@ -187,9 +187,9 @@ Commandes recommandées :
 
 ```bash
 pytest -q
-project-assistant --help
-project-assistant verify-invariants /chemin/vers/app-template
-project-assistant document /chemin/du/projet --refresh --clean
+docforge --help
+docforge verify-invariants /chemin/vers/app-template
+docforge document /chemin/du/projet --refresh --clean
 git status --short
 ```
 

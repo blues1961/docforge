@@ -23,7 +23,7 @@ class PythonCliConfigurationDocumentGenerator:
             "## Vue d’ensemble",
             "",
             (
-                "`project-assistant` sépare la configuration "
+                "`docforge` sépare la configuration "
                 "utilisateur, l’état local propre à un projet "
                 "et les rapports pouvant être suivis par Git."
             ),
@@ -268,20 +268,20 @@ class PythonCliConfigurationDocumentGenerator:
                 "Afficher les projets enregistrés :",
                 "",
                 "```bash",
-                "project-assistant projects list",
+                "docforge projects list",
                 "```",
                 "",
                 "Afficher le profil détecté :",
                 "",
                 "```bash",
-                "project-assistant profile /chemin/du/projet",
+                "docforge profile /chemin/du/projet",
                 "```",
                 "",
                 "Reconstruire les aperçus :",
                 "",
                 "```bash",
                 (
-                    "project-assistant document "
+                    "docforge document "
                     "/chemin/du/projet --refresh --clean"
                 ),
                 "```",
@@ -290,7 +290,7 @@ class PythonCliConfigurationDocumentGenerator:
                 "",
                 "```bash",
                 (
-                    "project-assistant verify-invariants "
+                    "docforge verify-invariants "
                     "/chemin/vers/app-template"
                 ),
                 "```",

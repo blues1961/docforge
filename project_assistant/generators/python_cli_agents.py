@@ -240,7 +240,7 @@ class PythonCliAgentsDocumentGenerator:
             "",
             "1. `python -m py_compile` réussit;",
             "2. `pytest -q` réussit;",
-            "3. `project-assistant --help` fonctionne;",
+            "3. `docforge --help` fonctionne;",
             "4. `git diff` correspond à la demande;",
             "5. `git status` ne contient aucun secret ou cache;",
             "6. les profils existants conservent leur comportement;",

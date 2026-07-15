@@ -82,7 +82,7 @@ def test_python_cli_readme_uses_cli_content(
     assert "rich>=13" in result.content
     assert "pytest>=8" in result.content
     assert "demo_cli.cli:main" in result.content
-    assert "project-assistant profile" in result.content
+    assert "docforge profile" in result.content
     assert "Traefik" not in result.content
     assert ".env.dev" not in result.content
 

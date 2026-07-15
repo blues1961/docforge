@@ -45,7 +45,7 @@ Le code existant ne constitue jamais une justification pour contourner un invari
 - Version Python requise : `>=3.11`.
 - Backend de construction : `setuptools.build_meta`.
 - Dépendances principales : `PyYAML>=6.0`, `requests>=2.31`, `rich>=13.7`, `typer>=0.12`.
-- Points d’entrée CLI : `project-assistant` → `project_assistant.cli:app`.
+- Points d’entrée CLI : `docforge` → `project_assistant.cli:app`.
 
 ## Architecture interne
 
@@ -146,7 +146,7 @@ Toujours vérifier :
 
 1. `python -m py_compile` réussit;
 2. `pytest -q` réussit;
-3. `project-assistant --help` fonctionne;
+3. `docforge --help` fonctionne;
 4. `git diff` correspond à la demande;
 5. `git status` ne contient aucun secret ou cache;
 6. les profils existants conservent leur comportement;

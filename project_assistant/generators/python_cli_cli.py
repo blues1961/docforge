@@ -143,14 +143,14 @@ class PythonCliCliDocumentGenerator:
                 "## Exemples généraux",
                 "",
                 "```bash",
-                "project-assistant --help",
-                "project-assistant profile /chemin/du/projet",
-                "project-assistant knowledge /chemin/du/projet",
+                "docforge --help",
+                "docforge profile /chemin/du/projet",
+                "docforge knowledge /chemin/du/projet",
                 (
-                    "project-assistant document "
+                    "docforge document "
                     "/chemin/du/projet --refresh --clean"
                 ),
-                "project-assistant audit-all --show-findings",
+                "docforge audit-all --show-findings",
                 "```",
                 "",
                 "## Limites de l’analyse",

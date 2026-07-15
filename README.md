@@ -71,7 +71,7 @@ python -m pip install -e ".[dev]"
 Vérifier l’installation :
 
 ```bash
-project-assistant --help
+docforge --help
 pytest -q
 ```
 
@@ -80,37 +80,37 @@ pytest -q
 Analyser un dépôt :
 
 ```bash
-project-assistant analyze /chemin/du/projet
+docforge analyze /chemin/du/projet
 ```
 
 Détecter son profil :
 
 ```bash
-project-assistant profile /chemin/du/projet
+docforge profile /chemin/du/projet
 ```
 
 Construire sa connaissance structurée :
 
 ```bash
-project-assistant knowledge /chemin/du/projet
+docforge knowledge /chemin/du/projet
 ```
 
 Générer la documentation en aperçu :
 
 ```bash
-project-assistant document /chemin/du/projet --refresh --clean
+docforge document /chemin/du/projet --refresh --clean
 ```
 
 Appliquer un document validé :
 
 ```bash
-project-assistant apply /chemin/du/projet docs/architecture.md
+docforge apply /chemin/du/projet docs/architecture.md
 ```
 
 Auditer les projets enregistrés :
 
 ```bash
-project-assistant audit-all --show-findings
+docforge audit-all --show-findings
 ```
 
 ## Configuration
@@ -125,7 +125,7 @@ Les fichiers de secrets des projets analysés ne doivent jamais être lus ni rep
 
 ## Commandes CLI déclarées
 
-- `project-assistant` → `project_assistant.cli:app`
+- `docforge` → `project_assistant.cli:app`
 
 ## Dépendances optionnelles
 

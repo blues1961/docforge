@@ -110,7 +110,7 @@ Les rapports temporaires ou contenant des données sensibles ne doivent pas êtr
 - version : `0.1.0`;
 - Python requis : `>=3.11`;
 - backend de construction : `setuptools.build_meta`;
-- points d’entrée : `project-assistant` → `project_assistant.cli:app`.
+- points d’entrée : `docforge` → `project_assistant.cli:app`.
 
 ## Variables d’environnement détectées
 
@@ -167,25 +167,25 @@ __pycache__/
 Afficher les projets enregistrés :
 
 ```bash
-project-assistant projects list
+docforge projects list
 ```
 
 Afficher le profil détecté :
 
 ```bash
-project-assistant profile /chemin/du/projet
+docforge profile /chemin/du/projet
 ```
 
 Reconstruire les aperçus :
 
 ```bash
-project-assistant document /chemin/du/projet --refresh --clean
+docforge document /chemin/du/projet --refresh --clean
 ```
 
 Vérifier les invariants protégés :
 
 ```bash
-project-assistant verify-invariants /chemin/vers/app-template
+docforge verify-invariants /chemin/vers/app-template
 ```
 
 ## Critères de validation

@@ -151,11 +151,11 @@ class RemediationPlanner:
                 ),
                 commands=[
                     (
-                        "project-assistant document "
+                        "docforge document "
                         f"{project_path} --refresh --clean"
                     ),
                     (
-                        "project-assistant apply "
+                        "docforge apply "
                         f"{project_path} {path}"
                     ),
                     f"git -C {project_path} diff -- {path}",
@@ -175,7 +175,7 @@ class RemediationPlanner:
                 ),
                 commands=[
                     (
-                        "project-assistant document "
+                        "docforge document "
                         f"{project_path} --clean"
                     ),
                 ],

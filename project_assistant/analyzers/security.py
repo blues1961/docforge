@@ -78,7 +78,7 @@ class SecurityAnalyzer:
                     "Un document généré ne doit être appliqué "
                     "qu’après une commande explicite."
                 ),
-                evidence="project-assistant apply",
+                evidence="docforge apply",
             ),
             SecurityControlFacts(
                 identifier="SEC-004",
@@ -165,13 +165,13 @@ class SecurityAnalyzer:
             risks=risks,
             validation_commands=[
                 "pytest -q",
-                "project-assistant --help",
+                "docforge --help",
                 (
-                    "project-assistant verify-invariants "
+                    "docforge verify-invariants "
                     "/chemin/vers/app-template"
                 ),
                 (
-                    "project-assistant document "
+                    "docforge document "
                     "/chemin/du/projet --refresh --clean"
                 ),
                 "git status --short",

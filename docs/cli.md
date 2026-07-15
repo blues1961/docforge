@@ -13,7 +13,7 @@ Les commandes sont extraites du code Python avec ast.
 
 ## Points d’entrée
 
-- `project-assistant` → `project_assistant.cli:app`
+- `docforge` → `project_assistant.cli:app`
 
 ## Commandes
 
@@ -321,11 +321,11 @@ Retirer un projet du registre.
 ## Exemples généraux
 
 ```bash
-project-assistant --help
-project-assistant profile /chemin/du/projet
-project-assistant knowledge /chemin/du/projet
-project-assistant document /chemin/du/projet --refresh --clean
-project-assistant audit-all --show-findings
+docforge --help
+docforge profile /chemin/du/projet
+docforge knowledge /chemin/du/projet
+docforge document /chemin/du/projet --refresh --clean
+docforge audit-all --show-findings
 ```
 
 ## Limites de l’analyse
