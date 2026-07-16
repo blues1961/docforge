@@ -110,3 +110,26 @@ class DjangoReactProfile(ProjectProfile):
                 "INVARIANTS.md",
             ),
         )
+
+    def build_manual_knowledge_builder(self):
+        from docforge.manual_django_react import (
+            DjangoReactManualKnowledgeBuilder,
+        )
+
+        return DjangoReactManualKnowledgeBuilder()
+
+    def build_manual_blueprint(self):
+        from docforge.manual_blueprint import (
+            ManualBlueprintRegistry,
+        )
+
+        return ManualBlueprintRegistry().blueprint_for_profile(
+            self.name
+        )
+
+    def build_manual_prompt_builder(self):
+        from docforge.manual_prompt import (
+            DjangoReactManualPromptBuilder,
+        )
+
+        return DjangoReactManualPromptBuilder()

@@ -38,6 +38,9 @@ from docforge.knowledge import (
     ProjectKnowledgeBuilder,
     write_project_knowledge,
 )
+from docforge.manual_service import (
+    ManualPreparationService,
+)
 from docforge.profiles import (
     ProfileDetector,
 )
@@ -52,11 +55,89 @@ app = typer.Typer(
 
 console = Console()
 
+manual_app = typer.Typer(
+    help="Préparer les artefacts d’un manuel utilisateur.",
+    no_args_is_help=True,
+)
+
+app.add_typer(
+    manual_app,
+    name="manual",
+)
+
 
 @app.callback()
 def main() -> None:
     """Assistant local d'analyse et de documentation de projets."""
     return None
+
+
+@manual_app.command("prepare")
+def manual_prepare_command(
+    path: Path = typer.Argument(
+        Path("."),
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Chemin du projet à préparer.",
+    ),
+    clean: bool = typer.Option(
+        False,
+        "--clean",
+        help="Supprimer la préparation précédente avant génération.",
+    ),
+    mode: str = typer.Option(
+        "both",
+        "--mode",
+        help="Mode de génération : full, sections ou both.",
+    ),
+    output_dir: Path = typer.Option(
+        Path(".docforge/manual"),
+        "--output-dir",
+        help="Répertoire cible pour les artefacts du manuel.",
+    ),
+) -> None:
+    """Préparer les entrées déterministes d’un manuel utilisateur."""
+
+    if mode not in {"full", "sections", "both"}:
+        raise typer.BadParameter(
+            "Mode invalide. Utilisez full, sections ou both."
+        )
+
+    result = ManualPreparationService().prepare(
+        path,
+        clean=clean,
+        mode=mode,
+        output_dir=output_dir,
+    )
+
+    console.print(
+        "[green]Préparation du manuel terminée.[/green]"
+    )
+    console.print(
+        f"Connaissance : "
+        f"{result.knowledge_file.relative_to(result.root)}"
+    )
+
+    if result.full_prompt_file is not None:
+        console.print(
+            f"Prompt complet : "
+            f"{result.full_prompt_file.relative_to(result.root)}"
+        )
+
+    if result.section_prompt_files:
+        console.print("Prompts de section :")
+        for section_path in result.section_prompt_files:
+            console.print(
+                f"- {section_path.relative_to(result.root)}"
+            )
+
+    console.print(
+        f"Manifeste : "
+        f"{result.manifest_file.relative_to(result.root)}"
+    )
 
 
 @app.command()

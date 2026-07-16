@@ -138,7 +138,7 @@ def test_knowledge_builder_combines_project_analyzers(
         .build_from_path(tmp_path)
     )
 
-    assert knowledge.schema_version == 1
+    assert knowledge.schema_version == 2
     assert knowledge.identity.name == tmp_path.name
     assert knowledge.profile.name == "django-react"
 
@@ -183,7 +183,7 @@ def test_project_knowledge_is_json_serializable(
         output.read_text(encoding="utf-8")
     )
 
-    assert data["schema_version"] == 1
+    assert data["schema_version"] == 2
     assert data["identity"]["name"] == tmp_path.name
     assert data["profile"]["name"] == "django-react"
     assert "pyproject" in data

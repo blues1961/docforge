@@ -11,6 +11,7 @@ from docforge.analyzers import (
     CliAnalyzer,
     ConfigurationAnalyzer,
     DeploymentAnalyzer,
+    DjangoReactApplicationAnalyzer,
     PyprojectAnalyzer,
     PyprojectFacts,
     ReadmeAnalyzer,
@@ -100,6 +101,14 @@ def _analyze_security(
     )
 
 
+def _analyze_application(
+    context: AnalysisContext,
+):
+    return DjangoReactApplicationAnalyzer().analyze(
+        context
+    )
+
+
 def build_default_analyzer_registry() -> AnalyzerRegistry:
     registry = AnalyzerRegistry()
 
@@ -150,6 +159,19 @@ def build_default_analyzer_registry() -> AnalyzerRegistry:
         RegisteredAnalyzer(
             name="api",
             analyze=_analyze_api,
+        )
+    )
+
+    registry.register(
+        RegisteredAnalyzer(
+            name="application",
+            analyze=_analyze_application,
+            profiles=frozenset({"django-react"}),
+            dependencies=(
+                "architecture",
+                "deployment",
+                "api",
+            ),
         )
     )
 

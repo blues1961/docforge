@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from docforge.models import Project
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from docforge.analyzer_registry import (
-        AnalyzerRegistry,
-    )
+    from docforge.analyzer_registry import AnalyzerRegistry
     from docforge.document_generator_registry import (
         DocumentGeneratorRegistry,
     )
     from docforge.knowledge import ProjectKnowledge
+    from docforge.manual_blueprint import ManualBlueprint
+    from docforge.manual_knowledge import ManualKnowledgeBuilder
+    from docforge.manual_prompt import ManualPromptBuilder
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +84,34 @@ class ProjectProfile(ABC):
             knowledge
         )
 
+    def build_manual_knowledge_builder(
+        self,
+    ) -> "ManualKnowledgeBuilder":
+        from docforge.manual_knowledge import (
+            ManualKnowledgeBuilder,
+        )
+
+        return ManualKnowledgeBuilder()
+
+    def build_manual_blueprint(
+        self,
+    ) -> "ManualBlueprint":
+        from docforge.manual_blueprint import (
+            ManualBlueprintRegistry,
+        )
+
+        return ManualBlueprintRegistry().blueprint_for_profile(
+            self.name
+        )
+
+    def build_manual_prompt_builder(
+        self,
+    ) -> "ManualPromptBuilder":
+        from docforge.manual_prompt import (
+            ManualPromptBuilder,
+        )
+
+        return ManualPromptBuilder()
 
     def analyze(
         self,

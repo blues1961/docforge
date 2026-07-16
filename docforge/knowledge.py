@@ -5,18 +5,25 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from docforge.analyzer_registry import (
-    AnalysisContext,
-)
+from docforge.analyzer_registry import AnalysisContext
 from docforge.analyzers import (
     ApiFacts,
+    ApplicationOverviewFacts,
     ArchitectureFacts,
+    CapabilitiesFacts,
     CliFacts,
     ConfigurationFacts,
     DeploymentFacts,
+    DjangoFacts,
+    DjangoReactApplicationFacts,
+    EnvironmentVariablesFacts,
+    OperationalCommandsFacts,
+    ProjectEnvironmentsFacts,
     PyprojectFacts,
+    ReactFacts,
     ReadmeFacts,
     SecurityFacts,
+    ServiceEndpointsFacts,
     SpecificationFacts,
 )
 from docforge.detectors import TechnologyDetector
@@ -54,6 +61,27 @@ class ProjectKnowledge:
     specification: SpecificationFacts
     readme: ReadmeFacts
 
+    application: ApplicationOverviewFacts = field(
+        default_factory=ApplicationOverviewFacts
+    )
+    environments: ProjectEnvironmentsFacts = field(
+        default_factory=ProjectEnvironmentsFacts
+    )
+    operational_commands: OperationalCommandsFacts = field(
+        default_factory=OperationalCommandsFacts
+    )
+    environment_variables: EnvironmentVariablesFacts = field(
+        default_factory=EnvironmentVariablesFacts
+    )
+    service_endpoints: ServiceEndpointsFacts = field(
+        default_factory=ServiceEndpointsFacts
+    )
+    django: DjangoFacts = field(default_factory=DjangoFacts)
+    react: ReactFacts = field(default_factory=ReactFacts)
+    capabilities: CapabilitiesFacts = field(
+        default_factory=CapabilitiesFacts
+    )
+
     findings: list[dict[str, Any]] = field(
         default_factory=list
     )
@@ -73,7 +101,7 @@ class ProjectKnowledge:
 
 
 class ProjectKnowledgeBuilder:
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = 2
     SUPPRESSED_PYTHON_CLI_FINDINGS = {
         "ENV002",
         "ENV003",
@@ -129,9 +157,14 @@ class ProjectKnowledgeBuilder:
         security = analyzer_results["security"]
 
         cli = analyzer_results.get("cli")
-
         if cli is None:
             cli = CliFacts()
+
+        application_result = analyzer_results.get(
+            "application"
+        )
+        if application_result is None:
+            application_result = DjangoReactApplicationFacts()
 
         technologies = sorted(
             technology.name
@@ -162,6 +195,20 @@ class ProjectKnowledgeBuilder:
             api=api,
             specification=specification,
             readme=readme,
+            application=application_result.application,
+            environments=application_result.environments,
+            operational_commands=(
+                application_result.operational_commands
+            ),
+            environment_variables=(
+                application_result.environment_variables
+            ),
+            service_endpoints=(
+                application_result.service_endpoints
+            ),
+            django=application_result.django,
+            react=application_result.react,
+            capabilities=application_result.capabilities,
             findings=findings,
         )
 
