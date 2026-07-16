@@ -105,12 +105,23 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                         "phony": item.phony,
                         "documented": item.documented,
                         "visibility": item.visibility,
+                        "provenance": item.provenance,
+                        "documentation_policy": item.documentation_policy,
+                        "exclusion_reason": item.exclusion_reason,
+                        "provenance_evidence": list(item.provenance_evidence),
+                        "manifest_source": item.manifest_source,
+                        "audience": self._command_audience(item),
+                        "reference_level": self._command_reference_level(item),
+                        "destructive": self._command_is_destructive(item),
+                        "destructive_effects": self._command_destructive_effects(item),
+                        "environment": list(item.environments),
                         "parameters": [
                             {
                                 "name": parameter.name,
                                 "required": parameter.required,
                                 "example": parameter.example,
                                 "description": parameter.description,
+                                "allowed_values": self._parameter_allowed_values(knowledge, parameter),
                                 "origin": parameter.origin,
                                 "source": parameter.source,
                             }
@@ -216,7 +227,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
     ) -> list[ManualCommand]:
         commands: list[ManualCommand] = []
         for item in knowledge.operational_commands.commands:
-            if item.visibility != "public":
+            if item.visibility != "public" or item.documentation_policy == "exclude":
                 continue
             commands.append(
                 ManualCommand(
@@ -227,6 +238,15 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                     help=item.help_text or f"Commande opérationnelle catégorie {item.category}.",
                     visibility=item.visibility,
                     documented=item.documented,
+                    audience=self._command_audience(item),
+                    reference_level=self._command_reference_level(item),
+                    provenance=item.provenance,
+                    documentation_policy=item.documentation_policy,
+                    exclusion_reason=item.exclusion_reason,
+                    provenance_evidence=list(item.provenance_evidence),
+                    destructive=self._command_is_destructive(item),
+                    destructive_effects=self._command_destructive_effects(item),
+                    environment=list(item.environments),
                     prerequisites=list(item.prerequisites),
                     parameters=[
                         ManualCommandParameter(
@@ -235,6 +255,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                             required=parameter.required,
                             example=parameter.example,
                             description=parameter.description,
+                            allowed_values=self._parameter_allowed_values(knowledge, parameter),
                             origin=parameter.origin,
                             source=parameter.source,
                         )
@@ -248,6 +269,56 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                 )
             )
         return commands
+
+    def _command_audience(self, command) -> str:
+        if command.visibility != "public":
+            return "internal"
+        if command.category in {"tests", "diagnostic"}:
+            return "operator"
+        if command.category in {"backup", "restore", "migrations", "build", "startup", "shutdown", "restart", "environment"}:
+            return "operator"
+        if command.name in {"createsuperuser", "create-admin"}:
+            return "administrator"
+        return "operator"
+
+    def _command_reference_level(self, command) -> str:
+        if command.visibility != "public" or command.documentation_policy == "exclude":
+            return "omit"
+        if command.documentation_policy == "advanced-reference":
+            return "advanced"
+        if command.documentation_policy in {"quick-start", "main-reference"}:
+            return "primary"
+        if command.prerequisites and not command.body:
+            return "alias"
+        if command.category in {"tests", "diagnostic", "backup", "restore", "migrations", "build"}:
+            return "advanced"
+        return "primary"
+
+    @staticmethod
+    def _command_is_destructive(command) -> bool:
+        return bool(DjangoReactManualKnowledgeBuilder._command_destructive_effects(command))
+
+    @staticmethod
+    def _command_destructive_effects(command) -> list[str]:
+        effects: list[str] = []
+        body = "\n".join(command.body).casefold()
+        if " down" in f" {body}" or command.category == "shutdown":
+            effects.append("Arrêt des services actifs")
+        if "psql" in body or command.category == "restore":
+            effects.append("Modification ou écrasement potentiel des données PostgreSQL")
+        if "rm " in body or "rm -" in body:
+            effects.append("Suppression de fichiers")
+        if "build" in body or command.category == "build":
+            effects.append("Reconstruction des images ou services")
+        return effects
+
+    def _parameter_allowed_values(self, knowledge: ProjectKnowledge, parameter) -> list[str]:
+        if parameter.name != "SERVICE":
+            return []
+        services = sorted({service.name for environment in knowledge.environments.items for service in environment.services})
+        if not services:
+            return []
+        return services
 
     def _build_workflows(
         self,
@@ -491,6 +562,33 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                     "sources": sorted({endpoint.source for endpoint in knowledge.service_endpoints.endpoints}),
                 }
             )
+        for endpoint in knowledge.django.endpoints:
+            write_methods = {method for method in endpoint.methods if method in {"POST", "PUT", "PATCH", "DELETE"}}
+            if not write_methods or "AllowAny" not in endpoint.permissions:
+                continue
+            if endpoint.custom_authentication:
+                risks.append(
+                    {
+                        "identifier": "WRITE-ENDPOINT-ALLOWANY-CUSTOM-AUTH",
+                        "category": "api",
+                        "severity": "warning",
+                        "description": f"L’endpoint {endpoint.path or endpoint.relative_path} accepte des écritures avec AllowAny et s’appuie sur une authentification personnalisée qui doit être vérifiée manuellement.",
+                        "sources": sorted(set(endpoint.sources)),
+                    }
+                )
+                continue
+            if endpoint.authentication:
+                continue
+            risks.append(
+                {
+                    "identifier": "WRITE-ENDPOINT-ALLOWANY-NO-AUTH",
+                    "category": "api",
+                    "severity": "critical",
+                    "description": f"L’endpoint {endpoint.path or endpoint.relative_path} accepte des écritures avec AllowAny sans mécanisme d’authentification démontré.",
+                    "sources": sorted(set(endpoint.sources)),
+                }
+            )
+
         admin_fallback_risk = self._detect_admin_fallback_risk(knowledge)
         if admin_fallback_risk is not None:
             risks.append(admin_fallback_risk)

@@ -152,3 +152,10 @@ class PythonCliProfile(ProjectProfile):
         )
 
         return bool(entry_points)
+
+    def build_manual_prompt_builder(self):
+        from docforge.manual_prompt import (
+            PythonCliManualPromptBuilder,
+        )
+
+        return PythonCliManualPromptBuilder()

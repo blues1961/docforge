@@ -7,6 +7,7 @@ from docforge.manual_blueprint import ManualBlueprintRegistry
 from docforge.manual_django_react import DjangoReactManualKnowledgeBuilder
 from docforge.manual_prompt import DjangoReactManualPromptBuilder
 from docforge.manual_service import ManualPreparationService
+from docforge.validators import ManualMarkdownValidator
 from docforge.profiles import ProfileDetector
 from docforge.scanners import FileSystemScanner
 
@@ -233,6 +234,142 @@ def _build_knowledge(root: Path):
     return project, profile, knowledge
 
 
+def _write_template_manifest(
+    root: Path,
+    *,
+    include_missing_target: bool = False,
+) -> None:
+    targets = [
+        {
+            "name": "help",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "init",
+            "origin": "app-template",
+            "documentation_policy": "quick-start",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "dev",
+            "origin": "app-template",
+            "documentation_policy": "quick-start",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "prod",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "up",
+            "origin": "app-template",
+            "documentation_policy": "quick-start",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "down",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "restart",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "rebuild",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "logs",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "ps",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "primary",
+            "audience": "operator",
+        },
+        {
+            "name": "check",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "migrate",
+            "origin": "app-template",
+            "documentation_policy": "main-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "update",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "backup",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+        {
+            "name": "restore",
+            "origin": "app-template",
+            "documentation_policy": "advanced-reference",
+            "reference_level": "advanced",
+            "audience": "operator",
+        },
+    ]
+    if include_missing_target:
+        targets.append(
+            {
+                "name": "missing-template-target",
+                "origin": "app-template",
+                "documentation_policy": "main-reference",
+                "reference_level": "primary",
+                "audience": "operator",
+            }
+        )
+    payload = {
+        "schema_version": 1,
+        "template_id": "app-template",
+        "project_kind": "application-template",
+        "base_profile": "django-react",
+        "template_version": "2026-07-16",
+        "make_targets": targets,
+    }
+    (root / "docforge.template.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def test_django_react_profile_selects_specialized_manual_components(tmp_path: Path) -> None:
     _create_django_react_project(tmp_path)
     _project, profile, _knowledge = _build_knowledge(tmp_path)
@@ -357,6 +494,7 @@ def test_django_react_knowledge_detects_commands_django_react_and_capabilities(t
     assert knowledge.react.dev_command == "npm run dev"
     assert knowledge.react.build_command == "npm run build"
     assert knowledge.react.routes == ["/"]
+    assert any(feature.label == "Recherche" for feature in knowledge.react.user_features)
     assert any(route.full_path == "/api/auth/login/" for route in knowledge.django.resolved_routes)
     assert any(endpoint.path == "/api/users/" and "IsAdminUser" in endpoint.permissions for endpoint in knowledge.django.endpoints)
     visibility_field = next(
@@ -373,6 +511,28 @@ def test_django_react_knowledge_detects_commands_django_react_and_capabilities(t
         cap.label.startswith("Consulter") and "contact" in cap.label
         for cap in knowledge.capabilities.capabilities
     )
+
+
+def test_django_react_template_metadata_uses_local_manifest(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path, include_missing_target=True)
+    _project, profile, knowledge = _build_knowledge(tmp_path)
+
+    commands = {item.name: item for item in knowledge.operational_commands.commands}
+
+    assert profile.name == "django-react"
+    assert knowledge.template.detected is True
+    assert knowledge.template.project_kind == "application-template"
+    assert knowledge.template.template_id == "app-template"
+    assert knowledge.template.base_profile == "django-react"
+    assert knowledge.template.manifest_source == "docforge.template.json"
+    assert knowledge.template.manifest_fallback_used is False
+    assert "up" in knowledge.template.manifest_verified_targets
+    assert {"help", "update", "missing-template-target"}.issubset(set(knowledge.template.manifest_missing_targets))
+    assert any(item.name == "APP_NAME" for item in knowledge.template.placeholders)
+    assert any(item.identifier == "template-first-init" for item in knowledge.template.creator_workflows)
+    assert any(item.identifier == "template-maintainer-validate" for item in knowledge.template.maintainer_workflows)
+    assert commands["up"].provenance == "app-template"
 
 
 def test_django_react_manual_prepare_is_application_oriented(tmp_path: Path) -> None:
@@ -408,6 +568,8 @@ def test_django_react_manual_prepare_is_application_oriented(tmp_path: Path) -> 
     assert any(item["identifier"] == "API-SCHEMA-MISSING" for item in data["missing_information"])
     rebuild = next(item for item in data["commands"] if item["name"] == "rebuild")
     assert rebuild["parameters"][0]["name"] == "SERVICE"
+    assert rebuild["audience"] == "operator"
+    assert rebuild["reference_level"] == "advanced"
     restore = next(item for item in data["commands"] if item["name"] == "restore")
     assert restore["parameters"][0]["name"] == "FILE"
     assert any(route["full_path"] == "/api/auth/login/" for route in data["django"]["resolved_routes"])
@@ -434,6 +596,7 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
     manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
 
     assert len(section_names) == 13
+    assert len(result.section_context_files) == 13
     assert section_names == [
         "01-presentation.md",
         "02-audience-roles.md",
@@ -465,7 +628,7 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
     assert "respecte les contextes fournis par ManualKnowledge" in prompt
     assert "Utilise `missing_information` et `limitations.items` comme source prioritaire" in prompt
     assert "Pour `react.crypto`, décris uniquement l’implémentation détectée" in prompt
-    assert "Le flux de DocForge s’arrête à la production de `manual-knowledge.json` et du prompt de rédaction" in prompt
+    assert "Le flux de DocForge s’arrête à la production de `manual-knowledge.json`" in prompt
     assert "Une URL syntaxiquement invalide ou contenant une interpolation déséquilibrée" in prompt
     assert "Les paramètres internes d’une commande ne doivent jamais être présentés comme arguments utilisateur" in prompt
     assert "Lorsqu’une cible alias délègue à des prérequis démontrés" in prompt
@@ -514,6 +677,9 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
     assert '"workflows"' in command_reference_section
     assert "Remplace les identifiants techniques par des phrases lisibles destinées au lecteur final." in limitations_section
     assert '"missing_information"' in limitations_section
+    assert manifest["section_contexts"][0]["context_file"] == "section-contexts/01-presentation.json"
+    assert manifest["section_contexts"][0]["estimated_tokens"] < manifest["full_prompt_estimated_tokens"]
+
 
 
 def test_django_react_manual_json_is_valid_and_does_not_modify_project_files(tmp_path: Path) -> None:
@@ -695,6 +861,24 @@ tree: ## Arborescence du projet
 """,
         encoding="utf-8",
     )
+    (root / "docforge.make-targets.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "targets": [
+                    {"name": "backup-db", "documentation_policy": "advanced-reference"},
+                    {"name": "restore-db", "documentation_policy": "advanced-reference"},
+                    {"name": "createsuperuser", "documentation_policy": "main-reference", "audience": "administrator"},
+                    {"name": "test", "documentation_policy": "advanced-reference"},
+                    {"name": "test-backend", "documentation_policy": "advanced-reference"},
+                    {"name": "test-frontend", "documentation_policy": "advanced-reference"},
+                    {"name": "tree", "documentation_policy": "advanced-reference"}
+                ],
+            },
+            ensure_ascii=False,
+        ) + "\n",
+        encoding="utf-8",
+    )
 
     (root / "backend" / "requirements.txt").write_text(
         "Django\ndjangorestframework\ndjangorestframework-simplejwt\n",
@@ -780,6 +964,45 @@ def test_django_react_generalization_make_parameters_and_aliases(tmp_path: Path)
     assert commands["backup-dir"]["visibility"] == "internal"
     assert "backup-dir" not in public_commands
 
+    context = json.loads((result.output_dir / "section-contexts/12-operational-commands-reference.json").read_text(encoding="utf-8"))
+    primary_names = {item["name"] for item in context["facts"]["operational_commands"]["primary_commands"]}
+    advanced_names = {item["name"] for item in context["facts"]["operational_commands"]["advanced_commands"]}
+
+    assert "up" in primary_names
+    assert "backup-db" in advanced_names
+    assert "createsuperuser" in primary_names or "test-backend" in advanced_names
+    assert "exec-backend" not in primary_names
+    assert "pull-secret-single" not in primary_names
+
+
+def test_django_react_generalization_command_provenance_and_reference_filtering(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+
+    commands = {item["name"]: item for item in data["operational_commands"]["commands"]}
+    public_reference = {item["name"] for item in data["commands"]}
+    summary = manifest["command_provenance_summary"]
+    reference_context = json.loads(
+        (result.output_dir / "section-contexts/12-operational-commands-reference.json").read_text(encoding="utf-8")
+    )
+    excluded = reference_context["facts"]["operational_commands"]["excluded_commands_summary"]
+
+    assert commands["up"]["provenance"] == "template-standard"
+    assert commands["backup-db"]["provenance"] == "application-public"
+    assert commands["start-backend"]["provenance"] == "unknown"
+    assert commands["env-check-base"]["provenance"] == "internal"
+    assert "up" in public_reference
+    assert "backup-db" in public_reference
+    assert "start-backend" not in public_reference
+    assert "env-check-base" not in public_reference
+    assert summary["by_provenance"]["template-standard"] >= 1
+    assert summary["by_provenance"]["application-public"] >= 1
+    assert summary["by_provenance"]["unknown"] >= 1
+    assert excluded["total"] >= 1
+    assert any(item["name"] == "start-backend" for item in excluded["commands"])
+
 
 def test_django_react_generalization_workflows_capabilities_and_security(tmp_path: Path) -> None:
     _create_generalized_django_react_project(tmp_path)
@@ -840,3 +1063,139 @@ def test_django_react_invalid_frontend_endpoint_is_not_operational(tmp_path: Pat
     assert frontend_endpoints[0]["validity"] == "invalid"
     assert "open-frontend" not in workflow_ids
     assert "INVALID-SERVICE-ENDPOINTS" in limitation_ids
+
+
+def test_django_react_markdown_validator_detects_invalid_manual_output(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+    profile = ProfileDetector().resolve(FileSystemScanner().scan(tmp_path))
+    blueprint = profile.build_manual_blueprint()
+    knowledge = profile.build_manual_knowledge_builder().build(
+        project_root=tmp_path,
+        knowledge=ProjectKnowledgeBuilder().build(FileSystemScanner().scan(tmp_path), profile_instance=profile),
+        profile_instance=profile,
+    )
+
+    markdown = """Conversation id: 123
+## Présentation
+Texte
+## Public visé et rôles
+Texte
+## Fonctionnalités principales
+Texte
+## Démarrage rapide
+Utiliser `make unknown`
+- `make up`
+- `make up`
+## Utilisation de l’application
+Texte
+## Administration
+Texte
+## Installation et configuration
+Texte
+## Exploitation
+Texte
+## Architecture et référence technique
+Texte
+URL: https://bad.example.test
+Endpoint: /api/does-not-exist/
+## Sécurité
+workflow structuré
+## Dépannage
+Texte
+## Référence des commandes
+Texte
+## Limites des informations disponibles
+Texte
+"""
+    diagnostics = ManualMarkdownValidator().validate(
+        markdown=markdown,
+        knowledge=knowledge,
+        blueprint=blueprint,
+    )
+
+    codes = {item.code for item in diagnostics}
+    assert {"MANUAL001", "MANUAL002", "MANUAL005", "MANUAL006", "MANUAL008", "MANUAL009", "MANUAL010"}.issubset(codes)
+
+
+def test_django_react_markdown_validator_accepts_well_structured_manual(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+    profile = ProfileDetector().resolve(project)
+    knowledge = ProjectKnowledgeBuilder().build(project, profile_instance=profile)
+    manual_knowledge = profile.build_manual_knowledge_builder().build(
+        project_root=tmp_path,
+        knowledge=knowledge,
+        profile_instance=profile,
+    )
+    blueprint = profile.build_manual_blueprint()
+
+    markdown = """# Guide utilisateur de Contact
+
+## Présentation
+Contact est une application de gestion de contacts.
+
+## Public visé et rôles
+Le document distingue utilisateur, administrateur et exploitant.
+
+## Fonctionnalités principales
+L’application permet de consulter et modifier des contacts.
+
+## Démarrage rapide
+Utiliser `make dev`, puis `make up`.
+
+## Utilisation de l’application
+L’utilisateur peut se connecter et consulter ses contacts.
+
+## Administration
+L’administration Django est réservée aux comptes autorisés.
+
+## Installation et configuration
+Les environnements de développement et de production sont distincts.
+
+## Exploitation
+Les migrations passent par `make migrate`.
+
+## Architecture et référence technique
+L’API inclut `/api/auth/login/`.
+
+## Sécurité
+Le projet détecte une authentification JWT.
+
+## Dépannage
+Consulter les limitations si une information manque.
+
+## Référence des commandes
+`make logs SERVICE=backend` affiche les journaux du service backend.
+
+## Limites des informations disponibles
+Les schémas détaillés de réponse de l’API ne sont pas disponibles.
+"""
+    diagnostics = ManualMarkdownValidator().validate(
+        markdown=markdown,
+        knowledge=manual_knowledge,
+        blueprint=blueprint,
+    )
+
+    assert not any(item.severity == "error" for item in diagnostics)
+
+
+def test_django_react_markdown_validator_warns_for_destructive_command_without_warning(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+    profile = ProfileDetector().resolve(project)
+    knowledge = ProjectKnowledgeBuilder().build(project, profile_instance=profile)
+    manual_knowledge = profile.build_manual_knowledge_builder().build(
+        project_root=tmp_path,
+        knowledge=knowledge,
+        profile_instance=profile,
+    )
+    blueprint = profile.build_manual_blueprint()
+
+    markdown = "# Guide utilisateur de test_django_react_markdown_validator_warns_for_destructive_command_without_warning\n\n" + "\n\n".join(f"## {section.title}\nTexte.\n`make restore-db`" if section.identifier == "operational-commands-reference" else f"## {section.title}\nTexte." for section in blueprint.sections)
+    diagnostics = ManualMarkdownValidator().validate(markdown=markdown, knowledge=manual_knowledge, blueprint=blueprint)
+
+    assert any(item.code == "MANUAL011" for item in diagnostics)

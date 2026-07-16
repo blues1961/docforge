@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 import typer
@@ -41,6 +42,8 @@ from docforge.knowledge import (
 from docforge.manual_service import (
     ManualPreparationService,
 )
+from docforge.manual_blueprint import ManualBlueprintRegistry
+from docforge.validators import ManualMarkdownValidator
 from docforge.profiles import (
     ProfileDetector,
 )
@@ -98,6 +101,12 @@ def manual_prepare_command(
         "--output-dir",
         help="Répertoire cible pour les artefacts du manuel.",
     ),
+    context_budget: int | None = typer.Option(
+        None,
+        "--context-budget",
+        min=1,
+        help="Budget maximum estimé par contexte de section. La préparation échoue si une section dépasse ce budget.",
+    ),
 ) -> None:
     """Préparer les entrées déterministes d’un manuel utilisateur."""
 
@@ -111,6 +120,7 @@ def manual_prepare_command(
         clean=clean,
         mode=mode,
         output_dir=output_dir,
+        context_budget=context_budget,
     )
 
     console.print(
@@ -127,17 +137,135 @@ def manual_prepare_command(
             f"{result.full_prompt_file.relative_to(result.root)}"
         )
 
-    if result.section_prompt_files:
+    if result.section_artifacts:
         console.print("Prompts de section :")
-        for section_path in result.section_prompt_files:
+        for artifact in result.section_artifacts:
             console.print(
-                f"- {section_path.relative_to(result.root)}"
+                f"- {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
             )
 
     console.print(
         f"Manifeste : "
         f"{result.manifest_file.relative_to(result.root)}"
     )
+
+    try:
+        manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        manifest = {}
+    summary = manifest.get("command_provenance_summary")
+    if isinstance(summary, dict):
+        by_provenance = summary.get("by_provenance", {})
+        console.print("Résumé des cibles Make documentaires :")
+        console.print(
+            "- total détecté : "
+            f"{summary.get('total_detected', 0)} | "
+            f"template local={by_provenance.get('app-template', 0)} | "
+            f"template standard={by_provenance.get('template-standard', 0)} | "
+            f"applicatives publiques={by_provenance.get('application-public', 0)} | "
+            f"héritées={by_provenance.get('legacy', 0)} | "
+            f"internes={by_provenance.get('internal', 0)} | "
+            f"inconnues={by_provenance.get('unknown', 0)}"
+        )
+        console.print(
+            "- documentées : "
+            f"principales={summary.get('primary_documented', 0)} | "
+            f"avancées={summary.get('advanced_documented', 0)} | "
+            f"exclues={summary.get('excluded', 0)}"
+        )
+
+
+
+
+@manual_app.command("validate")
+def manual_validate_command(
+    markdown_file: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Fichier Markdown du manuel à valider.",
+    ),
+    project_root: Path = typer.Option(
+        Path("."),
+        "--project-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Racine du projet correspondant aux artefacts de préparation.",
+    ),
+    manual_dir: Path = typer.Option(
+        Path(".docforge/manual"),
+        "--manual-dir",
+        help="Répertoire contenant manual-knowledge.json et manual-manifest.json.",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Émettre les diagnostics en JSON pour l’automatisation.",
+    ),
+) -> None:
+    """Valider un manuel Markdown contre les artefacts préparés."""
+
+    resolved_root = project_root.expanduser().resolve()
+    resolved_manual_dir = manual_dir if manual_dir.is_absolute() else resolved_root / manual_dir
+    knowledge_file = resolved_manual_dir / "manual-knowledge.json"
+    manifest_file = resolved_manual_dir / "manual-manifest.json"
+
+    if not knowledge_file.is_file() or not manifest_file.is_file():
+        raise typer.BadParameter(
+            "Les artefacts de préparation sont introuvables. Exécutez d’abord 'docforge manual prepare'."
+        )
+
+    manual_knowledge = json.loads(knowledge_file.read_text(encoding="utf-8"))
+    profile_name = manual_knowledge.get("profile", {}).get("name") or manual_knowledge.get("project", {}).get("profile_type")
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile(profile_name or "generic")
+    markdown = markdown_file.read_text(encoding="utf-8")
+    diagnostics = ManualMarkdownValidator().validate(
+        markdown=markdown,
+        knowledge=manual_knowledge,
+        blueprint=blueprint,
+    )
+
+    errors = [item for item in diagnostics if item.severity == "error"]
+    warnings = [item for item in diagnostics if item.severity == "warning"]
+
+    if json_output:
+        console.print_json(json.dumps({
+            "markdown_file": str(markdown_file),
+            "knowledge_file": str(knowledge_file),
+            "errors": [asdict(item) for item in errors],
+            "warnings": [asdict(item) for item in warnings],
+            "valid": not errors,
+        }, ensure_ascii=False))
+    else:
+        console.print(f"Validation du manuel : {markdown_file}")
+        console.print(f"Artefacts : {knowledge_file.relative_to(resolved_root)}")
+        if diagnostics:
+            table = Table(title="Diagnostics du manuel")
+            table.add_column("Sévérité")
+            table.add_column("Code")
+            table.add_column("Section")
+            table.add_column("Élément")
+            table.add_column("Message")
+            for item in diagnostics:
+                table.add_row(
+                    item.severity,
+                    item.code,
+                    item.section or "—",
+                    item.fact or "—",
+                    item.message,
+                )
+            console.print(table)
+        else:
+            console.print("[green]Aucun diagnostic bloquant détecté.[/green]")
+
+    if errors:
+        raise typer.Exit(code=1)
 
 
 @app.command()

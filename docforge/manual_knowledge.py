@@ -58,6 +58,7 @@ class ManualCommandParameter:
     default: str | None = None
     example: str | None = None
     description: str | None = None
+    allowed_values: list[str] = field(default_factory=list)
     origin: str | None = None
     source: str | None = None
 
@@ -71,6 +72,15 @@ class ManualCommand:
     help: str | None
     visibility: str = "public"
     documented: bool = False
+    audience: str | None = None
+    reference_level: str | None = None
+    provenance: str | None = None
+    documentation_policy: str | None = None
+    exclusion_reason: str | None = None
+    provenance_evidence: list[str] = field(default_factory=list)
+    destructive: bool = False
+    destructive_effects: list[str] = field(default_factory=list)
+    environment: list[str] = field(default_factory=list)
     prerequisites: list[str] = field(default_factory=list)
     parameters: list[ManualCommandParameter] = field(
         default_factory=list

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import re
 from dataclasses import dataclass, field
@@ -32,6 +33,51 @@ class ApplicationOverviewFacts:
     category: str | None = None
     backend_framework: str | None = None
     frontend_framework: str | None = None
+    source_paths: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class TemplatePlaceholderFacts:
+    name: str
+    kind: str
+    description: str | None = None
+    required: bool = True
+    files: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class TemplateWorkflowFacts:
+    identifier: str
+    audience: str
+    title: str
+    commands: list[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
+    preconditions: list[str] = field(default_factory=list)
+    expected_results: list[str] = field(default_factory=list)
+    personalization_points: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
+    missing_information: list[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ProjectTemplateFacts:
+    detected: bool = False
+    project_kind: str | None = None
+    template_id: str | None = None
+    template_version: str | None = None
+    base_profile: str | None = None
+    manifest_source: str | None = None
+    manifest_fallback_used: bool = False
+    manifest_declared_targets: list[str] = field(default_factory=list)
+    manifest_verified_targets: list[str] = field(default_factory=list)
+    manifest_missing_targets: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    placeholders: list[TemplatePlaceholderFacts] = field(default_factory=list)
+    creator_workflows: list[TemplateWorkflowFacts] = field(default_factory=list)
+    maintainer_workflows: list[TemplateWorkflowFacts] = field(default_factory=list)
+    missing_steps: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
     source_paths: list[str] = field(default_factory=list)
 
 
@@ -104,6 +150,20 @@ class OperationalCommandFacts:
     phony: bool = False
     documented: bool = False
     visibility: str = "internal"
+    provenance: str = "unknown"
+    documentation_policy: str = "exclude"
+    exclusion_reason: str | None = None
+    provenance_evidence: list[str] = field(default_factory=list)
+    manifest_source: str | None = None
+
+
+@dataclass(slots=True)
+class MakeTargetDeclarationFacts:
+    name: str
+    documentation_policy: str
+    audience: str | None = None
+    reference_level: str | None = None
+    source: str = "docforge.make-targets.json"
 
 
 @dataclass(slots=True)
@@ -261,6 +321,9 @@ class DjangoEndpointFacts:
     authentication: list[str] = field(default_factory=list)
     actions: list[str] = field(default_factory=list)
     route_parameters: list[str] = field(default_factory=list)
+    ownership_controls: list[str] = field(default_factory=list)
+    data_controls: list[str] = field(default_factory=list)
+    custom_authentication: bool = False
     sources: list[str] = field(default_factory=list)
 
 
@@ -322,6 +385,17 @@ class ReactCryptoFacts:
 
 
 @dataclass(slots=True)
+class ReactUserFeatureFacts:
+    label: str
+    status: str
+    component: str | None = None
+    routes: list[str] = field(default_factory=list)
+    api_calls: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    confidence: str | None = None
+
+
+@dataclass(slots=True)
 class ReactFacts:
     entry_point: str | None = None
     routes: list[str] = field(default_factory=list)
@@ -329,6 +403,8 @@ class ReactFacts:
     navigation_items: list[str] = field(
         default_factory=list
     )
+    forms: list[str] = field(default_factory=list)
+    user_features: list[ReactUserFeatureFacts] = field(default_factory=list)
     api_calls: list[str] = field(default_factory=list)
     environment_variables: list[str] = field(
         default_factory=list
@@ -385,9 +461,19 @@ class DjangoReactApplicationFacts:
     capabilities: CapabilitiesFacts = field(
         default_factory=CapabilitiesFacts
     )
+    template: ProjectTemplateFacts = field(
+        default_factory=ProjectTemplateFacts
+    )
 
 
 class DjangoReactApplicationAnalyzer:
+    APP_TEMPLATE_TARGET_MANIFEST = (
+        Path(__file__).resolve().parent.parent
+        / "data"
+        / "django_react_app_template_make_targets.json"
+    )
+    APPLICATION_TARGET_DECLARATION_FILE = "docforge.make-targets.json"
+    LOCAL_TEMPLATE_MANIFEST_FILE = "docforge.template.json"
     CATEGORY_BY_TARGET = {
         "init": "setup",
         "dev": "environment",
@@ -455,6 +541,10 @@ class DjangoReactApplicationAnalyzer:
             facts.django,
             facts.react,
         )
+        facts.template = self._analyze_template_project(
+            project,
+            operational_commands=facts.operational_commands,
+        )
 
         # Keep a weak link to already detected compose/deployment facts.
         self._merge_architecture_context(
@@ -481,6 +571,335 @@ class DjangoReactApplicationAnalyzer:
                 "docker-compose.prod.yml",
             ],
         )
+
+    def _analyze_template_project(
+        self,
+        project: Project,
+        *,
+        operational_commands: OperationalCommandsFacts,
+    ) -> ProjectTemplateFacts:
+        manifest = self._load_local_template_manifest(project.root)
+        if not manifest:
+            return ProjectTemplateFacts()
+
+        command_names = {item.name for item in operational_commands.commands}
+        declared_targets = sorted(manifest.get("targets", {}).keys())
+        verified_targets = [name for name in declared_targets if name in command_names]
+        missing_targets = [name for name in declared_targets if name not in command_names]
+        source_paths = sorted(
+            {
+                self.LOCAL_TEMPLATE_MANIFEST_FILE,
+                "README.md",
+                "README_DEV.md",
+                "AGENTS.md",
+                "CODEX_START.md",
+                "INVARIANTS.md",
+                "Makefile",
+                "scripts/init.sh",
+                "scripts/generate-env.sh",
+                "scripts/generate-secrets.sh",
+                "scripts/check-invariants.sh",
+            }
+        )
+        evidence = [
+            f"template manifest detected: {manifest.get('source')}",
+            f"project_kind={manifest.get('project_kind')}",
+            f"template_id={manifest.get('template_id')}",
+        ]
+        if manifest.get("base_profile"):
+            evidence.append(
+                f"base_profile={manifest.get('base_profile')}"
+            )
+        if verified_targets:
+            evidence.append(
+                f"verified make targets: {len(verified_targets)}/{len(declared_targets)}"
+            )
+
+        return ProjectTemplateFacts(
+            detected=True,
+            project_kind=manifest.get("project_kind") or "application-template",
+            template_id=manifest.get("template_id"),
+            template_version=manifest.get("template_version"),
+            base_profile=manifest.get("base_profile") or "django-react",
+            manifest_source=manifest.get("source"),
+            manifest_fallback_used=False,
+            manifest_declared_targets=declared_targets,
+            manifest_verified_targets=verified_targets,
+            manifest_missing_targets=missing_targets,
+            evidence=evidence,
+            placeholders=self._template_placeholders(project),
+            creator_workflows=self._template_creator_workflows(operational_commands),
+            maintainer_workflows=self._template_maintainer_workflows(operational_commands),
+            missing_steps=[
+                "Aucune procédure démontrée de suppression de l’historique Git du template n’est documentée.",
+                "Aucune procédure démontrée de réinitialisation d’un nouveau dépôt Git n’est documentée.",
+                "Aucune procédure démontrée de création du dépôt distant n’est documentée.",
+                "Aucun mécanisme démontré de remplacement automatique des marqueurs textuels __APP_NAME__ et __APP_SLUG__ n’est fourni.",
+                "Aucune commande démontrée de création initiale du compte administrateur n’est fournie par le template standard.",
+            ],
+            risks=[
+                "Un clonage incomplet peut laisser des marqueurs __APP_NAME__ ou __APP_SLUG__ dans le frontend, l’API de santé et la documentation.",
+                "L’absence de .env.template empêche make init et la génération des environnements.",
+                "Une restauration PostgreSQL exécutée sans précaution remplace les données de la base active.",
+                "Le template ne démontre pas de procédure automatisée pour nettoyer .git ou recréer un dépôt distinct après copie.",
+            ],
+            source_paths=source_paths,
+        )
+
+    def _template_placeholders(
+        self,
+        project: Project,
+    ) -> list[TemplatePlaceholderFacts]:
+        placeholders = [
+            TemplatePlaceholderFacts(
+                name="APP_NAME",
+                kind="identity-variable",
+                description="Nom lisible de l’application à renseigner dans .env.template.",
+                required=True,
+                files=[".env.template.example", "README_DEV.md"],
+            ),
+            TemplatePlaceholderFacts(
+                name="APP_SLUG",
+                kind="identity-variable",
+                description="Identifiant technique court utilisé pour les conteneurs, services et variables dérivées.",
+                required=True,
+                files=[".env.template.example", "README_DEV.md", "docker-compose.dev.yml", "docker-compose.prod.yml"],
+            ),
+            TemplatePlaceholderFacts(
+                name="APP_DEPOT",
+                kind="identity-variable",
+                description="Nom du dépôt et base de dérivation du token inter-apps local.",
+                required=True,
+                files=[".env.template.example", "README_DEV.md", "scripts/generate-secrets.sh"],
+            ),
+            TemplatePlaceholderFacts(
+                name="APP_NO",
+                kind="identity-variable",
+                description="Numéro servant à dériver les ports de développement.",
+                required=True,
+                files=[".env.template.example", "README_DEV.md", "scripts/check-invariants.sh"],
+            ),
+            TemplatePlaceholderFacts(
+                name="ADMIN_USERNAME",
+                kind="bootstrap-secret",
+                description="Compte administrateur initial injecté dans .env.local lors du bootstrap.",
+                required=True,
+                files=[".env.template.example", "scripts/generate-env.sh"],
+            ),
+            TemplatePlaceholderFacts(
+                name="ADMIN_EMAIL",
+                kind="bootstrap-secret",
+                description="Courriel du compte administrateur initial.",
+                required=True,
+                files=[".env.template.example", "scripts/generate-env.sh"],
+            ),
+            TemplatePlaceholderFacts(
+                name="ADMIN_PASSWORD",
+                kind="bootstrap-secret",
+                description="Mot de passe initial à recopier ensuite dans .env.local.",
+                required=True,
+                files=[".env.template.example", "scripts/generate-env.sh"],
+            ),
+            TemplatePlaceholderFacts(
+                name="APP_HOST",
+                kind="derived-variable",
+                description="Domaine public de production. Le script génère ${APP_SLUG}.mon-site.ca si la valeur n’est pas fournie.",
+                required=False,
+                files=["scripts/generate-env.sh", "docker-compose.prod.yml"],
+            ),
+        ]
+
+        token_files = self._find_placeholder_files(project, "__APP_NAME__")
+        if token_files:
+            placeholders.append(
+                TemplatePlaceholderFacts(
+                    name="__APP_NAME__",
+                    kind="text-token",
+                    description="Marqueur textuel restant à remplacer dans les sources et documents du squelette.",
+                    required=True,
+                    files=token_files,
+                )
+            )
+        slug_files = self._find_placeholder_files(project, "__APP_SLUG__")
+        if slug_files:
+            placeholders.append(
+                TemplatePlaceholderFacts(
+                    name="__APP_SLUG__",
+                    kind="text-token",
+                    description="Marqueur textuel restant à remplacer dans les sources frontend et les exemples de nommage.",
+                    required=True,
+                    files=slug_files,
+                )
+            )
+        return placeholders
+
+    def _find_placeholder_files(
+        self,
+        project: Project,
+        token: str,
+    ) -> list[str]:
+        matches: list[str] = []
+        for rel_path in project.files:
+            if not rel_path.endswith((".md", ".py", ".js", ".jsx", ".json", ".html", ".yml", ".css", ".example", ".txt")):
+                continue
+            try:
+                content = (project.root / rel_path).read_text(
+                    encoding="utf-8",
+                    errors="ignore",
+                )
+            except OSError:
+                continue
+            if token in content:
+                matches.append(rel_path)
+        return sorted(matches)
+
+    def _template_creator_workflows(
+        self,
+        operational_commands: OperationalCommandsFacts,
+    ) -> list[TemplateWorkflowFacts]:
+        command_names = {item.name for item in operational_commands.commands}
+        workflows: list[TemplateWorkflowFacts] = []
+        workflows.append(
+            TemplateWorkflowFacts(
+                identifier="template-identity-setup",
+                audience="creator",
+                title="Préparer l’identité du nouveau projet",
+                commands=["cp .env.template.example .env.template"],
+                files=[".env.template.example", ".env.template"],
+                preconditions=["Le dépôt a été copié ou cloné dans son nouvel emplacement."],
+                expected_results=["Le fichier .env.template existe et peut être personnalisé."],
+                personalization_points=["APP_NAME", "APP_SLUG", "APP_DEPOT", "APP_NO", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"],
+                risks=["Sans .env.template, make init et les scripts de génération échouent."],
+                sources=["README_DEV.md", "scripts/init.sh", "scripts/generate-env.sh"],
+            )
+        )
+        if {"dev", "prod"} & command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-select-environment",
+                    audience="creator",
+                    title="Choisir l’environnement actif",
+                    commands=[command for command in ("make dev", "make prod") if command.split()[-1] in command_names],
+                    files=[".env"],
+                    preconditions=[".env.template a été préparé."],
+                    expected_results=[".env pointe vers .env.dev ou .env.prod."],
+                    personalization_points=["Choisir dev pour le premier démarrage local, prod pour préparer les variables de production."],
+                    risks=["make init échoue si .env n’est pas un lien symbolique vers .env.dev ou .env.prod."],
+                    sources=["README_DEV.md", "scripts/env-switch.sh", "scripts/init.sh"],
+                )
+            )
+        workflows.append(
+            TemplateWorkflowFacts(
+                identifier="template-generate-environments",
+                audience="creator",
+                title="Générer les fichiers d’environnement et les secrets locaux",
+                commands=["./scripts/generate-env.sh", "./scripts/generate-secrets.sh"],
+                files=[".env.dev", ".env.prod", ".env.local"],
+                preconditions=[".env.template existe et contient les variables d’identité requises."],
+                expected_results=[".env.dev et .env.prod sont régénérés avec les ports dérivés.", ".env.local existe et contient les clés ADMIN_*, POSTGRES_PASSWORD, DJANGO_SECRET_KEY et le token local inter-apps."],
+                personalization_points=["APP_HOST peut être laissé vide pour utiliser ${APP_SLUG}.mon-site.ca ou surchargé ensuite."],
+                risks=["Les marqueurs textuels du frontend et de la documentation ne sont pas remplacés par ces scripts."],
+                sources=["README_DEV.md", "scripts/generate-env.sh", "scripts/generate-secrets.sh"],
+            )
+        )
+        if "init" in command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-first-init",
+                    audience="creator",
+                    title="Initialiser et démarrer le squelette",
+                    commands=["make init"],
+                    files=["scripts/init.sh", "docker-compose.dev.yml", "docker-compose.prod.yml"],
+                    preconditions=[".env.template existe.", ".env pointe déjà vers .env.dev ou .env.prod."],
+                    expected_results=[".env.dev, .env.prod et .env.local sont prêts.", "Les invariants sont validés.", "Les services sont démarrés s’ils étaient absents ou arrêtés.", "Le statut des conteneurs est affiché."],
+                    personalization_points=["Choisir l’environnement avant make init via make dev ou make prod."],
+                    risks=["make init ne remplace pas automatiquement les marqueurs textuels __APP_NAME__ et __APP_SLUG__."],
+                    sources=["README.md", "README_DEV.md", "scripts/init.sh"],
+                )
+            )
+        if "check" in command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-validate-invariants",
+                    audience="creator",
+                    title="Valider les invariants après personnalisation",
+                    commands=["make check"],
+                    files=["scripts/check-invariants.sh", ".gitignore", ".env.dev", ".env.prod", ".env.local", ".env"],
+                    preconditions=["Les fichiers d’environnement ont été générés."],
+                    expected_results=["Les variables d’identité et les ports dérivés sont vérifiés.", "Le lien symbolique .env et les conventions Git sont validés."],
+                    risks=["Un APP_NO ou un POSTGRES_USER incohérent provoque un échec bloquant."],
+                    sources=["README_DEV.md", "scripts/check-invariants.sh"],
+                )
+            )
+        if "migrate" in command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-apply-migrations",
+                    audience="creator",
+                    title="Appliquer les migrations Django du squelette",
+                    commands=["make migrate"],
+                    files=["scripts/migrate.sh", "backend/manage.py"],
+                    preconditions=["Les services backend et db sont démarrés."],
+                    expected_results=["python manage.py migrate est exécuté dans le service backend de l’environnement actif."],
+                    missing_information=["Aucune commande démontrée de création initiale du compte administrateur n’accompagne cette étape dans le template standard."],
+                    sources=["README_DEV.md", "scripts/migrate.sh"],
+                )
+            )
+        return workflows
+
+    def _template_maintainer_workflows(
+        self,
+        operational_commands: OperationalCommandsFacts,
+    ) -> list[TemplateWorkflowFacts]:
+        command_names = {item.name for item in operational_commands.commands}
+        workflows: list[TemplateWorkflowFacts] = []
+        if "check" in command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-maintainer-validate",
+                    audience="maintainer",
+                    title="Vérifier les invariants du template",
+                    commands=["make check"],
+                    files=["INVARIANTS.md", "Makefile", "scripts/check-invariants.sh"],
+                    expected_results=["La structure standard, les conventions d’environnement et les ports dérivés restent cohérents."],
+                    risks=["Un changement non accompagné dans .gitignore ou les fichiers .env.* brise le bootstrap des futures applications."],
+                    sources=["README.md", "README_DEV.md", "scripts/check-invariants.sh"],
+                )
+            )
+        if "update" in command_names:
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-maintainer-update",
+                    audience="maintainer",
+                    title="Exécuter la séquence standard de mise à jour du template",
+                    commands=["make update"],
+                    files=["scripts/update.sh", "scripts/backup-db.sh", "scripts/rebuild.sh", "scripts/up.sh", "scripts/migrate.sh", "scripts/ps.sh"],
+                    expected_results=["Le dépôt local est mis à jour avec git pull --ff-only puis redémarré et validé."],
+                    risks=["La séquence inclut un backup PostgreSQL puis un git pull --ff-only; elle suppose un arbre Git compatible et un environnement déjà configuré."],
+                    sources=["README.md", "README_DEV.md", "scripts/update.sh"],
+                )
+            )
+        return workflows
+
+    def _load_local_template_manifest(
+        self,
+        root: Path,
+    ) -> dict[str, Any] | None:
+        path = root / self.LOCAL_TEMPLATE_MANIFEST_FILE
+        if not path.is_file():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        targets = {
+            item.get("name"): item
+            for item in payload.get("make_targets", [])
+            if isinstance(item, dict) and item.get("name")
+        }
+        payload["targets"] = targets
+        payload["source"] = self.LOCAL_TEMPLATE_MANIFEST_FILE
+        return payload
 
     def _analyze_environments(
         self,
@@ -721,6 +1140,16 @@ class DjangoReactApplicationAnalyzer:
         default_target_visibility = "public" if not help_entries else "internal"
         declared_variables = self._extract_declared_make_variables(lines)
         phony_targets = self._extract_phony_targets(lines)
+        local_template_manifest = self._load_local_template_manifest(
+            project.root
+        )
+        template_manifest = (
+            local_template_manifest
+            or self._load_app_template_target_manifest()
+        )
+        application_declarations = self._load_application_target_declarations(
+            project.root
+        )
 
         i = 0
         while i < len(lines):
@@ -761,6 +1190,22 @@ class DjangoReactApplicationAnalyzer:
             help_text = help_entries.get(target)
             visibility = "public" if help_text else default_target_visibility
             category = self.CATEGORY_BY_TARGET.get(target, self._infer_command_category(target, prerequisites, body))
+            (
+                provenance,
+                documentation_policy,
+                exclusion_reason,
+                provenance_evidence,
+                manifest_source,
+            ) = self._classify_make_target(
+                target=target,
+                prerequisites=prerequisites,
+                body=body,
+                help_text=help_text,
+                visibility=visibility,
+                template_manifest=template_manifest,
+                local_template_manifest=local_template_manifest,
+                application_declarations=application_declarations,
+            )
             commands.append(
                 OperationalCommandFacts(
                     name=target,
@@ -781,6 +1226,11 @@ class DjangoReactApplicationAnalyzer:
                     phony=target in phony_targets,
                     documented=help_text is not None,
                     visibility=visibility,
+                    provenance=provenance,
+                    documentation_policy=documentation_policy,
+                    exclusion_reason=exclusion_reason,
+                    provenance_evidence=provenance_evidence,
+                    manifest_source=manifest_source,
                 )
             )
 
@@ -789,6 +1239,180 @@ class DjangoReactApplicationAnalyzer:
             commands=commands,
             scripts=self._analyze_scripts(project),
         )
+
+    def _load_app_template_target_manifest(self) -> dict[str, Any]:
+        try:
+            payload = json.loads(
+                self.APP_TEMPLATE_TARGET_MANIFEST.read_text(
+                    encoding="utf-8"
+                )
+            )
+        except (OSError, json.JSONDecodeError):
+            return {"source": None, "targets": {}}
+
+        targets = {
+            item.get("name"): item
+            for item in payload.get("targets", [])
+            if isinstance(item, dict) and item.get("name")
+        }
+        return {
+            "source": str(
+                self.APP_TEMPLATE_TARGET_MANIFEST.relative_to(
+                    Path(__file__).resolve().parent.parent
+                )
+            ),
+            "targets": targets,
+        }
+
+    def _load_application_target_declarations(
+        self,
+        root: Path,
+    ) -> dict[str, MakeTargetDeclarationFacts]:
+        path = root / self.APPLICATION_TARGET_DECLARATION_FILE
+        if not path.is_file():
+            return {}
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+        declarations: dict[str, MakeTargetDeclarationFacts] = {}
+        for item in payload.get("targets", []):
+            if not isinstance(item, dict) or not item.get("name"):
+                continue
+            declarations[item["name"]] = MakeTargetDeclarationFacts(
+                name=item["name"],
+                documentation_policy=item.get(
+                    "documentation_policy",
+                    "main-reference",
+                ),
+                audience=item.get("audience"),
+                reference_level=item.get("reference_level"),
+                source=self.APPLICATION_TARGET_DECLARATION_FILE,
+            )
+        return declarations
+
+    def _classify_make_target(
+        self,
+        *,
+        target: str,
+        prerequisites: list[str],
+        body: list[str],
+        help_text: str | None,
+        visibility: str,
+        template_manifest: dict[str, Any],
+        local_template_manifest: dict[str, Any] | None,
+        application_declarations: dict[str, MakeTargetDeclarationFacts],
+    ) -> tuple[str, str, str | None, list[str], str | None]:
+        if visibility != "public":
+            return (
+                "internal",
+                "exclude",
+                "Target non exposé comme commande publique.",
+                ["make target visibility = internal"],
+                None,
+            )
+
+        if target.startswith(("require-", "exec-")) or target in {"env-check-base", "env-check-local", "backup-dir"}:
+            return (
+                "internal",
+                "exclude",
+                "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur.",
+                ["target classified as helper/internal make guard"],
+                "Makefile",
+            )
+
+        declared = application_declarations.get(target)
+        if declared is not None:
+            return (
+                "application-public",
+                declared.documentation_policy,
+                None,
+                [f"declared in {declared.source}"],
+                declared.source,
+            )
+
+        manifest_targets = template_manifest.get("targets", {})
+        manifest_entry = manifest_targets.get(target)
+        signature = self._make_target_signature(
+            target=target,
+            prerequisites=prerequisites,
+            body=body,
+            help_text=help_text,
+        )
+        if manifest_entry is not None:
+            provenance = (
+                "app-template"
+                if local_template_manifest is not None
+                else "template-standard"
+            )
+            evidence = [
+                f"declared in {template_manifest.get('source')}",
+                f"origin={manifest_entry.get('origin', provenance)}",
+            ]
+            if signature == manifest_entry.get("signature"):
+                evidence.insert(
+                    0,
+                    f"signature matches {template_manifest.get('source')}",
+                )
+            elif local_template_manifest is not None:
+                evidence.insert(
+                    0,
+                    "target is publicly declared by the local template manifest",
+                )
+            else:
+                evidence.insert(
+                    0,
+                    "public interface matches bundled template-standard command metadata",
+                )
+            return (
+                provenance,
+                manifest_entry.get(
+                    "documentation_policy",
+                    "main-reference",
+                ),
+                None,
+                evidence,
+                template_manifest.get("source"),
+            )
+
+        normalized_help = (help_text or "").casefold()
+        if "compatibilité" in normalized_help or "compatibility" in normalized_help:
+            return (
+                "legacy",
+                "exclude",
+                "Alias ou compatibilité historique non retenu dans la référence principale.",
+                ["help text marks compatibility alias"],
+                "Makefile",
+            )
+
+        return (
+            "unknown",
+            "exclude",
+            "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative.",
+            ["no template signature match", "no application declaration"],
+            template_manifest.get("source"),
+        )
+
+    @staticmethod
+    def _make_target_signature(
+        *,
+        target: str,
+        prerequisites: list[str],
+        body: list[str],
+        help_text: str | None,
+    ) -> str:
+        payload = json.dumps(
+            {
+                "target": target,
+                "prerequisites": prerequisites,
+                "body": body,
+                "help_text": help_text,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def _analyze_environment_variables(
         self,
@@ -1090,15 +1714,21 @@ class DjangoReactApplicationAnalyzer:
             match.group(1).strip()
             for text in text_by_file.values()
             for match in re.finditer(r">([^<>{}][^<]{1,80})<", text)
-            if any(keyword in match.group(1) for keyword in ("Connexion", "Catég", "Sauvegarde", "Vérif", "Recherche", "Thème", "Utilisateurs"))
+            if any(keyword in match.group(1) for keyword in ("Connexion", "Catég", "Sauvegarde", "Vérif", "Recherche", "Thème", "Utilisateurs", "Aide", "Exporter", "Importer", "Génér", "Coffre"))
         })
         pages = sorted({
             match.group(1).strip()
             for text in text_by_file.values()
             for match in re.finditer(r"<h[1-3][^>]*>([^<]+)</h[1-3]>", text)
         })
+        forms = self._extract_react_forms(source_files)
         routes = self._extract_react_routes(source_files)
         api_calls = self._extract_frontend_api_calls_from_files(source_files)
+        user_features = self._extract_react_user_features(
+            source_files=source_files,
+            routes=routes,
+            api_calls=api_calls,
+        )
         auth_mechanisms = []
         if "Authorization" in combined_text and "Bearer" in combined_text:
             auth_mechanisms.append("JWT Bearer côté frontend")
@@ -1133,6 +1763,8 @@ class DjangoReactApplicationAnalyzer:
             routes=routes or ["/"],
             pages=pages,
             navigation_items=navigation_items,
+            forms=forms,
+            user_features=user_features,
             api_calls=api_calls,
             environment_variables=env_names,
             auth_mechanisms=auth_mechanisms,
@@ -1202,6 +1834,16 @@ class DjangoReactApplicationAnalyzer:
                 status="detected",
                 component="frontend",
                 confidence="medium",
+            )
+
+        for feature in react.user_features:
+            add(
+                feature.label,
+                *(feature.evidence + feature.routes + feature.api_calls),
+                status=feature.status,
+                component=feature.component,
+                endpoint=(feature.api_calls[0].split(" ", 1)[1] if feature.api_calls else (feature.routes[0] if feature.routes else None)),
+                confidence=feature.confidence,
             )
 
         frontend_components = {path.split("/")[-1].removesuffix(".jsx") for path in react.source_paths}
@@ -1998,12 +2640,16 @@ class DjangoReactApplicationAnalyzer:
                 source = f"backend/{source.lstrip('/')}"
             for node in tree.body:
                 if isinstance(node, ast.FunctionDef):
+                    body_text = self._ast_text(node)
                     details[node.name] = {
                         "view": node.name,
                         "permissions": self._decorator_name_list(node.decorator_list, "permission_classes"),
                         "authentication": self._decorator_name_list(node.decorator_list, "authentication_classes"),
                         "methods": self._decorator_string_list(node.decorator_list, "api_view"),
                         "actions": [],
+                        "ownership_controls": self._ownership_controls_from_text(body_text),
+                        "data_controls": self._data_controls_from_text(body_text),
+                        "custom_authentication": "_authenticate_" in body_text or "hmac.compare_digest" in body_text,
                         "source": source,
                     }
                 if isinstance(node, ast.ClassDef):
@@ -2011,6 +2657,9 @@ class DjangoReactApplicationAnalyzer:
                     authentication = []
                     methods: list[str] = []
                     actions: list[dict[str, Any]] = []
+                    ownership_controls: list[str] = []
+                    data_controls: list[str] = []
+                    custom_authentication = False
                     for item in node.body:
                         if isinstance(item, ast.Assign):
                             for target in item.targets:
@@ -2019,18 +2668,26 @@ class DjangoReactApplicationAnalyzer:
                                 if isinstance(target, ast.Name) and target.id == "authentication_classes":
                                     authentication = self._list_literal_names(item.value)
                         if isinstance(item, ast.FunctionDef):
+                            body_text = self._ast_text(item)
                             http_method = self._http_method_for_name(item.name)
                             if http_method:
                                 methods.append(http_method)
                             action = self._extract_viewset_action(item)
                             if action is not None:
                                 actions.append(action)
+                            ownership_controls.extend(self._ownership_controls_from_text(body_text))
+                            data_controls.extend(self._data_controls_from_text(body_text))
+                            if "_authenticate_" in body_text or "hmac.compare_digest" in body_text:
+                                custom_authentication = True
                     details[node.name] = {
                         "view": node.name,
                         "permissions": permissions,
                         "authentication": authentication,
                         "methods": list(dict.fromkeys(methods)),
                         "actions": actions,
+                        "ownership_controls": list(dict.fromkeys(ownership_controls)),
+                        "data_controls": list(dict.fromkeys(data_controls)),
+                        "custom_authentication": custom_authentication,
                         "source": source,
                     }
         return details
@@ -2114,6 +2771,9 @@ class DjangoReactApplicationAnalyzer:
                         authentication=authentication,
                         actions=[route.name] if route.kind == "router-action" and route.name else [],
                         route_parameters=self._route_parameters(full_path or route.path),
+                        ownership_controls=list(detail.get("ownership_controls", [])),
+                        data_controls=list(detail.get("data_controls", [])),
+                        custom_authentication=bool(detail.get("custom_authentication")),
                         sources=list(dict.fromkeys([*route_fact.sources, detail.get("source")] if detail.get("source") else route_fact.sources)),
                     )
                 )
@@ -2315,11 +2975,61 @@ class DjangoReactApplicationAnalyzer:
         routes: set[str] = set()
         for path in source_files:
             text = self._read_text(path)
-            for match in re.finditer(r"path=\"([^\"]+)\"", text):
+            for match in re.finditer(r'path=["\']([^"\']+)["\']', text):
                 routes.add(match.group(1))
-            for match in re.finditer(r"to=\"([^\"]+)\"", text):
+            for match in re.finditer(r'to=["\']([^"\']+)["\']', text):
                 routes.add(match.group(1))
         return sorted(routes)
+
+    def _extract_react_forms(self, source_files: list[Path]) -> list[str]:
+        forms: set[str] = set()
+        for path in source_files:
+            if "<form" in self._read_text(path):
+                forms.add(path.stem)
+        return sorted(forms)
+
+    def _extract_react_user_features(
+        self,
+        *,
+        source_files: list[Path],
+        routes: list[str],
+        api_calls: list[str],
+    ) -> list[ReactUserFeatureFacts]:
+        features: list[ReactUserFeatureFacts] = []
+        seen: set[str] = set()
+        catalog = (
+            ("Générateur de mots de passe", ("passwordgenerator", "générateur", "générer"), ("/vault/new", "/vault/:id/edit"), ("passwords/",)),
+            ("Aide", ("help", "aide"), (), ()),
+            ("Guide des catégories", ("categoryguide", "guide des catégories", "catégories"), ("/vault/categories",), ("categories/",)),
+            ("Importation de clé", ("keyimportform", "importer la clé", "importkeybundle"), ("/login", "/vault/key-backup", "/vault/key-check"), ()),
+            ("Exportation de clé", ("keybackup", "exporter la clé", "exportkeybundle"), ("/vault/key-backup",), ("passwords/",)),
+            ("Vérification de clé", ("keycheck", "vérif clé", "key-check"), ("/vault/key-check",), ()),
+            ("Révélation d’une valeur", ("revealdialog", "réimporte la clé", "impossible de déchiffrer", "decryptpayload"), ("/vault", "/vault/:id/edit"), ("passwords/",)),
+            ("Changement de thème", ("themetoggle", "thème", "theme"), (), ()),
+            ("Recherche", ("rechercher", "search", "vault-search", "effacer la recherche"), ("/vault",), ("passwords/", "categories/")),
+            ("Connexion", ("loginform", "connexion", "current-password"), ("/login",), ("auth/",)),
+        )
+        for path in source_files:
+            relative_path = path.as_posix()
+            lowered = (relative_path + "\n" + self._read_text(path)).casefold()
+            for label, keywords, route_hints, api_hints in catalog:
+                if label in seen or not any(keyword in lowered for keyword in keywords):
+                    continue
+                related_routes = [route for route in routes if any(hint.casefold() in route.casefold() for hint in route_hints)]
+                related_calls = [call for call in api_calls if any(hint.casefold() in call.casefold() for hint in api_hints)]
+                features.append(
+                    ReactUserFeatureFacts(
+                        label=label,
+                        status="detected",
+                        component=path.stem,
+                        routes=related_routes,
+                        api_calls=related_calls,
+                        evidence=[relative_path],
+                        confidence="high" if related_routes or related_calls else "medium",
+                    )
+                )
+                seen.add(label)
+        return sorted(features, key=lambda item: item.label)
 
     def _extract_frontend_api_calls_from_files(self, source_files: list[Path]) -> list[str]:
         results: set[str] = set()
@@ -2580,6 +3290,35 @@ class DjangoReactApplicationAnalyzer:
         if name is None:
             return []
         return [name.split(".")[-1]]
+
+    @staticmethod
+    def _ast_text(node: ast.AST) -> str:
+        try:
+            return ast.unparse(node)
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _ownership_controls_from_text(text: str) -> list[str]:
+        controls: list[str] = []
+        if "owner=self.request.user" in text or "filter(owner=self.request.user" in text:
+            controls.append("owner scoped to request.user")
+        if "filter(owner=owner" in text or "Contact.objects.filter(owner=owner" in text:
+            controls.append("owner scoped to authenticated owner value")
+        if "serializer.save(owner=self.request.user)" in text or "Contact.objects.create(owner=owner" in text:
+            controls.append("owner assigned server-side")
+        return controls
+
+    @staticmethod
+    def _data_controls_from_text(text: str) -> list[str]:
+        controls: list[str] = []
+        if "visibility" in text and ".filter(visibility=" in text:
+            controls.append("visibility filtering detected")
+        if "search" in text and "icontains" in text:
+            controls.append("search filtering detected")
+        if "_normalize_payload" in text:
+            controls.append("payload normalization before persistence")
+        return controls
 
     @staticmethod
     def _http_method_for_name(name: str) -> str | None:

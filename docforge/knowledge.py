@@ -19,6 +19,7 @@ from docforge.analyzers import (
     EnvironmentVariablesFacts,
     OperationalCommandsFacts,
     ProjectEnvironmentsFacts,
+    ProjectTemplateFacts,
     PyprojectFacts,
     ReactFacts,
     ReadmeFacts,
@@ -80,6 +81,9 @@ class ProjectKnowledge:
     react: ReactFacts = field(default_factory=ReactFacts)
     capabilities: CapabilitiesFacts = field(
         default_factory=CapabilitiesFacts
+    )
+    template: ProjectTemplateFacts = field(
+        default_factory=ProjectTemplateFacts
     )
 
     findings: list[dict[str, Any]] = field(
@@ -209,6 +213,7 @@ class ProjectKnowledgeBuilder:
             django=application_result.django,
             react=application_result.react,
             capabilities=application_result.capabilities,
+            template=application_result.template,
             findings=findings,
         )
 

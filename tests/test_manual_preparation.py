@@ -6,9 +6,9 @@ from typer.testing import CliRunner
 from docforge.cli import app
 from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
-from docforge.manual_blueprint import ManualBlueprintRegistry
+from docforge.manual_blueprint import ManualBlueprintRegistry, ManualSectionDefinition
 from docforge.manual_knowledge import ManualKnowledgeBuilder
-from docforge.manual_prompt import ManualPromptBuilder
+from docforge.manual_prompt import ManualPromptBuilder, ManualPromptBudgetExceeded
 from docforge.manual_service import ManualPreparationService
 from docforge.profiles import ProfileDetector
 from docforge.scanners import FileSystemScanner
@@ -339,8 +339,8 @@ def test_prompt_builder_generates_full_and_section_prompts(
 
     assert "BEGIN INSTRUCTIONS" in full_prompt
     assert "END INSTRUCTIONS" in full_prompt
-    assert "BEGIN MANUAL KNOWLEDGE" in full_prompt
-    assert "END MANUAL KNOWLEDGE" in full_prompt
+    assert "BEGIN COMPACT MANUAL CONTEXT" in full_prompt
+    assert "END COMPACT MANUAL CONTEXT" in full_prompt
     assert "source unique de vérité" in full_prompt
     assert "aucune connaissance externe" in full_prompt
     assert "`detected` = fait directement démontré" in full_prompt
@@ -376,15 +376,15 @@ def test_manual_service_manifest_and_modes_and_clean(
     assert both.full_prompt_file is not None
     assert both.full_prompt_file.is_file()
     assert both.section_prompt_files
+    assert both.section_context_files
     assert both.generated_directory is not None
     assert both.generated_directory.is_dir()
     assert both_manifest["knowledge_file"] == (
         "manual-knowledge.json"
     )
     assert both_manifest["full_prompt"] == "manual-prompt.md"
-    assert "section-prompts/01-presentation.md" in both_manifest[
-        "section_prompts"
-    ]
+    assert "section-prompts/01-presentation.md" in both_manifest["section_prompts"]
+    assert both_manifest["section_contexts"][0]["context_file"] == "section-contexts/01-presentation.json"
 
     full = service.prepare(
         tmp_path,
@@ -397,6 +397,7 @@ def test_manual_service_manifest_and_modes_and_clean(
     assert full.full_prompt_file is not None
     assert full.section_prompt_files == []
     assert full_manifest["section_prompts"] == []
+    assert full_manifest["section_contexts"] == []
 
     sections = service.prepare(
         tmp_path,
@@ -410,6 +411,7 @@ def test_manual_service_manifest_and_modes_and_clean(
     )
     assert sections.full_prompt_file is None
     assert sections.section_prompt_files
+    assert sections.section_context_files
     assert sections_manifest["full_prompt"] is None
 
 
@@ -520,3 +522,120 @@ def test_manual_service_clean_removes_stale_files(
     )
 
     assert stale.exists() is False
+
+
+def test_manual_prepare_context_budget_is_enforced(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+
+    service = ManualPreparationService()
+
+    try:
+        service.prepare(tmp_path, clean=True, mode="sections", context_budget=10)
+    except ManualPromptBudgetExceeded as exc:
+        assert exc.section_identifier == "presentation"
+    else:
+        raise AssertionError("ManualPromptBudgetExceeded attendu")
+
+
+def test_section_contexts_are_compact_relative_to_full_prompt(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+
+    full_prompt_tokens = manifest["full_prompt_estimated_tokens"]
+    section_tokens = [item["estimated_tokens"] for item in manifest["section_contexts"]]
+
+    assert full_prompt_tokens is not None
+    assert section_tokens
+    assert max(section_tokens) < full_prompt_tokens
+
+
+def test_manual_prepare_context_budget_accepts_exact_limit(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, _profile = _build_manual_knowledge(tmp_path)
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    builder = ManualPromptBuilder()
+    section = blueprint.sections[0]
+    context = builder.build_section_context(knowledge, section)
+
+    exact = builder.build_section_context(knowledge, section, context_budget=context.estimated_tokens)
+
+    assert exact.estimated_tokens == context.estimated_tokens
+
+
+def test_manual_prepare_context_budget_fails_one_token_above_limit(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, _profile = _build_manual_knowledge(tmp_path)
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    builder = ManualPromptBuilder()
+    section = blueprint.sections[0]
+    context = builder.build_section_context(knowledge, section)
+
+    try:
+        builder.build_section_context(knowledge, section, context_budget=max(1, context.estimated_tokens - 1))
+    except ManualPromptBudgetExceeded as exc:
+        assert exc.estimated_tokens == context.estimated_tokens
+        assert exc.context_budget == max(1, context.estimated_tokens - 1)
+        assert exc.fact_breakdown
+    else:
+        raise AssertionError("ManualPromptBudgetExceeded attendu")
+
+
+def test_manual_prepare_context_tracks_missing_and_repeated_fact_paths(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, _profile = _build_manual_knowledge(tmp_path)
+    builder = ManualPromptBuilder()
+    section = ManualSectionDefinition(
+        identifier="custom",
+        title="Custom",
+        purpose="Tester les chemins absents et répétés.",
+        required_fact_paths=("project", "project", "missing.branch"),
+    )
+
+    context = builder.build_section_context(knowledge, section)
+
+    assert context.repeated_fact_paths == ["project"]
+    assert context.missing_fact_paths == ["missing.branch"]
+    assert "project" in context.projected_facts
+
+
+def test_manual_prepare_contexts_are_deterministic(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    service = ManualPreparationService()
+
+    first = service.prepare(tmp_path, clean=True, mode="sections")
+    first_payloads = [path.read_text(encoding="utf-8") for path in first.section_context_files]
+    second = service.prepare(tmp_path, clean=True, mode="sections")
+    second_payloads = [path.read_text(encoding="utf-8") for path in second.section_context_files]
+
+    assert first_payloads == second_payloads
+
+
+def test_manual_prepare_shared_fact_paths_stay_consistent(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, _profile = _build_manual_knowledge(tmp_path)
+    builder = ManualPromptBuilder()
+    first = ManualSectionDefinition("first", "First", "A", ("project",))
+    second = ManualSectionDefinition("second", "Second", "B", ("project",))
+
+    assert builder.build_section_context(knowledge, first).projected_facts["project"] == builder.build_section_context(knowledge, second).projected_facts["project"]
+
+
+def test_manual_validate_cli_reports_errors_and_json(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    good_manual = tmp_path / "guide.md"
+    sections = "\n\n".join(f"## {section.title}\nTexte." for section in blueprint.sections)
+    good_manual.write_text(f"# Guide utilisateur de docforge\n\n{sections}\n", encoding="utf-8")
+
+    ok = runner.invoke(app, ["manual", "validate", str(good_manual), "--project-root", str(tmp_path), "--json"])
+    assert ok.exit_code == 0
+    assert '"valid": true' in ok.stdout
+
+    bad_manual = tmp_path / "guide-bad.md"
+    bad_manual.write_text("Conversation id: 1\n## Présentation\nUtiliser `make unknown`\n", encoding="utf-8")
+    bad = runner.invoke(app, ["manual", "validate", str(bad_manual), "--project-root", str(tmp_path)])
+    assert bad.exit_code == 1
+    assert "MANUAL002" in bad.stdout
+    assert "MANUAL006" in bad.stdout

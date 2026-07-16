@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
+from math import ceil
 from typing import Any
 
 from docforge.manual_blueprint import (
@@ -10,8 +12,56 @@ from docforge.manual_blueprint import (
 from docforge.manual_knowledge import ManualKnowledge
 
 
+@dataclass(frozen=True, slots=True)
+class SectionPromptContext:
+    identifier: str
+    title: str
+    purpose: str
+    projected_facts: dict[str, Any]
+    estimated_tokens: int
+    context_budget: int | None = None
+    fact_breakdown: dict[str, int] = field(default_factory=dict)
+    missing_fact_paths: list[str] = field(default_factory=list)
+    repeated_fact_paths: list[str] = field(default_factory=list)
+
+
+class ManualPromptBudgetExceeded(ValueError):
+    def __init__(
+        self,
+        *,
+        section_identifier: str,
+        section_title: str,
+        estimated_tokens: int,
+        context_budget: int,
+        fact_breakdown: dict[str, int] | None = None,
+        missing_fact_paths: list[str] | None = None,
+        repeated_fact_paths: list[str] | None = None,
+    ) -> None:
+        breakdown = fact_breakdown or {}
+        top_groups = ", ".join(
+            f"{name}={size}" for name, size in sorted(breakdown.items(), key=lambda item: item[1], reverse=True)[:5]
+        )
+        details = f" Groupes principaux: {top_groups}." if top_groups else ""
+        missing = f" Faits absents: {', '.join(missing_fact_paths or [])}." if missing_fact_paths else ""
+        repeated = f" Chemins répétés: {', '.join(repeated_fact_paths or [])}." if repeated_fact_paths else ""
+        super().__init__(
+            f"Le contexte de la section {section_identifier} ({section_title}) "
+            f"dépasse le budget: {estimated_tokens} > {context_budget} tokens estimés."
+            f"{details}{missing}{repeated}"
+        )
+        self.section_identifier = section_identifier
+        self.section_title = section_title
+        self.estimated_tokens = estimated_tokens
+        self.context_budget = context_budget
+        self.fact_breakdown = breakdown
+        self.missing_fact_paths = list(missing_fact_paths or [])
+        self.repeated_fact_paths = list(repeated_fact_paths or [])
+
+
 class ManualPromptBuilder:
-    GLOBAL_RULES = (
+    DEFAULT_CONTEXT_BUDGET = 4096
+
+    COMMON_RULES = (
         "Rédige un guide utilisateur en Markdown.",
         "Utilise `manual-knowledge.json` comme source unique de vérité et n’utilise aucune connaissance externe pour compléter les procédures ou les caractéristiques du projet.",
         "Suis strictement le blueprint fourni.",
@@ -39,14 +89,26 @@ class ManualPromptBuilder:
         "Réduis les répétitions : le démarrage rapide reste court, la référence des commandes porte les détails, et les autres sections évitent de recopier des listes complètes sans nécessité.",
     )
 
+    def common_rules(self) -> tuple[str, ...]:
+        return (
+            *self.COMMON_RULES,
+            *self.FACT_STATUS_RULES,
+            *self.STYLE_RULES,
+        )
+
+    def profile_rules(
+        self,
+        blueprint: ManualBlueprint,
+    ) -> tuple[str, ...]:
+        return ()
+
     def rules(
         self,
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
         return (
-            *self.GLOBAL_RULES,
-            *self.FACT_STATUS_RULES,
-            *self.STYLE_RULES,
+            *self.common_rules(),
+            *self.profile_rules(blueprint),
         )
 
     def build_full_prompt(
@@ -54,23 +116,32 @@ class ManualPromptBuilder:
         *,
         knowledge: ManualKnowledge,
         blueprint: ManualBlueprint,
+        context_budget: int | None = None,
     ) -> str:
-        payload = knowledge.to_dict()
-        blueprint_payload = {
-            "profile_name": blueprint.profile_name,
+        section_contexts = [
+            self.build_section_context(
+                knowledge,
+                section,
+                context_budget=context_budget,
+            )
+            for section in blueprint.sections
+        ]
+        blueprint_payload = self._blueprint_payload(blueprint)
+        compact_context = {
+            "schema_version": knowledge.schema_version,
+            "project": {
+                "name": knowledge.project.name,
+                "profile_type": knowledge.project.profile_type,
+            },
             "sections": [
                 {
-                    "identifier": section.identifier,
-                    "title": section.title,
-                    "purpose": section.purpose,
-                    "required_fact_paths": list(section.required_fact_paths),
-                    "optional": section.optional,
-                    "omit_condition": section.omit_condition,
-                    "omit_if_fact_paths_missing": list(
-                        section.omit_if_fact_paths_missing
-                    ),
+                    "identifier": context.identifier,
+                    "title": context.title,
+                    "purpose": context.purpose,
+                    "estimated_tokens": context.estimated_tokens,
+                    "facts": context.projected_facts,
                 }
-                for section in blueprint.sections
+                for context in section_contexts
             ],
         }
 
@@ -87,16 +158,82 @@ class ManualPromptBuilder:
             ),
             "END INSTRUCTIONS",
             "",
-            "BEGIN MANUAL KNOWLEDGE",
+            "BEGIN COMPACT MANUAL CONTEXT",
             json.dumps(
-                payload,
+                compact_context,
                 indent=2,
                 ensure_ascii=False,
             ),
-            "END MANUAL KNOWLEDGE",
+            "END COMPACT MANUAL CONTEXT",
             "",
         ]
         return "\n".join(lines)
+
+    def build_section_context(
+        self,
+        knowledge: ManualKnowledge,
+        section: ManualSectionDefinition,
+        *,
+        context_budget: int | None = None,
+    ) -> SectionPromptContext:
+        payload = knowledge.to_dict()
+        projection: dict[str, Any] = {}
+        fact_breakdown: dict[str, int] = {}
+        missing_fact_paths: list[str] = []
+        repeated_fact_paths: list[str] = []
+        seen_paths: set[str] = set()
+
+        for path in section.required_fact_paths:
+            if path in seen_paths:
+                repeated_fact_paths.append(path)
+                continue
+            seen_paths.add(path)
+            value = ManualPromptBuilder._extract_path(payload, path)
+            if value is None:
+                missing_fact_paths.append(path)
+            compact_value = ManualPromptBuilder._compact_path_value(
+                path=path,
+                value=value,
+                payload=payload,
+                section=section,
+            )
+            ManualPromptBuilder._assign_path(projection, path, compact_value)
+            fact_breakdown[path] = self.estimate_tokens(json.dumps(compact_value, ensure_ascii=False))
+
+        ManualPromptBuilder._deduplicate_projection(projection)
+        ManualPromptBuilder._postprocess_section_projection(section.identifier, projection)
+
+        preview_payload = {
+            "identifier": section.identifier,
+            "title": section.title,
+            "purpose": section.purpose,
+            "facts": projection,
+        }
+        estimated_tokens = self.estimate_tokens(
+            json.dumps(preview_payload, ensure_ascii=False)
+        )
+        effective_budget = context_budget
+        if effective_budget is not None and estimated_tokens > effective_budget:
+            raise ManualPromptBudgetExceeded(
+                section_identifier=section.identifier,
+                section_title=section.title,
+                estimated_tokens=estimated_tokens,
+                context_budget=effective_budget,
+                fact_breakdown=fact_breakdown,
+                missing_fact_paths=missing_fact_paths,
+                repeated_fact_paths=repeated_fact_paths,
+            )
+        return SectionPromptContext(
+            identifier=section.identifier,
+            title=section.title,
+            purpose=section.purpose,
+            projected_facts=projection,
+            estimated_tokens=estimated_tokens,
+            context_budget=effective_budget,
+            fact_breakdown=fact_breakdown,
+            missing_fact_paths=missing_fact_paths,
+            repeated_fact_paths=repeated_fact_paths,
+        )
 
     def build_section_prompt(
         self,
@@ -104,6 +241,8 @@ class ManualPromptBuilder:
         blueprint: ManualBlueprint | None = None,
         section: ManualSectionDefinition,
         projected_facts: dict[str, Any],
+        estimated_tokens: int | None = None,
+        context_budget: int | None = None,
     ) -> str:
         effective_blueprint = blueprint or ManualBlueprint(
             profile_name="generic"
@@ -116,7 +255,15 @@ class ManualPromptBuilder:
                 section=section,
             ),
             f"Titre de section : {section.title}",
+            f"Identifiant de section : {section.identifier}",
             f"But : {section.purpose}",
+            (
+                f"Budget de contexte estimé : {estimated_tokens}/{context_budget} tokens."
+                if estimated_tokens is not None and context_budget is not None
+                else f"Taille estimée du contexte : {estimated_tokens} tokens."
+                if estimated_tokens is not None
+                else None
+            ),
             "Produis uniquement la section demandée, sans titre de document global, sans conclusion générale et sans contenu hors sujet.",
             "END INSTRUCTIONS",
             "",
@@ -134,7 +281,7 @@ class ManualPromptBuilder:
             "END SECTION FACTS",
             "",
         ]
-        return "\n".join(lines)
+        return "\n".join(str(line) for line in lines if line is not None)
 
     def additional_guidance(
         self,
@@ -153,25 +300,19 @@ class ManualPromptBuilder:
         return ()
 
     @staticmethod
+    def estimate_tokens(value: str) -> int:
+        return max(1, ceil(len(value) / 4))
+
+    @staticmethod
     def project_section_facts(
         knowledge: ManualKnowledge,
         section: ManualSectionDefinition,
     ) -> dict[str, Any]:
-        payload = knowledge.to_dict()
-        projection: dict[str, Any] = {}
-
-        for path in section.required_fact_paths:
-            value = ManualPromptBuilder._extract_path(
-                payload,
-                path,
-            )
-            ManualPromptBuilder._assign_path(
-                projection,
-                path,
-                value,
-            )
-
-        return projection
+        return ManualPromptBuilder().build_section_context(
+            knowledge,
+            section,
+            context_budget=None,
+        ).projected_facts
 
     @staticmethod
     def should_omit_section(
@@ -191,6 +332,786 @@ class ManualPromptBuilder:
                 return False
 
         return True
+
+    @staticmethod
+    def _blueprint_payload(
+        blueprint: ManualBlueprint,
+    ) -> dict[str, Any]:
+        return {
+            "profile_name": blueprint.profile_name,
+            "sections": [
+                {
+                    "identifier": section.identifier,
+                    "title": section.title,
+                    "purpose": section.purpose,
+                    "required_fact_paths": list(section.required_fact_paths),
+                    "optional": section.optional,
+                    "omit_condition": section.omit_condition,
+                    "omit_if_fact_paths_missing": list(
+                        section.omit_if_fact_paths_missing
+                    ),
+                }
+                for section in blueprint.sections
+            ],
+        }
+
+    @staticmethod
+    def _workflow_identifiers_for_section(section_identifier: str) -> set[str] | None:
+        django_map = {
+            "quick-start": {"prepare-dev-config", "start-development", "apply-migrations", "open-frontend"},
+            "administration": {"create-admin", "open-django-admin"},
+            "operations": {"apply-migrations", "create-admin", "view-logs", "run-tests", "stop-services", "rebuild-images", "prepare-production", "start-production", "backup-database", "restore-database"},
+        }
+        python_map = {
+            "quick-start": {"analyze-project", "detect-profile", "build-project-knowledge"},
+            "analyze-project": {"analyze-project"},
+            "detect-profile": {"detect-profile"},
+            "build-project-knowledge": {"build-project-knowledge"},
+            "documentation-generation": {"generate-preview", "review-preview", "generate-with-ollama"},
+            "ollama-generation": {"generate-with-ollama"},
+            "preview-review": {"review-preview"},
+            "apply-documents": {"apply-validated-document", "apply-protected-document"},
+            "protected-documents": {"apply-protected-document"},
+            "project-management": {"manage-projects"},
+            "audits-compliance": {"produce-audit"},
+            "troubleshooting": {"produce-audit", "review-preview"},
+        }
+        return django_map.get(section_identifier) or python_map.get(section_identifier)
+
+    @staticmethod
+    def _keep_only_workflows(projection: dict[str, Any], section_identifier: str) -> None:
+        allowed = ManualPromptBuilder._workflow_identifiers_for_section(section_identifier)
+        workflows = projection.get("workflows")
+        if allowed is None or not isinstance(workflows, list):
+            return
+        projection["workflows"] = [item for item in workflows if item.get("identifier") in allowed]
+
+    @staticmethod
+    def _keep_only_commands_for_workflows(projection: dict[str, Any], *, key: str, grouped: bool = False) -> None:
+        workflows = projection.get("workflows")
+        commands_block = projection.get(key)
+        if not isinstance(workflows, list) or not isinstance(commands_block, dict):
+            return
+        referenced = {command for workflow in workflows for command in workflow.get("commands", [])}
+        commands = commands_block.get("commands")
+        if isinstance(commands, list):
+            commands_block["commands"] = [item for item in commands if item.get("command_path") in referenced]
+            return
+        if grouped:
+            for group_name in ("primary_commands", "advanced_commands"):
+                group = commands_block.get(group_name)
+                if isinstance(group, list):
+                    commands_block[group_name] = [item for item in group if item.get("command_path") in referenced]
+
+    @staticmethod
+    def _group_operational_commands(commands: list[dict[str, Any]]) -> dict[str, Any]:
+        documentable = [
+            item
+            for item in commands
+            if item.get("visibility") == "public"
+            and item.get("documentation_policy") != "exclude"
+            and item.get("reference_level") != "omit"
+        ]
+        primary = [
+            item for item in documentable
+            if item.get("reference_level") in {None, "primary"}
+        ]
+        advanced = [
+            item for item in documentable
+            if item.get("reference_level") in {"advanced", "alias"}
+        ]
+        excluded = [item for item in commands if item not in documentable]
+        by_provenance: dict[str, int] = {}
+        reasons: dict[str, int] = {}
+        for item in excluded:
+            provenance = item.get("provenance") or "unknown"
+            by_provenance[provenance] = by_provenance.get(provenance, 0) + 1
+            reason = item.get("exclusion_reason") or "Aucune raison d’exclusion documentée."
+            reasons[reason] = reasons.get(reason, 0) + 1
+        excluded_summary = {
+            "total": len(excluded),
+            "by_provenance": by_provenance,
+            "reasons": [
+                {"reason": reason, "count": count}
+                for reason, count in sorted(
+                    reasons.items(),
+                    key=lambda item: (-item[1], item[0]),
+                )
+            ],
+            "commands": [
+                {
+                    "name": item.get("name"),
+                    "provenance": item.get("provenance"),
+                    "reason": item.get("exclusion_reason"),
+                }
+                for item in excluded[:12]
+            ],
+        }
+        return {
+            "primary_commands": primary,
+            "advanced_commands": advanced,
+            "excluded_commands_summary": excluded_summary,
+        }
+
+    @staticmethod
+    def _filter_user_capabilities(capabilities: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            item for item in capabilities
+            if item.get("permission_condition") != "IsAdminUser"
+            and "administr" not in (item.get("label") or "").casefold()
+            and "utilisateur" not in (item.get("label") or "").casefold()
+        ]
+
+    @staticmethod
+    def _filter_admin_capabilities(capabilities: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            item for item in capabilities
+            if item.get("permission_condition") == "IsAdminUser"
+            or "administr" in (item.get("label") or "").casefold()
+            or "utilisateur" in (item.get("label") or "").casefold()
+        ]
+
+    @staticmethod
+    def _summarize_capabilities(capabilities: list[dict[str, Any]], *, include_evidence: bool = False) -> list[dict[str, Any]]:
+        return [
+            {
+                "label": item.get("label"),
+                "status": item.get("status"),
+                "component": item.get("component"),
+                "endpoint": item.get("endpoint"),
+                "permission_condition": item.get("permission_condition"),
+                "confidence": item.get("confidence"),
+                **({"evidence": item.get("evidence", [])[:2]} if include_evidence else {}),
+            }
+            for item in capabilities
+        ]
+
+    @staticmethod
+    def _postprocess_section_projection(section_identifier: str, projection: dict[str, Any]) -> None:
+        ManualPromptBuilder._keep_only_workflows(projection, section_identifier)
+
+        if section_identifier == "quick-start":
+            endpoints = projection.get("service_endpoints", {}).get("endpoints", []) if isinstance(projection.get("service_endpoints"), dict) else []
+            if isinstance(endpoints, list):
+                preferred = [item for item in endpoints if item.get("environment") == "dev" and item.get("service") == "frontend" and item.get("validity") == "valid"]
+                if not preferred:
+                    preferred = [item for item in endpoints if item.get("environment") == "dev" and item.get("validity") == "valid"][:2]
+                projection["service_endpoints"] = {"endpoints": preferred}
+            ManualPromptBuilder._keep_only_commands_for_workflows(projection, key="operational_commands")
+            if isinstance(projection.get("missing_information"), list):
+                projection["missing_information"] = [item for item in projection["missing_information"] if item.get("category") in {"runtime", "network", "tests"}]
+
+        if section_identifier == "operations":
+            ManualPromptBuilder._keep_only_commands_for_workflows(projection, key="operational_commands")
+            block = projection.get("operational_commands")
+            if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+            if isinstance(projection.get("service_endpoints"), dict):
+                projection["service_endpoints"] = {"endpoints": []}
+
+        if section_identifier == "operational-commands-reference":
+            block = projection.get("operational_commands")
+            if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+            workflows = projection.get("workflows")
+            if isinstance(workflows, list):
+                projection["workflows"] = [
+                    item for item in workflows
+                    if item.get("identifier") in {"prepare-dev-config", "start-development", "apply-migrations", "create-admin", "view-logs", "run-tests", "backup-database", "restore-database", "prepare-production", "start-production"}
+                ]
+
+        if section_identifier in {"main-features", "application-usage", "audience-roles"}:
+            capabilities = projection.get("capabilities", {}).get("capabilities", []) if isinstance(projection.get("capabilities"), dict) else []
+            user_caps = ManualPromptBuilder._filter_user_capabilities(capabilities)
+            if section_identifier == "audience-roles":
+                projection["roles"] = {
+                    "user": [item.get("label") for item in user_caps[:10]],
+                    "administrator": [item.get("label") for item in ManualPromptBuilder._filter_admin_capabilities(capabilities)[:10]],
+                    "operator": [item.get("title") for item in projection.get("workflows", [])[:8]] if isinstance(projection.get("workflows"), list) else [],
+                }
+            projection["capabilities"] = {
+                "capabilities": ManualPromptBuilder._summarize_capabilities(user_caps if section_identifier != "audience-roles" else capabilities[:12], include_evidence=section_identifier == "application-usage")
+            }
+            react = projection.get("react")
+            if isinstance(react, dict):
+                react["pages"] = react.get("pages", [])[:6]
+                react["navigation_items"] = react.get("navigation_items", [])[:8]
+                react["forms"] = react.get("forms", [])[:6]
+                react["user_features"] = react.get("user_features", [])[:10]
+                react.pop("crypto", None) if section_identifier == "audience-roles" else None
+            django = projection.get("django")
+            if isinstance(django, dict):
+                endpoints = django.get("endpoints", [])
+                django["endpoints"] = [item for item in endpoints if item.get("permissions") != ["IsAdminUser"]][:8]
+                schemas = django.get("model_schemas", [])
+                for schema in schemas:
+                    schema["fields"] = [field for field in schema.get("fields", []) if field.get("choices") or field.get("relation") or field.get("required")][:6]
+
+        if section_identifier == "administration":
+            capabilities = projection.get("capabilities", {}).get("capabilities", []) if isinstance(projection.get("capabilities"), dict) else []
+            projection["capabilities"] = {"capabilities": ManualPromptBuilder._summarize_capabilities(ManualPromptBuilder._filter_admin_capabilities(capabilities), include_evidence=True)}
+            django = projection.get("django")
+            if isinstance(django, dict):
+                django["endpoints"] = [
+                    item for item in django.get("endpoints", [])
+                    if "IsAdminUser" in item.get("permissions", []) or "/users/" in (item.get("path") or "") or "/auth/" in (item.get("path") or "")
+                ][:10]
+                django["model_schemas"] = []
+            ManualPromptBuilder._keep_only_workflows(projection, section_identifier)
+
+        if section_identifier == "installation-configuration":
+            variables = projection.get("environment_variables", {}).get("variables", []) if isinstance(projection.get("environment_variables"), dict) else []
+            important = []
+            for item in variables:
+                values = item.get("values", [])
+                differing = len({(entry.get("environment"), entry.get("value")) for entry in values}) > 1
+                if item.get("required") or item.get("sensitive") or differing or item.get("name") in {"APP_ENV", "APP_HOST", "FRONT_ORIGIN", "ALLOWED_HOSTS", "CSRF_TRUSTED_ORIGINS", "DJANGO_DEBUG"}:
+                    important.append(item)
+            projection["environment_variables"] = {"variables": important[:14]}
+
+        if section_identifier == "technical-reference":
+            envs = projection.get("environments", {}).get("items", []) if isinstance(projection.get("environments"), dict) else []
+            for env in envs:
+                env["services"] = [
+                    {
+                        "name": service.get("name"),
+                        "role": service.get("role"),
+                        "image": service.get("image"),
+                        "ports": service.get("ports", []),
+                        "depends_on": service.get("depends_on", []),
+                    }
+                    for service in env.get("services", [])
+                ]
+                env["urls"] = env.get("urls", [])[:4]
+            django = projection.get("django")
+            if isinstance(django, dict):
+                for schema in django.get("model_schemas", []):
+                    schema["fields"] = [field for field in schema.get("fields", []) if field.get("choices") or field.get("relation") or field.get("unique")][:6]
+                django["endpoints"] = [
+                    {
+                        "path": item.get("path"),
+                        "methods": item.get("methods", []),
+                        "permissions": item.get("permissions", []),
+                        "authentication": item.get("authentication", []),
+                    }
+                    for item in django.get("endpoints", [])[:12]
+                ]
+            react = projection.get("react")
+            if isinstance(react, dict):
+                react["pages"] = react.get("pages", [])[:6]
+                react["navigation_items"] = react.get("navigation_items", [])[:6]
+                react["user_features"] = [
+                    {
+                        "label": item.get("label"),
+                        "routes": item.get("routes", [])[:2],
+                        "api_calls": item.get("api_calls", [])[:3],
+                    }
+                    for item in react.get("user_features", [])[:8]
+                ]
+                react["api_calls"] = react.get("api_calls", [])[:12]
+
+        if section_identifier == "security":
+            variables = projection.get("environment_variables", {}).get("variables", []) if isinstance(projection.get("environment_variables"), dict) else []
+            projection["environment_variables"] = {
+                "variables": [
+                    {
+                        "name": item.get("name"),
+                        "required": item.get("required"),
+                        "required_by_environment": item.get("required_by_environment", {}),
+                        "sensitive": item.get("sensitive"),
+                        "description": item.get("description"),
+                    }
+                    for item in variables
+                    if item.get("sensitive")
+                ]
+            }
+            django = projection.get("django")
+            if isinstance(django, dict):
+                django["installed_apps"] = []
+                django["models"] = []
+                django["model_schemas"] = []
+                django["routers"] = []
+                django["endpoints"] = [
+                    {
+                        "path": item.get("path"),
+                        "methods": item.get("methods", []),
+                        "permissions": item.get("permissions", []),
+                        "authentication": item.get("authentication", []),
+                        "custom_authentication": item.get("custom_authentication"),
+                        "ownership_controls": item.get("ownership_controls", []),
+                        "data_controls": item.get("data_controls", []),
+                    }
+                    for item in django.get("endpoints", [])
+                    if "AllowAny" in item.get("permissions", []) or item.get("custom_authentication") or any(method in {"POST", "PUT", "PATCH", "DELETE"} for method in item.get("methods", []))
+                ][:8]
+            react = projection.get("react")
+            if isinstance(react, dict):
+                projection["react"] = {
+                    "auth_mechanisms": react.get("auth_mechanisms", []),
+                    "crypto": react.get("crypto", {}),
+                }
+            if isinstance(projection.get("limitations"), dict):
+                projection["limitations"]["items"] = [item for item in projection["limitations"].get("items", []) if item.get("category") in {"security", "api", "credentials", "network"}]
+
+        if section_identifier == "troubleshooting":
+            if isinstance(projection.get("missing_information"), list):
+                projection["missing_information"] = [item for item in projection["missing_information"] if item.get("category") in {"runtime", "tests", "api", "network", "backup"}]
+            block = projection.get("operational_commands")
+            if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                diag = [
+                    item for item in block.get("commands", [])
+                    if item.get("category") in {"diagnostic", "logs", "tests"}
+                    and item.get("visibility") == "public"
+                    and item.get("documentation_policy") != "exclude"
+                ]
+                projection["operational_commands"] = {"commands": diag[:8]}
+            if isinstance(projection.get("service_endpoints"), dict):
+                projection["service_endpoints"] = {"endpoints": [item for item in projection["service_endpoints"].get("endpoints", []) if item.get("validity") != "valid" or item.get("resolution_status") != "resolved"][:6]}
+
+        if section_identifier in {"documentation-generation", "project-management", "apply-documents", "audits-compliance", "analyze-project", "detect-profile", "build-project-knowledge", "ollama-generation", "preview-review", "protected-documents", "quick-start", "troubleshooting"}:
+            workflows = projection.get("workflows")
+            commands = projection.get("commands")
+            if isinstance(workflows, list) and isinstance(commands, list):
+                referenced = {command for workflow in workflows for command in workflow.get("commands", [])}
+                projection["commands"] = [item for item in commands if item.get("command_path") in referenced][:10]
+
+
+    @staticmethod
+    def _compact_path_value(
+        *,
+        path: str,
+        value: Any,
+        payload: dict[str, Any],
+        section: ManualSectionDefinition,
+    ) -> Any:
+        if path == "commands":
+            return ManualPromptBuilder._compact_commands(
+                value,
+                include_advanced=section.identifier in {"operational-commands-reference", "operations"},
+            )
+        if path == "operational_commands":
+            commands = value.get("commands", []) if isinstance(value, dict) else []
+            return {
+                "commands": ManualPromptBuilder._compact_operational_commands(
+                    commands,
+                    include_internal=section.identifier == "technical-reference",
+                )
+            }
+        if path == "workflows":
+            return ManualPromptBuilder._compact_workflows(value)
+        if path == "limitations":
+            return ManualPromptBuilder._compact_limitations(value)
+        if path == "missing_information":
+            return ManualPromptBuilder._compact_missing_information(value)
+        if path == "environment_variables":
+            return ManualPromptBuilder._compact_environment_variables(value)
+        if path == "environments":
+            return ManualPromptBuilder._compact_environments(value)
+        if path == "service_endpoints":
+            return ManualPromptBuilder._compact_service_endpoints(value)
+        if path == "django":
+            return ManualPromptBuilder._compact_django(value, section.identifier)
+        if path == "react":
+            return ManualPromptBuilder._compact_react(value, section.identifier)
+        if path == "capabilities":
+            return ManualPromptBuilder._compact_capabilities(value)
+        if path == "source_traceability":
+            return ManualPromptBuilder._compact_source_traceability(value)
+        if path == "installation":
+            return ManualPromptBuilder._compact_installation(value)
+        return ManualPromptBuilder._compact_generic(value)
+
+    @staticmethod
+    def _compact_installation(value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        compact = {
+            "summary": value.get("summary"),
+            "prerequisites": value.get("prerequisites", []),
+            "steps": [
+                {
+                    "title": step.get("title"),
+                    "command": step.get("command"),
+                }
+                for step in value.get("steps", [])
+            ],
+        }
+        return ManualPromptBuilder._compact_generic(compact)
+
+    @staticmethod
+    def _compact_commands(
+        value: Any,
+        *,
+        include_advanced: bool,
+    ) -> list[dict[str, Any]]:
+        if not isinstance(value, list):
+            return []
+        items = []
+        for command in value:
+            if command.get("reference_level") == "omit":
+                continue
+            if command.get("reference_level") == "advanced" and not include_advanced:
+                continue
+            items.append(
+                {
+                    "name": command.get("name"),
+                    "command_path": command.get("command_path"),
+                    "group": command.get("group"),
+                    "audience": command.get("audience"),
+                    "reference_level": command.get("reference_level"),
+                    "provenance": command.get("provenance"),
+                    "documentation_policy": command.get("documentation_policy"),
+                    "environment": command.get("environment"),
+                    "destructive": command.get("destructive"),
+                    "destructive_effects": command.get("destructive_effects", []),
+                    "help": command.get("help"),
+                    "parameters": [
+                        {
+                            "name": parameter.get("name"),
+                            "required": parameter.get("required"),
+                            "example": parameter.get("example"),
+                            "allowed_values": parameter.get("allowed_values", []),
+                            "description": parameter.get("description"),
+                        }
+                        for parameter in command.get("parameters", [])
+                    ],
+                }
+            )
+        return ManualPromptBuilder._compact_generic(items)
+
+    @staticmethod
+    def _compact_operational_commands(
+        commands: Any,
+        *,
+        include_internal: bool,
+    ) -> list[dict[str, Any]]:
+        if not isinstance(commands, list):
+            return []
+        items = []
+        for command in commands:
+            if not include_internal and command.get("visibility") != "public":
+                continue
+            items.append(
+                {
+                    "name": command.get("name"),
+                    "category": command.get("category"),
+                    "command_path": command.get("command_path"),
+                    "audience": command.get("audience"),
+                    "reference_level": command.get("reference_level"),
+                    "environment": command.get("environment"),
+                    "visibility": command.get("visibility"),
+                    "documented": command.get("documented"),
+                    "provenance": command.get("provenance"),
+                    "documentation_policy": command.get("documentation_policy"),
+                    "exclusion_reason": command.get("exclusion_reason"),
+                    "prerequisites": command.get("prerequisites", []),
+                    "destructive": command.get("destructive"),
+                    "destructive_effects": command.get("destructive_effects", []),
+                    "parameters": [
+                        {
+                            "name": parameter.get("name"),
+                            "required": parameter.get("required"),
+                            "example": parameter.get("example"),
+                            "allowed_values": parameter.get("allowed_values", []),
+                            "origin": parameter.get("origin"),
+                        }
+                        for parameter in command.get("parameters", [])
+                    ],
+                }
+            )
+        return ManualPromptBuilder._compact_generic(items)
+
+    @staticmethod
+    def _compact_workflows(value: Any) -> list[dict[str, Any]]:
+        if not isinstance(value, list):
+            return []
+        return ManualPromptBuilder._compact_generic(
+            [
+                {
+                    "identifier": item.get("identifier"),
+                    "title": item.get("title"),
+                    "summary": item.get("summary"),
+                    "commands": item.get("commands", []),
+                    "operational_status": item.get("operational_status"),
+                    "notes": item.get("notes", []),
+                }
+                for item in value
+            ]
+        )
+
+    @staticmethod
+    def _compact_missing_information(value: Any) -> list[dict[str, Any]]:
+        if not isinstance(value, list):
+            return []
+        return [
+            {
+                "identifier": item.get("identifier"),
+                "category": item.get("category"),
+                "severity": item.get("severity"),
+                "description": item.get("description"),
+                "affected_sections": item.get("affected_sections", []),
+                "sources": ManualPromptBuilder._compact_source_list(item.get("sources", [])),
+            }
+            for item in value
+        ]
+
+    @staticmethod
+    def _compact_limitations(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"items": []}
+        items = []
+        for item in value.get("items", []):
+            if isinstance(item, str):
+                items.append({
+                    "identifier": None,
+                    "category": "limitation",
+                    "severity": "warning",
+                    "description": item,
+                    "affected_sections": [],
+                    "sources": [],
+                })
+                continue
+            items.append(
+                {
+                    "identifier": item.get("identifier"),
+                    "category": item.get("category"),
+                    "severity": item.get("severity"),
+                    "description": item.get("description"),
+                    "affected_sections": item.get("affected_sections", []),
+                    "sources": ManualPromptBuilder._compact_source_list(item.get("sources", [])),
+                }
+            )
+        return {"items": items}
+
+    @staticmethod
+    def _compact_environments(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"items": []}
+        items = []
+        for item in value.get("items", []):
+            items.append(
+                {
+                    "name": item.get("name"),
+                    "compose_file": item.get("compose_file"),
+                    "env_files": item.get("env_files", []),
+                    "urls": item.get("urls", []),
+                    "services": [
+                        {
+                            "name": service.get("name"),
+                            "role": service.get("role"),
+                            "image": service.get("image"),
+                            "ports": service.get("ports", []),
+                            "depends_on": service.get("depends_on", []),
+                            "networks": service.get("networks", []),
+                            "volumes": service.get("volumes", []),
+                        }
+                        for service in item.get("services", [])
+                    ],
+                }
+            )
+        return ManualPromptBuilder._compact_generic({"items": items})
+
+    @staticmethod
+    def _compact_environment_variables(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"variables": []}
+        variables = []
+        for item in value.get("variables", []):
+            values = item.get("values", [])
+            differing_values = len({(entry.get("environment"), entry.get("value")) for entry in values}) > 1
+            variables.append(
+                {
+                    "name": item.get("name"),
+                    "scope": item.get("scope"),
+                    "required": item.get("required"),
+                    "required_by_environment": item.get("required_by_environment", {}),
+                    "sensitive": item.get("sensitive"),
+                    "default_value": item.get("default_value"),
+                    "description": item.get("description"),
+                    "comment": item.get("comment"),
+                    "values": [
+                        {
+                            "environment": entry.get("environment"),
+                            "value": entry.get("value"),
+                            "source": entry.get("source"),
+                        }
+                        for entry in values
+                    ] if differing_values or item.get("comment") else [],
+                }
+            )
+        return ManualPromptBuilder._compact_generic({"variables": variables})
+
+    @staticmethod
+    def _compact_service_endpoints(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"endpoints": []}
+        endpoints = [
+            {
+                "environment": endpoint.get("environment"),
+                "service": endpoint.get("service"),
+                "url": endpoint.get("url"),
+                "validity": endpoint.get("validity"),
+                "resolution_status": endpoint.get("resolution_status"),
+            }
+            for endpoint in value.get("endpoints", [])
+        ]
+        return {"endpoints": endpoints}
+
+    @staticmethod
+    def _compact_django(value: Any, section_identifier: str) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {}
+        unresolved_routes = [
+            {
+                "relative_path": route.get("relative_path"),
+                "mount_path": route.get("mount_path"),
+                "full_path": route.get("full_path"),
+                "route_type": route.get("route_type"),
+                "resolution_status": route.get("resolution_status"),
+            }
+            for route in value.get("resolved_routes", [])
+            if route.get("resolution_status") != "resolved"
+        ]
+        endpoints = [
+            {
+                "path": endpoint.get("path"),
+                "methods": endpoint.get("methods", []),
+                "view": endpoint.get("view"),
+                "permissions": endpoint.get("permissions", []),
+                "authentication": endpoint.get("authentication", []),
+                "actions": endpoint.get("actions", []),
+                "route_parameters": endpoint.get("route_parameters", []),
+                "ownership_controls": endpoint.get("ownership_controls", []),
+                "data_controls": endpoint.get("data_controls", []),
+                "custom_authentication": endpoint.get("custom_authentication"),
+            }
+            for endpoint in value.get("endpoints", [])
+        ]
+        compact = {
+            "settings_module": value.get("settings_module"),
+            "urlconf_module": value.get("urlconf_module"),
+            "installed_apps": value.get("installed_apps", []),
+            "admin_enabled": value.get("admin_enabled"),
+            "routers": value.get("routers", []),
+            "auth_mechanisms": value.get("auth_mechanisms", []),
+            "models": value.get("models", []),
+            "model_schemas": [
+                {
+                    "name": schema.get("name"),
+                    "fields": [
+                        {
+                            "name": field.get("name"),
+                            "field_type": field.get("field_type"),
+                            "required": field.get("required"),
+                            "nullable": field.get("nullable"),
+                            "blank": field.get("blank"),
+                            "default": field.get("default"),
+                            "choices": field.get("choices", []),
+                            "relation": field.get("relation"),
+                            "unique": field.get("unique"),
+                            "on_delete": field.get("on_delete"),
+                        }
+                        for field in schema.get("fields", [])
+                    ],
+                }
+                for schema in value.get("model_schemas", [])
+            ],
+            "endpoints": endpoints,
+        }
+        if section_identifier in {"technical-reference", "troubleshooting"}:
+            compact["unresolved_routes"] = unresolved_routes
+            compact["database_engine"] = value.get("database_engine")
+            compact["database_engines"] = value.get("database_engines", [])
+            compact["database_configuration"] = value.get("database_configuration", [])
+        return ManualPromptBuilder._compact_generic(compact)
+
+    @staticmethod
+    def _compact_react(value: Any, section_identifier: str) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {}
+        compact = {
+            "entry_point": value.get("entry_point"),
+            "routes": value.get("routes", []),
+            "pages": value.get("pages", []),
+            "navigation_items": value.get("navigation_items", []),
+            "forms": value.get("forms", []),
+            "user_features": value.get("user_features", []),
+            "auth_mechanisms": value.get("auth_mechanisms", []),
+            "crypto": value.get("crypto", {}),
+        }
+        if section_identifier in {"technical-reference", "security"}:
+            compact["api_calls"] = value.get("api_calls", [])
+            compact["environment_variables"] = value.get("environment_variables", [])
+        return ManualPromptBuilder._compact_generic(compact)
+
+    @staticmethod
+    def _compact_capabilities(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"capabilities": []}
+        return {
+            "capabilities": [
+                {
+                    "label": capability.get("label"),
+                    "status": capability.get("status"),
+                    "component": capability.get("component"),
+                    "endpoint": capability.get("endpoint"),
+                    "permission_condition": capability.get("permission_condition"),
+                    "confidence": capability.get("confidence"),
+                    "evidence": capability.get("evidence", [])[:4],
+                }
+                for capability in value.get("capabilities", [])
+            ]
+        }
+
+    @staticmethod
+    def _compact_source_traceability(value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {"items": {}}
+        return {
+            "items": {
+                key: {
+                    "status": item.get("status"),
+                    "sources": ManualPromptBuilder._compact_source_list(item.get("sources", [])),
+                }
+                for key, item in value.get("items", {}).items()
+            }
+        }
+
+    @staticmethod
+    def _deduplicate_projection(projection: dict[str, Any]) -> None:
+        missing = projection.get("missing_information")
+        limitations = projection.get("limitations")
+        if isinstance(missing, list) and isinstance(limitations, dict):
+            missing_ids = {item.get("identifier") for item in missing}
+            items = limitations.get("items", [])
+            limitations["items"] = [
+                item
+                for item in items
+                if item.get("identifier") not in missing_ids
+            ]
+
+    @staticmethod
+    def _compact_source_list(value: Any) -> list[str]:
+        if not isinstance(value, list):
+            return []
+        items = [str(item) for item in value if item]
+        if len(items) <= 3:
+            return items
+        return [*items[:3], f"… (+{len(items) - 3} autres sources)"]
+
+    @staticmethod
+    def _compact_generic(value: Any) -> Any:
+        if isinstance(value, dict):
+            compact: dict[str, Any] = {}
+            for key, item in value.items():
+                if key in {"sources", "source_paths"}:
+                    compact[key] = ManualPromptBuilder._compact_source_list(item)
+                    continue
+                compact[key] = ManualPromptBuilder._compact_generic(item)
+            return compact
+        if isinstance(value, list):
+            return [ManualPromptBuilder._compact_generic(item) for item in value]
+        return value
 
     @staticmethod
     def _has_content(value: Any) -> bool:
@@ -243,6 +1164,19 @@ class ManualPromptBuilder:
         current[parts[-1]] = value
 
 
+class PythonCliManualPromptBuilder(ManualPromptBuilder):
+    PYTHON_CLI_RULES = (
+        "Le manuel concerne l’outil CLI analysé et ses commandes réelles, sans extrapolation sur des intégrations non démontrées.",
+        "Ne transforme jamais les commandes de maintenance interne ou de génération documentaire en commandes d’usage courant si le projet ne les expose pas comme telles.",
+    )
+
+    def profile_rules(
+        self,
+        blueprint: ManualBlueprint,
+    ) -> tuple[str, ...]:
+        return self.PYTHON_CLI_RULES
+
+
 class DjangoReactManualPromptBuilder(ManualPromptBuilder):
     DJANGO_REACT_RULES = (
         "Le manuel concerne l’application analysée, jamais DocForge comme produit utilisateur.",
@@ -282,7 +1216,6 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         "Décris la section d’utilisation avec un langage fonctionnel orienté utilisateur; n’invente ni boutons, ni messages affichés, ni captures d’écran, ni parcours non démontrés.",
         "Si `capabilities.capabilities` contient des capacités backend ou frontend démontrées, conserve des sections visibles pour les fonctionnalités principales et l’utilisation de l’application.",
         "Lorsque `conflicts` est vide, n’ajoute pas une phrase de remplissage disant qu’aucune contradiction n’est signalée.",
-        "Décris la section d’utilisation avec un langage fonctionnel orienté utilisateur; n’invente ni boutons, ni messages affichés, ni captures d’écran, ni parcours non démontrés.",
     )
 
     SECTION_RULES = {
@@ -291,7 +1224,7 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
             "N’y recopie pas l’inventaire complet des services, variables, paramètres Make ou procédures d’exploitation.",
         ),
         "application-usage": (
-            "Cette section vient avant l’infrastructure détaillée et doit privilégier les usages concrets : connexion, consultation, recherche, création, modification, visibilité, contacts privés et synchronisation lorsque ces comportements sont démontrés.",
+            "Cette section vient avant l’infrastructure détaillée et doit privilégier les usages concrets de l’interface: connexion, recherche, consultation, création, modification, guide, vérification de clé, import/export de clé, révélation de valeur et changement de thème lorsque ces comportements sont démontrés.",
             "Décris le comportement fonctionnel plutôt que de lister tous les endpoints complets; garde la référence API détaillée pour la section technique.",
         ),
         "administration": (
@@ -321,11 +1254,11 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         ),
     }
 
-    def rules(
+    def profile_rules(
         self,
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
-        return (*super().rules(blueprint), *self.DJANGO_REACT_RULES)
+        return self.DJANGO_REACT_RULES
 
     def additional_guidance(
         self,
@@ -334,7 +1267,7 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
         return (
-            "Le flux de DocForge s’arrête à la production de `manual-knowledge.json` et du prompt de rédaction; tu ne dois pas prétendre que DocForge a rédigé ou validé le manuel final.",
+            "Le flux de DocForge s’arrête à la production de `manual-knowledge.json`, des contextes de section et du prompt de rédaction; tu ne dois pas prétendre que DocForge a rédigé ou validé le manuel final.",
             "Le document peut rester unique, mais fais apparaître sans ambiguïté les sections destinées aux utilisateurs, aux administrateurs et aux exploitants.",
             "Les URLs résolues peuvent être citées; lorsqu’une URL ou un port reste symbolique dans ManualKnowledge, conserve cette forme au lieu d’inventer une valeur.",
         )

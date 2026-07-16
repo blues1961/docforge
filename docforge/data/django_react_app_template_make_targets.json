@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "template": "app-template",
+  "manifest_version": "2026-07-16",
+  "targets": [
+    {
+      "name": "help",
+      "signature": "f20e4dd0ba251cb0e4159e9399d27e45899c1de9e05e7f71c635ac8151a57ec9",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Affiche l’aide Make principale."
+    },
+    {
+      "name": "init",
+      "signature": "d57898c86182a0ffe4d6eb77162f539618ea8169f90ed73cf68cabbbe2159f86",
+      "origin": "app-template",
+      "documentation_policy": "quick-start",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Initialise les fichiers et secrets locaux."
+    },
+    {
+      "name": "dev",
+      "signature": "119cad81a107a58d10d768c34f1d74a6f20f626e1876199e768750d99d6f2ce1",
+      "origin": "app-template",
+      "documentation_policy": "quick-start",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Active l’environnement de développement."
+    },
+    {
+      "name": "prod",
+      "signature": "1bb15ca570cf5f12fbe1ece8ce32b9be1cbf76bd4db207853e3d95906e91e457",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Active l’environnement de production."
+    },
+    {
+      "name": "up",
+      "signature": "84d55ecfe2810e6bf7f9c5997f07560c96cf4d9b07b773f5f8a45c42ab2a91af",
+      "origin": "app-template",
+      "documentation_policy": "quick-start",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Démarre les services."
+    },
+    {
+      "name": "down",
+      "signature": "df8e6e548b664bed689a23d3af91915090361de2f7b6671959556b3a70d649b0",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Arrêt des services actifs"
+      ],
+      "description": "Arrête les services."
+    },
+    {
+      "name": "restart",
+      "signature": "2a0c8decffa15ec03837eed29e77becf588b44b42f884f2fc9dc44ba4b0fb7ec",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Arrêt des services actifs"
+      ],
+      "description": "Redémarre les services."
+    },
+    {
+      "name": "rebuild",
+      "signature": "feb6a1615863318de5a617c9e2e353b0020c2ffb805fa7be08c0a493b5b03773",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Reconstruction des images ou services"
+      ],
+      "description": "Reconstruit les images."
+    },
+    {
+      "name": "logs",
+      "signature": "1b740180746343a150df7cc0bc9e3fc7e8b9c26d1bdf6a918aa7ba9bbbc54d12",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Affiche les journaux des services."
+    },
+    {
+      "name": "ps",
+      "signature": "91cc70db233a8fb3c97ee997d906e1f3d1862c86847c78068290ee33f04fbb49",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "primary",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Affiche l’état des services."
+    },
+    {
+      "name": "check",
+      "signature": "3abbed542360ea8b0b8465e4181d8ceb18079a41f3d8bc2ed851e3d955dc8f5a",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Vérifie les invariants du template."
+    },
+    {
+      "name": "migrate",
+      "signature": "aaf60bb42aa2f115053ed111d5725b6b7b8cf0fff4961bd8ceaecf6534d40d9d",
+      "origin": "app-template",
+      "documentation_policy": "main-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Applique les migrations Django."
+    },
+    {
+      "name": "update",
+      "signature": "bcba8a2619708032cc770a6a33e08c6df77ee2e64f975efdbf92cd60df0fd370",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Reconstruction des images ou services"
+      ],
+      "description": "Met à jour l’application."
+    },
+    {
+      "name": "backup",
+      "signature": "2b937ebbac2e0465bcb8262be3de9d6a9b0f548008752703b41f8f417d248ebb",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "description": "Crée une sauvegarde PostgreSQL."
+    },
+    {
+      "name": "restore",
+      "signature": "f92449b80733f12b4b527006e2e4b6f25f961ed7ba5411d87e06cc178410f0d3",
+      "origin": "app-template",
+      "documentation_policy": "advanced-reference",
+      "reference_level": "advanced",
+      "audience": "operator",
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Modification ou écrasement potentiel des données PostgreSQL"
+      ],
+      "description": "Restaure une sauvegarde PostgreSQL."
+    }
+  ]
+}
