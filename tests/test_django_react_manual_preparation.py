@@ -3,6 +3,7 @@ from pathlib import Path
 
 from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
+from docforge.manual_blueprint import ManualBlueprintRegistry
 from docforge.manual_django_react import DjangoReactManualKnowledgeBuilder
 from docforge.manual_prompt import DjangoReactManualPromptBuilder
 from docforge.manual_service import ManualPreparationService
@@ -179,7 +180,7 @@ networks:
         encoding="utf-8",
     )
     (root / "backend" / "api" / "models.py").write_text(
-        'from django.conf import settings\nfrom django.db import models\n\nclass Contact(models.Model):\n    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="contacts")\n    visibility = models.CharField(max_length=16, default="public")\n    name = models.CharField(max_length=255, blank=True, default="")\n    email = models.EmailField(blank=True, default="")\n    birthday = models.DateField(blank=True, null=True)\n    encrypted_payload = models.TextField(blank=True, default="")\n',
+        'from django.conf import settings\nfrom django.db import models\n\nclass Contact(models.Model):\n    class Visibility(models.TextChoices):\n        PUBLIC = "public", "Public"\n        PRIVATE = "private", "Privé"\n\n    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="contacts")\n    visibility = models.CharField(max_length=16, choices=Visibility.choices, default=Visibility.PUBLIC)\n    name = models.CharField(max_length=255, blank=True, default="")\n    email = models.EmailField(blank=True, default="")\n    birthday = models.DateField(blank=True, null=True)\n    encrypted_payload = models.TextField(blank=True, default="")\n',
         encoding="utf-8",
     )
     (root / "backend" / "api" / "views.py").write_text(
@@ -216,7 +217,7 @@ networks:
         encoding="utf-8",
     )
     (root / "frontend" / "src" / "crypto.js").write_text(
-        'export function decryptPrivateFields(value) { return value; }\n',
+        'const encoder = new TextEncoder();\nconst decoder = new TextDecoder();\nexport const PRIVATE_ENCRYPTION_VERSION = "v1";\nasync function importKeyMaterial(keyMaterial) { return crypto.subtle.importKey("raw", new Uint8Array(), "AES-GCM", false, ["encrypt", "decrypt"]); }\nexport async function deriveVaultKeyMaterial(passphrase, scope = "default") { const baseKey = await crypto.subtle.importKey("raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveBits"]); const derivedBits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: encoder.encode(`contacts-vault:${scope}:v1`), iterations: 250000, hash: "SHA-256" }, baseKey, 256); return derivedBits; }\nexport async function encryptPrivateFields(fields, keyMaterial) { const key = await importKeyMaterial(keyMaterial); const iv = crypto.getRandomValues(new Uint8Array(12)); const plaintext = encoder.encode(JSON.stringify(fields)); const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext); return JSON.stringify({ version: PRIVATE_ENCRYPTION_VERSION, iv, ciphertext }); }\nexport async function decryptPrivateFields(payload, keyMaterial) { const envelope = typeof payload === "string" ? JSON.parse(payload) : payload; const key = await importKeyMaterial(keyMaterial); const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: envelope.iv }, key, envelope.ciphertext); return JSON.parse(decoder.decode(plaintext)); }\n',
         encoding="utf-8",
     )
 
@@ -246,6 +247,43 @@ def test_django_react_profile_selects_specialized_manual_components(tmp_path: Pa
         profile.build_manual_prompt_builder(),
         DjangoReactManualPromptBuilder,
     )
+
+
+def test_django_react_blueprint_is_compact_and_user_oriented() -> None:
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile(
+        "django-react"
+    )
+
+    assert blueprint.profile_name == "django-react"
+    assert len(blueprint.sections) == 13
+    assert len(blueprint.sections) < 26
+
+    identifiers = [section.identifier for section in blueprint.sections]
+    assert identifiers == [
+        "presentation",
+        "audience-roles",
+        "main-features",
+        "quick-start",
+        "application-usage",
+        "administration",
+        "installation-configuration",
+        "operations",
+        "technical-reference",
+        "security",
+        "troubleshooting",
+        "operational-commands-reference",
+        "limitations",
+    ]
+    assert identifiers.index("application-usage") < identifiers.index("installation-configuration")
+    assert identifiers.index("installation-configuration") < identifiers.index("technical-reference")
+    assert "environment-configuration" not in identifiers
+    assert "development-environment" not in identifiers
+    assert "production-environment" not in identifiers
+    assert "docker-services" not in identifiers
+    assert "database" not in identifiers
+    assert "migrations" not in identifiers
+    assert "tests" not in identifiers
+    assert "backup-restore" not in identifiers
 
 
 def test_django_react_knowledge_separates_compose_environments_and_ports(tmp_path: Path) -> None:
@@ -319,6 +357,18 @@ def test_django_react_knowledge_detects_commands_django_react_and_capabilities(t
     assert knowledge.react.dev_command == "npm run dev"
     assert knowledge.react.build_command == "npm run build"
     assert knowledge.react.routes == ["/"]
+    assert any(route.full_path == "/api/auth/login/" for route in knowledge.django.resolved_routes)
+    assert any(endpoint.path == "/api/users/" and "IsAdminUser" in endpoint.permissions for endpoint in knowledge.django.endpoints)
+    visibility_field = next(
+        field
+        for model in knowledge.django.model_schemas
+        if model.name == "Contact"
+        for field in model.fields
+        if field.name == "visibility"
+    )
+    assert [choice.value for choice in visibility_field.choices] == ["public", "private"]
+    assert knowledge.react.crypto.detected is True
+    assert knowledge.react.crypto.key_derivation == "PBKDF2"
     assert any(
         cap.label == "Consulter les contacts"
         for cap in knowledge.capabilities.capabilities
@@ -350,6 +400,19 @@ def test_django_react_manual_prepare_is_application_oriented(tmp_path: Path) -> 
     assert "docforge manual prepare" not in payload
     assert "make up" in command_paths
     assert "make migrate" in command_paths
+    run_tests = next(item for item in data["workflows"] if item["identifier"] == "run-tests")
+    assert run_tests["commands"] == ["npm run test"]
+    assert run_tests["operational_status"] == "requires-context"
+    create_admin = next(item for item in data["workflows"] if item["identifier"] == "create-admin")
+    assert create_admin["commands"] == ["make migrate"]
+    assert any(item["identifier"] == "API-SCHEMA-MISSING" for item in data["missing_information"])
+    rebuild = next(item for item in data["commands"] if item["name"] == "rebuild")
+    assert rebuild["parameters"][0]["name"] == "SERVICE"
+    restore = next(item for item in data["commands"] if item["name"] == "restore")
+    assert restore["parameters"][0]["name"] == "FILE"
+    assert any(route["full_path"] == "/api/auth/login/" for route in data["django"]["resolved_routes"])
+    assert any(endpoint["path"] == "/api/users/" and "IsAdminUser" in endpoint["permissions"] for endpoint in data["django"]["endpoints"])
+    assert data["conflicts"] == []
     assert "project-assistant" not in payload
     assert "/home/" not in payload
 
@@ -364,14 +427,87 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
 
     prompt = result.full_prompt_file.read_text(encoding="utf-8")
     section_names = [path.name for path in result.section_prompt_files]
+    section_contents = {
+        path.name: path.read_text(encoding="utf-8")
+        for path in result.section_prompt_files
+    }
     manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+
+    assert len(section_names) == 13
+    assert section_names == [
+        "01-presentation.md",
+        "02-audience-roles.md",
+        "03-main-features.md",
+        "04-quick-start.md",
+        "05-application-usage.md",
+        "06-administration.md",
+        "07-installation-configuration.md",
+        "08-operations.md",
+        "09-technical-reference.md",
+        "10-security.md",
+        "11-troubleshooting.md",
+        "12-operational-commands-reference.md",
+        "13-limitations.md",
+    ]
 
     assert "Le manuel concerne l’application analysée" in prompt
     assert "Les commandes DocForge ne sont pas des commandes d’utilisation de l’application analysée." in prompt
-    assert any(name.endswith("detected-features.md") for name in section_names)
-    assert not any("django-admin" in name for name in section_names)
+    assert "source unique de vérité" in prompt
+    assert "aucune connaissance externe" in prompt
+    assert "`derived` = fait déduit d’éléments compatibles" in prompt
+    assert "`configured` = fait provenant du profil ou de la configuration DocForge" in prompt
+    assert "`unresolved` = fait incomplet" in prompt
+    assert "utilise uniquement `full_path` lorsque `resolution_status` vaut `resolved`" in prompt
+    assert "n’attribue jamais des permissions globales à tous les endpoints" in prompt
+    assert "un workflow `requires-context` ne doit jamais être présenté comme immédiatement exécutable" in prompt
+    assert "Ne présente jamais `make check` comme une suite de tests" in prompt
+    assert "Associe `make migrate` à la création ou mise à jour de l’administrateur uniquement si la chaîne démontrée" in prompt
+    assert "respecte les contextes fournis par ManualKnowledge" in prompt
+    assert "Utilise `missing_information` et `limitations.items` comme source prioritaire" in prompt
+    assert "Pour `react.crypto`, décris uniquement l’implémentation détectée" in prompt
+    assert "Le flux de DocForge s’arrête à la production de `manual-knowledge.json` et du prompt de rédaction" in prompt
+    assert "Chaque catégorie d’information doit avoir une section principale" in prompt
+    assert "Ne recopie pas intégralement la liste des commandes, des services, des variables, des URLs ou des endpoints" in prompt
+    assert "Le démarrage rapide doit contenir uniquement" in prompt
+    assert "N’expose pas dans le manuel final un vocabulaire interne comme `workflow structuré`" in prompt
+    assert "`PROJECT-VERSION-MISSING` devient une phrase" in prompt
     assert manifest["profile_name"] == "django-react"
     assert any("operational-commands-reference" in item for item in manifest["section_prompts"])
+    assert not any("environment-configuration" in name for name in section_names)
+    assert not any("development-environment" in name for name in section_names)
+    assert not any("production-environment" in name for name in section_names)
+    assert not any("docker-services" in name for name in section_names)
+    assert not any("database" in name for name in section_names)
+    assert not any("migrations" in name for name in section_names)
+    assert not any("tests" in name for name in section_names)
+    assert not any("backup-restore" in name for name in section_names)
+
+    usage_section = section_contents["05-application-usage.md"]
+    install_section = section_contents["07-installation-configuration.md"]
+    operations_section = section_contents["08-operations.md"]
+    technical_section = section_contents["09-technical-reference.md"]
+    command_reference_section = section_contents["12-operational-commands-reference.md"]
+    limitations_section = section_contents["13-limitations.md"]
+
+    assert "Cette section vient avant l’infrastructure détaillée" in usage_section
+    assert '"react"' in usage_section
+    assert '"capabilities"' in usage_section
+    assert '"django"' in usage_section
+    assert "Cette section regroupe développement et production dans un même chapitre comparatif" in install_section
+    assert '"environments"' in install_section
+    assert '"environment_variables"' in install_section
+    assert "Cette section regroupe démarrage, arrêt, migrations, journaux, diagnostic, tests, sauvegarde, restauration, mise à jour et reconstruction" in operations_section
+    assert '"workflows"' in operations_section
+    assert '"missing_information"' in operations_section
+    assert "Cette section sert de référence technique principale pour l’architecture, les services Docker, la base de données, l’API et le chiffrement côté client." in technical_section
+    assert '"django"' in technical_section
+    assert '"react"' in technical_section
+    assert '"conflicts"' in technical_section
+    assert "les détails complets des commandes et paramètres peuvent apparaître" in command_reference_section
+    assert '"operational_commands"' in command_reference_section
+    assert '"workflows"' in command_reference_section
+    assert "Remplace les identifiants techniques par des phrases lisibles destinées au lecteur final." in limitations_section
+    assert '"missing_information"' in limitations_section
 
 
 def test_django_react_manual_json_is_valid_and_does_not_modify_project_files(tmp_path: Path) -> None:

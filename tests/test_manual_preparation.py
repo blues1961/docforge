@@ -186,7 +186,7 @@ def test_manual_knowledge_is_json_serializable(
     )
     data = json.loads(knowledge.to_json())
 
-    assert data["schema_version"] == 1
+    assert data["schema_version"] == 2
     assert data["project"]["name"] == "docforge"
     assert data["project"]["cli_entry_point"] == (
         "docforge -> docforge.cli:app"
@@ -341,6 +341,11 @@ def test_prompt_builder_generates_full_and_section_prompts(
     assert "END INSTRUCTIONS" in full_prompt
     assert "BEGIN MANUAL KNOWLEDGE" in full_prompt
     assert "END MANUAL KNOWLEDGE" in full_prompt
+    assert "source unique de vérité" in full_prompt
+    assert "aucune connaissance externe" in full_prompt
+    assert "`detected` = fait directement démontré" in full_prompt
+    assert "`unresolved` = fait incomplet" in full_prompt
+    assert "Version du schéma ManualKnowledge : 2." in full_prompt
     assert "`oaicite`" in full_prompt
     assert "Titre de section : Présentation" in section_prompt
     assert "BEGIN SECTION FACTS" in section_prompt

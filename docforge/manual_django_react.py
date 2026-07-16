@@ -6,13 +6,17 @@ from pathlib import Path
 from docforge.knowledge import ProjectKnowledge
 from docforge.manual_knowledge import (
     ManualCommand,
+    ManualCommandParameter,
     ManualConfiguration,
+    ManualConflict,
+    ManualConflictFact,
     ManualDocumentationPolicy,
     ManualFactSource,
     ManualInstallation,
     ManualInstallationStep,
     ManualKnowledge,
     ManualKnowledgeBuilder,
+    ManualKnowledgeGap,
     ManualLimitations,
     ManualProject,
     ManualSecurity,
@@ -38,6 +42,12 @@ class DjangoReactManualKnowledgeBuilder(
         workflows = self._build_workflows(knowledge)
         missing_information = self._missing_information(
             knowledge
+        )
+        conflicts = self._build_conflicts(knowledge)
+        limitations = self._build_limitations(
+            knowledge,
+            missing_information,
+            conflicts,
         )
 
         return ManualKnowledge(
@@ -131,12 +141,13 @@ class DjangoReactManualKnowledgeBuilder(
                 ]
             },
             missing_information=missing_information,
+            conflicts=conflicts,
             commands=commands,
             workflows=workflows,
             configuration=self._build_configuration(knowledge),
             security=self._build_security(knowledge),
             limitations=ManualLimitations(
-                items=missing_information,
+                items=limitations,
                 source=ManualFactSource(
                     status="derived",
                     sources=(
@@ -271,7 +282,17 @@ class DjangoReactManualKnowledgeBuilder(
                     invocation=item.command,
                     group=item.category,
                     help=f"Commande opérationnelle catégorie {item.category}.",
-                    parameters=[],
+                    parameters=[
+                        ManualCommandParameter(
+                            name=parameter.name,
+                            kind="make-variable",
+                            required=parameter.required,
+                            example=parameter.example,
+                            description=parameter.description,
+                            source=parameter.source,
+                        )
+                        for parameter in item.parameters
+                    ],
                     examples=[item.command],
                     source=ManualFactSource(
                         status="detected",
@@ -292,6 +313,9 @@ class DjangoReactManualKnowledgeBuilder(
             title: str,
             summary: str,
             required: list[str],
+            *,
+            operational_status: str = "operational",
+            notes: list[str] | None = None,
         ) -> None:
             commands = []
             for name in required:
@@ -305,6 +329,8 @@ class DjangoReactManualKnowledgeBuilder(
                     title=title,
                     summary=summary,
                     commands=commands,
+                    operational_status=operational_status,
+                    notes=notes or [],
                     source=ManualFactSource(
                         status="derived",
                         sources=tuple(commands),
@@ -330,7 +356,7 @@ class DjangoReactManualKnowledgeBuilder(
             "Exécuter la procédure de migration détectée.",
             ["migrate"],
         )
-        if knowledge.django.create_admin_commands:
+        if self._workflow_proves_create_admin(knowledge):
             add_if_complete(
                 "create-admin",
                 "Créer un administrateur",
@@ -358,11 +384,22 @@ class DjangoReactManualKnowledgeBuilder(
             ["logs"],
         )
         if "test" in knowledge.react.scripts:
-            add_if_complete(
-                "run-tests",
-                "Lancer les tests",
-                "Exécuter les tests détectés côté application.",
-                ["check"],
+            workflows.append(
+                ManualWorkflow(
+                    identifier="run-tests",
+                    title="Lancer les tests",
+                    summary="Le frontend expose un script de test, mais aucun workflow Make/Docker complet n’a été démontré pour l’ensemble de l’application.",
+                    commands=["npm run test"],
+                    operational_status="requires-context",
+                    notes=[
+                        "`make check` reste un diagnostic d’invariants et n’est pas utilisé comme workflow de tests.",
+                        "Aucune commande opérationnelle de tests backend n’a été prouvée.",
+                    ],
+                    source=ManualFactSource(
+                        status="derived",
+                        sources=("frontend/package.json",),
+                    ),
+                )
             )
         add_if_complete(
             "stop-services",
@@ -532,29 +569,186 @@ class DjangoReactManualKnowledgeBuilder(
     def _missing_information(
         self,
         knowledge: ProjectKnowledge,
-    ) -> list[str]:
-        missing = []
-        if not knowledge.capabilities.capabilities:
+    ) -> list[ManualKnowledgeGap]:
+        missing: list[ManualKnowledgeGap] = []
+
+        def add(identifier: str, category: str, description: str, *, affected_sections: list[str], sources: list[str], severity: str = "warning") -> None:
             missing.append(
-                "Aucune capacité fonctionnelle suffisamment fiable n’a été détectée."
+                ManualKnowledgeGap(
+                    identifier=identifier,
+                    category=category,
+                    severity=severity,
+                    description=description,
+                    affected_sections=affected_sections,
+                    sources=sources,
+                )
             )
-        if not knowledge.environment_variables.variables:
-            missing.append(
-                "Aucune variable d’environnement versionnée ou statiquement détectée n’a été extraite."
+
+        if not knowledge.pyproject.version:
+            add(
+                "PROJECT-VERSION-MISSING",
+                "project",
+                "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+                affected_sections=["presentation", "installation"],
+                sources=["pyproject.toml", "ProjectKnowledge.application"],
             )
-        if not knowledge.service_endpoints.endpoints:
-            missing.append(
-                "Aucune URL de service n’a pu être dérivée statiquement."
+        if not knowledge.pyproject.requires_python:
+            add(
+                "PYTHON-VERSION-MISSING",
+                "runtime",
+                "La version minimale de Python n’est pas déterminable statiquement.",
+                affected_sections=["installation", "prerequisites"],
+                sources=["pyproject.toml", "backend/Dockerfile.dev", "backend/Dockerfile.prod"],
             )
-        if not knowledge.operational_commands.commands:
-            missing.append(
-                "Aucune commande opérationnelle fiable n’a été détectée."
+        add(
+            "NODE-VERSION-MISSING",
+            "runtime",
+            "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+            affected_sections=["installation", "prerequisites", "frontend"],
+            sources=["frontend/package.json", "frontend/Dockerfile.dev"],
+        )
+        add(
+            "DOCKER-COMPOSE-VERSION-MISSING",
+            "runtime",
+            "La version minimale de Docker Compose n’est pas explicitement documentée.",
+            affected_sections=["installation", "prerequisites", "deployment"],
+            sources=["docker-compose.dev.yml", "docker-compose.prod.yml", "Makefile"],
+        )
+        if not any("pytest" in command.command or "manage.py test" in command.command for command in knowledge.operational_commands.commands):
+            add(
+                "BACKEND-TEST-COMMAND-MISSING",
+                "tests",
+                "Aucune commande opérationnelle de tests backend n’a été démontrée.",
+                affected_sections=["tests", "backend"],
+                sources=["Makefile", "scripts/", "backend/"],
             )
-        if not knowledge.react.api_calls:
-            missing.append(
-                "Les appels API côté frontend n’ont pas pu être extraits."
+        add(
+            "INTEGRATION-TEST-DETAILS-MISSING",
+            "tests",
+            "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+            affected_sections=["tests", "api"],
+            sources=["tests/", "backend/api/views.py", "frontend/src/api.js"],
+        )
+        add(
+            "API-SCHEMA-MISSING",
+            "api",
+            "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+            affected_sections=["api"],
+            sources=["backend/api/urls.py", "backend/api/views.py"],
+        )
+        add(
+            "API-ERROR-CODES-MISSING",
+            "api",
+            "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+            affected_sections=["api", "troubleshooting"],
+            sources=["backend/api/views.py"],
+        )
+        if not any(field.name == "visibility" and field.choices for model in knowledge.django.model_schemas for field in model.fields):
+            add(
+                "VISIBILITY-VALUES-MISSING",
+                "data-model",
+                "Les valeurs possibles du champ visibility ne sont pas démontrées dans les faits structurés.",
+                affected_sections=["api", "interface-usage"],
+                sources=["backend/api/models.py"],
             )
+        if knowledge.react.crypto.detected and knowledge.react.crypto.recovery_supported is None:
+            add(
+                "VAULT-RECOVERY-PROCEDURE-MISSING",
+                "security",
+                "La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.",
+                affected_sections=["security", "authentication-accounts"],
+                sources=["frontend/src/crypto.js", "frontend/src/App.jsx"],
+            )
+        add(
+            "BACKUP-RETENTION-POLICY-MISSING",
+            "backup",
+            "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+            affected_sections=["backup-restore", "operations"],
+            sources=["scripts/backup-db.sh", "scripts/restore-db.sh"],
+        )
         return missing
+
+    def _build_conflicts(
+        self,
+        knowledge: ProjectKnowledge,
+    ) -> list[ManualConflict]:
+        runtime_engines = [
+            item
+            for item in knowledge.django.database_engines
+            if "test" not in item.context.casefold()
+        ]
+        postgres_sources = [
+            environment.compose_file
+            for environment in knowledge.environments.items
+            for service in environment.services
+            if service.role == "database" and ((service.image or "").casefold().startswith("postgres") or service.name == "db")
+        ]
+        postgres_sources.extend(
+            script.path
+            for script in knowledge.operational_commands.scripts
+            if script.database_engine == "PostgreSQL"
+        )
+        if runtime_engines and any("sqlite" in item.engine for item in runtime_engines) and postgres_sources:
+            return [
+                ManualConflict(
+                    identifier="DATABASE-ENGINE-CONFLICT",
+                    category="database",
+                    severity="critical",
+                    description="Le moteur Django détecté reste SQLite pour l’exécution courante alors que l’orchestration et les opérations de données utilisent PostgreSQL.",
+                    facts=[
+                        ManualConflictFact(
+                            value=runtime_engines[0].engine,
+                            sources=[runtime_engines[0].source],
+                        ),
+                        ManualConflictFact(
+                            value="PostgreSQL",
+                            sources=sorted(set(postgres_sources)),
+                        ),
+                    ],
+                    affected_sections=["database", "migrations", "backup", "restore", "production"],
+                )
+            ]
+        return []
+
+    def _build_limitations(
+        self,
+        knowledge: ProjectKnowledge,
+        missing_information: list[ManualKnowledgeGap],
+        conflicts: list[ManualConflict],
+    ) -> list[ManualKnowledgeGap]:
+        items = list(missing_information)
+        for conflict in conflicts:
+            items.append(
+                ManualKnowledgeGap(
+                    identifier=f"LIMIT-{conflict.identifier}",
+                    category=conflict.category,
+                    severity=conflict.severity,
+                    description=conflict.description,
+                    affected_sections=list(conflict.affected_sections),
+                    sources=[source for fact in conflict.facts for source in fact.sources],
+                )
+            )
+        if any(route.resolution_status != "resolved" for route in knowledge.django.resolved_routes):
+            items.append(
+                ManualKnowledgeGap(
+                    identifier="UNRESOLVED-ROUTES",
+                    category="api",
+                    severity="warning",
+                    description="Certaines routes Django ont été détectées sans pouvoir être résolues en chemins publics complets.",
+                    affected_sections=["api"],
+                    sources=["backend/App/urls.py", "backend/api/urls.py"],
+                )
+            )
+        return items
+
+    def _workflow_proves_create_admin(
+        self,
+        knowledge: ProjectKnowledge,
+    ) -> bool:
+        return any(
+            any("python manage.py ensure_admin" in command for command in script.django_commands)
+            for script in knowledge.operational_commands.scripts
+        )
 
     @staticmethod
     def _find_command(

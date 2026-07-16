@@ -56,6 +56,9 @@ class ManualCommandParameter:
     help: str | None = None
     type_annotation: str | None = None
     default: str | None = None
+    example: str | None = None
+    description: str | None = None
+    source: str | None = None
 
 
 @dataclass(slots=True)
@@ -82,11 +85,41 @@ class ManualWorkflow:
     title: str
     summary: str
     commands: list[str] = field(default_factory=list)
+    operational_status: str = "operational"
+    notes: list[str] = field(default_factory=list)
     source: ManualFactSource = field(
         default_factory=lambda: ManualFactSource(
             status="derived"
         )
     )
+
+
+
+
+@dataclass(slots=True)
+class ManualConflictFact:
+    value: str
+    sources: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ManualConflict:
+    identifier: str
+    category: str
+    severity: str
+    description: str
+    facts: list[ManualConflictFact] = field(default_factory=list)
+    affected_sections: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ManualKnowledgeGap:
+    identifier: str
+    category: str
+    severity: str
+    description: str
+    affected_sections: list[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -126,7 +159,7 @@ class ManualSecurity:
 
 @dataclass(slots=True)
 class ManualLimitations:
-    items: list[str] = field(default_factory=list)
+    items: list[Any] = field(default_factory=list)
     source: ManualFactSource = field(
         default_factory=lambda: ManualFactSource(
             status="derived"
@@ -176,7 +209,8 @@ class ManualKnowledge:
     django: dict[str, Any] = field(default_factory=dict)
     react: dict[str, Any] = field(default_factory=dict)
     capabilities: dict[str, Any] = field(default_factory=dict)
-    missing_information: list[str] = field(default_factory=list)
+    missing_information: list[Any] = field(default_factory=list)
+    conflicts: list[ManualConflict] = field(default_factory=list)
     commands: list[ManualCommand] = field(default_factory=list)
     workflows: list[ManualWorkflow] = field(default_factory=list)
     configuration: ManualConfiguration = field(
@@ -215,7 +249,7 @@ class ManualKnowledge:
 
 
 class ManualKnowledgeBuilder:
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = 2
 
     def build(
         self,
