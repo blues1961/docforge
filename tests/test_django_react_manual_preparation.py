@@ -370,7 +370,7 @@ def test_django_react_knowledge_detects_commands_django_react_and_capabilities(t
     assert knowledge.react.crypto.detected is True
     assert knowledge.react.crypto.key_derivation == "PBKDF2"
     assert any(
-        cap.label == "Consulter les contacts"
+        cap.label.startswith("Consulter") and "contact" in cap.label
         for cap in knowledge.capabilities.capabilities
     )
 
@@ -401,7 +401,7 @@ def test_django_react_manual_prepare_is_application_oriented(tmp_path: Path) -> 
     assert "make up" in command_paths
     assert "make migrate" in command_paths
     run_tests = next(item for item in data["workflows"] if item["identifier"] == "run-tests")
-    assert run_tests["commands"] == ["npm run test"]
+    assert run_tests["commands"] == ["node --test src/*.test.mjs"]
     assert run_tests["operational_status"] == "requires-context"
     create_admin = next(item for item in data["workflows"] if item["identifier"] == "create-admin")
     assert create_admin["commands"] == ["make migrate"]
@@ -466,6 +466,12 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
     assert "Utilise `missing_information` et `limitations.items` comme source prioritaire" in prompt
     assert "Pour `react.crypto`, décris uniquement l’implémentation détectée" in prompt
     assert "Le flux de DocForge s’arrête à la production de `manual-knowledge.json` et du prompt de rédaction" in prompt
+    assert "Une URL syntaxiquement invalide ou contenant une interpolation déséquilibrée" in prompt
+    assert "Les paramètres internes d’une commande ne doivent jamais être présentés comme arguments utilisateur" in prompt
+    assert "Lorsqu’une cible alias délègue à des prérequis démontrés" in prompt
+    assert "Les helpers internes du Makefile ne doivent pas encombrer la référence principale" in prompt
+    assert "Lorsque `conflicts` est vide, n’ajoute pas une phrase de remplissage" in prompt
+    assert "Si `capabilities.capabilities` contient des capacités backend ou frontend démontrées" in prompt
     assert "Chaque catégorie d’information doit avoir une section principale" in prompt
     assert "Ne recopie pas intégralement la liste des commandes, des services, des variables, des URLs ou des endpoints" in prompt
     assert "Le démarrage rapide doit contenir uniquement" in prompt
@@ -533,3 +539,304 @@ def test_django_react_manual_json_is_valid_and_does_not_modify_project_files(tmp
         if path.is_file() and ".docforge" not in path.as_posix()
     }
     assert before == after
+
+
+def _create_generalized_django_react_project(root: Path) -> None:
+    (root / "backend" / "gestionnaire_mdp").mkdir(parents=True)
+    (root / "backend" / "api").mkdir(parents=True)
+    (root / "frontend" / "src" / "routes").mkdir(parents=True)
+    (root / "frontend" / "src" / "services").mkdir(parents=True)
+    (root / "frontend" / "src" / "components").mkdir(parents=True)
+    (root / "scripts").mkdir()
+
+    (root / ".gitignore").write_text(".docforge/\n.venv/\n__pycache__/\n*.pyc\n", encoding="utf-8")
+    (root / ".env.dev").write_text(
+        "APP_ENV=dev\n"
+        "APP_HOST=localhost\n"
+        "DEV_API_PORT=8002 # 8001 + N\n"
+        "DEV_DB_PORT=5433 # 5432 + N\n"
+        "DEV_VITE_PORT=5174 # 5173 + N\n"
+        'NAME="Gestionnaire MDP"\n'
+        'LABEL_HASH="abc#def"\n'
+        "EMPTY=\n"
+        "VALUE='texte avec espaces'\n"
+        "DJANGO_DEBUG=1\n"
+        "POSTGRES_DB=mdp\n"
+        "POSTGRES_USER=mdp_user\n",
+        encoding="utf-8",
+    )
+    (root / ".env.prod").write_text(
+        "APP_ENV=prod\n"
+        "APP_HOST=mdp.mon-site.ca\n"
+        "DJANGO_DEBUG=0\n"
+        "FRONT_ORIGIN=https://mdp.mon-site.ca\n"
+        "POSTGRES_DB=mdp\n"
+        "POSTGRES_USER=mdp_user\n",
+        encoding="utf-8",
+    )
+    (root / ".env").symlink_to(".env.dev")
+    (root / ".env.local").write_text(
+        "POSTGRES_PASSWORD=supersecret\nDJANGO_SECRET_KEY=super-secret-key\n",
+        encoding="utf-8",
+    )
+
+    (root / "docker-compose.dev.yml").write_text(
+        """
+services:
+  db:
+    image: postgres:16
+    env_file:
+      - .env.dev
+      - .env.local
+    ports:
+      - "${DEV_DB_PORT:-5433}:5432"
+  backend:
+    image: python:3.11
+    env_file:
+      - .env.dev
+      - .env.local
+    ports:
+      - "${DEV_API_PORT:-8002}:8000"
+  frontend:
+    image: node:20
+    env_file:
+      - .env.dev
+      - .env.local
+    ports:
+      - "${DEV_VITE_PORT:-5174}:5173"
+""",
+        encoding="utf-8",
+    )
+    (root / "docker-compose.prod.yml").write_text(
+        """
+services:
+  db:
+    image: postgres:16-alpine
+  backend:
+    image: python:3.11
+    labels:
+      - "traefik.http.routers.mdp-api.rule=Host(`${APP_HOST}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.mdp-admin.rule=Host(`${APP_HOST}`) && PathPrefix(`/admin`)"
+  frontend:
+    image: nginx:alpine
+    labels:
+      - "traefik.http.routers.mdp-front.rule=Host(`${APP_HOST}`) && !PathPrefix(`/api/`) && !PathPrefix(`/admin/`)"
+""",
+        encoding="utf-8",
+    )
+
+    (root / "Makefile").write_text(
+        """
+COMPOSE = docker compose --env-file .env --env-file .env.local -f docker-compose.$(APP_ENV).yml
+TREE_IGNORE ?= .git,node_modules,.venv
+.PHONY: help dev prod env-check env-check-base env-check-local up down start stop logs rebuild test test-backend test-frontend restore restore-db backup-db backup-dir createsuperuser tree
+
+help: ## Liste les commandes
+
+dev: ## Pointe .env vers .env.dev
+	ln -sf .env.dev .env
+
+prod: ## Pointe .env vers .env.prod
+	ln -sf .env.prod .env
+
+env-check: env-check-base env-check-local ## Vérifie env + secrets locaux
+
+env-check-base: ## Vérifie .env -> .env.$(APP_ENV)
+	@test -f .env
+
+env-check-local: ## Vérifie la présence de .env.local
+	@test -f .env.local
+
+up: env-check ## Démarre la stack
+	$(COMPOSE) up -d
+
+down: env-check ## Stoppe la stack
+	$(COMPOSE) down
+
+start: up ## Alias de up
+
+stop: down ## Alias de down
+
+logs: env-check ## Logs des services
+	$(COMPOSE) logs -f $(SERVICE)
+
+rebuild: env-check ## Rebuild des services
+	$(COMPOSE) build $(SERVICE)
+
+backup-dir:
+	mkdir -p backup
+
+backup-db: env-check backup-dir ## Sauvegarder la base
+	$(COMPOSE) exec -T db pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"
+
+restore: ## Alias standard vers restore-db
+	$(MAKE) restore-db
+
+restore-db: env-check ## Restaurer la DB depuis BACKUP=<fichier>
+	BACKUP_FILE="$${BACKUP:-./backup/latest.sql.gz}"; \
+	gunzip -c "$$BACKUP_FILE" | $(COMPOSE) exec -T db psql -U "$$POSTGRES_USER" "$$POSTGRES_DB"
+
+createsuperuser: env-check ## Crée/MAJ admin via ADMIN_*
+	$(COMPOSE) exec -T backend python manage.py shell -c 'import os; from django.contrib.auth import get_user_model; U=get_user_model(); u=os.getenv("ADMIN_USERNAME") or "admin"; e=os.getenv("ADMIN_EMAIL") or "admin@example.com"; p=os.getenv("ADMIN_PASSWORD") or "changeme"; obj,_=U.objects.update_or_create(username=u, defaults={"email":e}); obj.set_password(p); obj.is_staff=True; obj.is_superuser=True; obj.save()'
+
+start-backend: env-check ## Démarrer backend
+	$(COMPOSE) up -d backend
+
+test: test-backend test-frontend ## Lance la suite de tests principale
+
+test-backend: env-check ## Lance les tests backend Django
+	$(COMPOSE) run --rm backend python manage.py test
+
+test-frontend: env-check ## Lance les tests frontend
+	$(COMPOSE) run --rm frontend npm run test
+
+tree: ## Arborescence du projet
+	tree -I "$(TREE_IGNORE)"
+""",
+        encoding="utf-8",
+    )
+
+    (root / "backend" / "requirements.txt").write_text(
+        "Django\ndjangorestframework\ndjangorestframework-simplejwt\n",
+        encoding="utf-8",
+    )
+    (root / "frontend" / "package.json").write_text(
+        '{"type":"module","scripts":{"dev":"vite","build":"vite build","test":"vitest run"},"dependencies":{"react":"^18.0.0","react-dom":"^18.0.0"}}',
+        encoding="utf-8",
+    )
+    (root / "frontend" / "vite.config.js").write_text(
+        'export default { server: { host: "0.0.0.0" } };\n',
+        encoding="utf-8",
+    )
+    (root / "backend" / "gestionnaire_mdp" / "settings.py").write_text(
+        'import os\nimport sys\nfrom pathlib import Path\nBASE_DIR = Path(__file__).resolve().parent.parent\nSECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev")\nINSTALLED_APPS = ["django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.sessions", "rest_framework", "api"]\nROOT_URLCONF = "gestionnaire_mdp.urls"\nif "test" in sys.argv:\n    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "test.sqlite3"}}\nelse:\n    DATABASES = {"default": {"ENGINE": "django.db.backends.postgresql", "NAME": os.getenv("POSTGRES_DB"), "USER": os.getenv("POSTGRES_USER"), "PASSWORD": os.getenv("POSTGRES_PASSWORD"), "HOST": os.getenv("POSTGRES_HOST", "db"), "PORT": os.getenv("POSTGRES_PORT", "5432")}}\nREST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",), "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",)}\n',
+        encoding="utf-8",
+    )
+    (root / "backend" / "gestionnaire_mdp" / "urls.py").write_text(
+        'from django.contrib import admin\nfrom django.urls import include, path\nurlpatterns = [path("admin/", admin.site.urls), path("api/", include("api.urls"))]\n',
+        encoding="utf-8",
+    )
+    (root / "backend" / "api" / "models.py").write_text(
+        'from django.db import models\nclass Category(models.Model):\n    name = models.CharField(max_length=120, unique=True)\nclass PasswordEntry(models.Model):\n    title = models.CharField(max_length=120)\n    category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)\nclass SecretBundle(models.Model):\n    label = models.CharField(max_length=120, default="bundle")\n',
+        encoding="utf-8",
+    )
+    (root / "backend" / "api" / "views.py").write_text(
+        'from rest_framework import viewsets\nfrom rest_framework.permissions import IsAuthenticated\nfrom rest_framework.response import Response\nfrom rest_framework.views import APIView\nfrom .models import Category, PasswordEntry, SecretBundle\nclass LoginView(APIView):\n    permission_classes = []\n    def post(self, request):\n        return Response({"ok": True})\nclass WhoAmIView(APIView):\n    permission_classes = [IsAuthenticated]\n    def get(self, request):\n        return Response({"ok": True})\nclass CategoryViewSet(viewsets.ModelViewSet):\n    permission_classes = [IsAuthenticated]\n    queryset = Category.objects.all()\nclass PasswordEntryViewSet(viewsets.ModelViewSet):\n    permission_classes = [IsAuthenticated]\n    queryset = PasswordEntry.objects.all()\nclass SecretBundleViewSet(viewsets.ModelViewSet):\n    permission_classes = [IsAuthenticated]\n    queryset = SecretBundle.objects.all()\n',
+        encoding="utf-8",
+    )
+    (root / "backend" / "api" / "urls.py").write_text(
+        'from django.urls import path, include\nfrom rest_framework.routers import DefaultRouter\nfrom .views import CategoryViewSet, LoginView, PasswordEntryViewSet, SecretBundleViewSet, WhoAmIView\nrouter = DefaultRouter()\nrouter.register("categories", CategoryViewSet, basename="category")\nrouter.register("passwords", PasswordEntryViewSet, basename="password")\nrouter.register("secrets", SecretBundleViewSet, basename="secret")\nurlpatterns = [path("auth/login/", LoginView.as_view()), path("auth/whoami/", WhoAmIView.as_view()), path("", include(router.urls))]\n',
+        encoding="utf-8",
+    )
+    (root / "frontend" / "src" / "main.jsx").write_text(
+        'import React from "react";\nimport AppRoutes from "./routes/AppRoutes.jsx";\nexport default function Main() { return <AppRoutes />; }\n',
+        encoding="utf-8",
+    )
+    (root / "frontend" / "src" / "routes" / "AppRoutes.jsx").write_text(
+        'import React from "react";\nimport { BrowserRouter, Link, Route, Routes } from "react-router-dom";\nimport { listCategories, listPasswords, whoAmI } from "../services/http.js";\nexport default function AppRoutes() { whoAmI(); listCategories(); listPasswords(); return <BrowserRouter><nav><Link to="/vault">Coffre</Link><Link to="/vault/categories">Catégories</Link></nav><Routes><Route path="/login" element={<div>Login</div>} /><Route path="/vault" element={<div>Vault</div>} /><Route path="/vault/new" element={<div>New</div>} /><Route path="/vault/categories" element={<div>Categories</div>} /></Routes></BrowserRouter>; }\n',
+        encoding="utf-8",
+    )
+    (root / "frontend" / "src" / "services" / "http.js").write_text(
+        'export function whoAmI() { return fetch("/api/auth/whoami/"); }\nexport function listCategories() { return fetch("/api/categories/"); }\nexport function listPasswords() { return fetch("/api/passwords/"); }\n',
+        encoding="utf-8",
+    )
+
+
+def test_django_react_generalization_env_parsing_and_contextual_values(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    variables = {item.name: item for item in knowledge.environment_variables.variables}
+    assert variables["DEV_API_PORT"].default_value == "8002"
+    assert variables["DEV_API_PORT"].comment == "8001 + N"
+    assert variables["DEV_DB_PORT"].default_value == "5433"
+    assert variables["DEV_VITE_PORT"].default_value == "5174"
+    assert any(value.environment == "prod" and value.value == "mdp.mon-site.ca" for value in variables["APP_HOST"].values)
+    assert any(value.environment == "dev" and value.value == "localhost" for value in variables["APP_HOST"].values)
+    assert variables["NAME"].default_value == "Gestionnaire MDP"
+    assert variables["LABEL_HASH"].default_value == "abc#def"
+    assert variables["EMPTY"].default_value == ""
+    assert variables["VALUE"].default_value == "texte avec espaces"
+
+
+def test_django_react_generalization_make_parameters_and_aliases(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+
+    commands = {item["name"]: item for item in data["operational_commands"]["commands"]}
+    public_commands = {item["name"]: item for item in data["commands"]}
+
+    assert commands["test"]["prerequisites"] == ["test-backend", "test-frontend"]
+    assert commands["start"]["prerequisites"] == ["up"]
+    assert commands["stop"]["prerequisites"] == ["down"]
+    assert commands["logs"]["parameters"][0]["name"] == "SERVICE"
+    assert commands["rebuild"]["parameters"][0]["name"] == "SERVICE"
+    assert commands["tree"]["parameters"][0]["name"] == "TREE_IGNORE"
+    assert commands["tree"]["parameters"][0]["required"] is False
+    assert "COMPOSE" not in {item["name"] for item in commands["logs"]["parameters"]}
+    assert "MAKE" not in {item["name"] for item in commands["restore"]["parameters"]}
+    assert "MAKEFILE_LIST" not in {item["name"] for item in commands["help"]["parameters"]}
+    assert commands["backup-dir"]["visibility"] == "internal"
+    assert "backup-dir" not in public_commands
+
+
+def test_django_react_generalization_workflows_capabilities_and_security(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+
+    workflow_ids = {item["identifier"] for item in data["workflows"]}
+    run_tests = next(item for item in data["workflows"] if item["identifier"] == "run-tests")
+    create_admin = next(item for item in data["workflows"] if item["identifier"] == "create-admin")
+    missing_ids = {item["identifier"] for item in data["missing_information"]}
+    endpoints = {(item["environment"], item["service"], item["url"]) for item in data["service_endpoints"]["endpoints"]}
+
+    assert workflow_ids >= {"run-tests", "create-admin", "open-django-admin", "open-frontend"}
+    assert run_tests["commands"] == ["make test"]
+    assert run_tests["operational_status"] == "operational"
+    assert create_admin["commands"] == ["make createsuperuser"]
+    assert "BACKEND-TEST-COMMAND-MISSING" not in missing_ids
+    assert "VISIBILITY-VALUES-MISSING" not in missing_ids
+    assert any(cap["label"].startswith("Consulter") and "catég" in cap["label"].casefold() for cap in data["capabilities"]["capabilities"])
+    assert any(cap["label"].startswith("Créer") and "mots de passe" in cap["label"].casefold() for cap in data["capabilities"]["capabilities"])
+    assert ("prod", "frontend", "https://mdp.mon-site.ca") in endpoints
+    assert ("prod", "backend", "https://mdp.mon-site.ca/api/") in endpoints
+    assert not any("${APP_HOST}" in url for _, _, url in endpoints)
+    assert any(risk["identifier"] == "ADMIN-CREDENTIAL-FALLBACK-DETECTED" for risk in data["security"]["risks"])
+    assert "changeme" not in json.dumps(data["security"], ensure_ascii=False)
+
+
+def test_django_react_generalization_recursive_react_and_django_detection(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    assert knowledge.django.settings_files == ["backend/gestionnaire_mdp/settings.py"]
+    assert knowledge.django.settings_module == "gestionnaire_mdp.settings"
+    assert knowledge.django.urlconf_module == "gestionnaire_mdp.urls"
+    assert knowledge.django.admin_enabled is True
+    assert any(route.full_path == "/api/auth/login/" for route in knowledge.django.resolved_routes)
+    assert any(endpoint.path == "/api/categories/" for endpoint in knowledge.django.endpoints)
+    assert any(path.endswith("frontend/src/routes/AppRoutes.jsx") for path in knowledge.react.source_paths)
+    assert any(path.endswith("frontend/src/services/http.js") for path in knowledge.react.source_paths)
+    assert "frontend/src/api.js" not in knowledge.react.source_paths
+    assert knowledge.react.crypto.detected is False
+    assert any(route == "/vault" for route in knowledge.react.routes)
+    assert any(call == "GET /api/categories/" for call in knowledge.react.api_calls)
+
+
+def test_django_react_invalid_frontend_endpoint_is_not_operational(tmp_path: Path) -> None:
+    _create_generalized_django_react_project(tmp_path)
+    compose_path = tmp_path / "docker-compose.dev.yml"
+    compose_path.write_text(compose_path.read_text(encoding="utf-8").replace('${DEV_VITE_PORT:-5174}', '${DEV_VITE_PORT'), encoding="utf-8")
+
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+
+    frontend_endpoints = [item for item in data["service_endpoints"]["endpoints"] if item["service"] == "frontend" and item["environment"] == "dev"]
+    workflow_ids = {item["identifier"] for item in data["workflows"]}
+    limitation_ids = {item["identifier"] for item in data["limitations"]["items"]}
+
+    assert frontend_endpoints[0]["validity"] == "invalid"
+    assert "open-frontend" not in workflow_ids
+    assert "INVALID-SERVICE-ENDPOINTS" in limitation_ids

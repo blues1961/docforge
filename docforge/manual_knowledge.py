@@ -58,6 +58,7 @@ class ManualCommandParameter:
     default: str | None = None
     example: str | None = None
     description: str | None = None
+    origin: str | None = None
     source: str | None = None
 
 
@@ -68,6 +69,9 @@ class ManualCommand:
     invocation: str
     group: str | None
     help: str | None
+    visibility: str = "public"
+    documented: bool = False
+    prerequisites: list[str] = field(default_factory=list)
     parameters: list[ManualCommandParameter] = field(
         default_factory=list
     )
@@ -146,7 +150,7 @@ class ManualSecurity:
         default_factory=list
     )
     controls: list[dict[str, Any]] = field(default_factory=list)
-    risks: list[str] = field(default_factory=list)
+    risks: list[Any] = field(default_factory=list)
     validation_commands: list[str] = field(
         default_factory=list
     )

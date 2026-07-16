@@ -83,6 +83,7 @@ class OperationalCommandParameterFacts:
     required: bool
     example: str | None = None
     description: str | None = None
+    origin: str = "user-documented"
     source: str = "Makefile"
 
 
@@ -94,10 +95,15 @@ class OperationalCommandFacts:
     source: str
     target: str | None = None
     body: list[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
     environments: list[str] = field(default_factory=list)
     parameters: list["OperationalCommandParameterFacts"] = field(
         default_factory=list
     )
+    help_text: str | None = None
+    phony: bool = False
+    documented: bool = False
+    visibility: str = "internal"
 
 
 @dataclass(slots=True)
@@ -136,14 +142,25 @@ class OperationalCommandsFacts:
 
 
 @dataclass(slots=True)
+class EnvironmentVariableValueFacts:
+    environment: str
+    value: str | None
+    source: str
+    comment: str | None = None
+
+
+@dataclass(slots=True)
 class EnvironmentVariableFacts:
     name: str
     scope: str
     environments: list[str] = field(default_factory=list)
     required: bool | None = None
+    required_by_environment: dict[str, bool] = field(default_factory=dict)
     sensitive: bool = False
     default_value: str | None = None
     description: str | None = None
+    comment: str | None = None
+    values: list[EnvironmentVariableValueFacts] = field(default_factory=list)
     sources: list[str] = field(default_factory=list)
 
 
@@ -160,6 +177,9 @@ class ServiceEndpointFacts:
     service: str
     url: str
     source: str
+    validity: str = "valid"
+    resolution_status: str = "resolved"
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -247,6 +267,8 @@ class DjangoEndpointFacts:
 @dataclass(slots=True)
 class DjangoFacts:
     project_module: str | None = None
+    settings_module: str | None = None
+    urlconf_module: str | None = None
     settings_files: list[str] = field(default_factory=list)
     installed_apps: list[str] = field(default_factory=list)
     local_apps: list[str] = field(default_factory=list)
@@ -605,7 +627,7 @@ class DjangoReactApplicationAnalyzer:
                 self._resolve_host_placeholders(
                     self._hosts_from_labels(labels),
                     root,
-                    env_files,
+                    env_files or self._compose_interpolation_env_files(root, environment),
                 )
             ),
             source=compose_file,
@@ -620,58 +642,65 @@ class DjangoReactApplicationAnalyzer:
 
         if service.environment == "dev":
             for port in service.ports:
-                host_port = port.split(":", 1)[0]
+                host_port = self._extract_host_port(port)
+                if not host_port:
+                    continue
                 if service.name == "frontend":
+                    url = self._build_url("http", "localhost", host_port)
                     endpoints.append(
-                        ServiceEndpointFacts(
+                        self._endpoint_fact(
                             environment="dev",
                             service=service.name,
-                            url=f"http://localhost:{host_port}",
+                            url=url,
                             source=service.source,
                         )
                     )
                 if service.name == "backend":
-                    endpoints.extend(
-                        [
-                            ServiceEndpointFacts(
+                    for path_suffix in ("/api/", "/admin/"):
+                        url = self._build_url(
+                            "http",
+                            "localhost",
+                            host_port,
+                            path_suffix,
+                        )
+                        endpoints.append(
+                            self._endpoint_fact(
                                 environment="dev",
                                 service=service.name,
-                                url=f"http://localhost:{host_port}/api/",
+                                url=url,
                                 source=service.source,
-                            ),
-                            ServiceEndpointFacts(
-                                environment="dev",
-                                service=service.name,
-                                url=f"http://localhost:{host_port}/admin/",
-                                source=service.source,
-                            ),
-                        ]
-                    )
+                            )
+                        )
 
         if service.detected_hosts:
             for host in service.detected_hosts:
-                base = f"https://{host}"
                 candidate_paths = []
                 for label in service.traefik_labels:
-                    if "PathPrefix(`/api`)" in label:
+                    if "!PathPrefix(" in label:
+                        continue
+                    if "PathPrefix(`/api/`)" in label or "PathPrefix(`/api`)" in label:
                         candidate_paths.append("/api/")
-                    elif "PathPrefix(`/admin`)" in label:
+                    elif "PathPrefix(`/admin/`)" in label or "PathPrefix(`/admin`)" in label:
                         candidate_paths.append("/admin/")
-                    elif "PathPrefix(`/static`)" in label:
+                    elif "PathPrefix(`/static/`)" in label or "PathPrefix(`/static`)" in label:
                         candidate_paths.append("/static/")
                 if not candidate_paths:
                     candidate_paths = [""]
                 for path_suffix in candidate_paths:
+                    url = self._build_url("https", host, None, path_suffix)
                     endpoints.append(
-                        ServiceEndpointFacts(
+                        self._endpoint_fact(
                             environment=service.environment,
                             service=service.name,
-                            url=f"{base}{path_suffix}",
+                            url=url,
                             source=service.source,
                         )
                     )
 
-        return endpoints
+        deduped: dict[tuple[str, str, str], ServiceEndpointFacts] = {}
+        for endpoint in endpoints:
+            deduped[(endpoint.environment, endpoint.service, endpoint.url)] = endpoint
+        return list(deduped.values())
 
     def _analyze_operational_commands(
         self,
@@ -688,7 +717,10 @@ class DjangoReactApplicationAnalyzer:
         except OSError:
             return OperationalCommandsFacts()
 
-        help_parameters = self._extract_make_help_parameters(lines)
+        help_entries = self._extract_make_help_entries(lines)
+        default_target_visibility = "public" if not help_entries else "internal"
+        declared_variables = self._extract_declared_make_variables(lines)
+        phony_targets = self._extract_phony_targets(lines)
 
         i = 0
         while i < len(lines):
@@ -709,15 +741,15 @@ class DjangoReactApplicationAnalyzer:
                 i += 1
                 continue
 
-            target = line.split(":", 1)[0].strip()
+            target, remainder = line.split(":", 1)
+            target = target.strip()
+            prereq_part = remainder.split("##", 1)[0].strip()
+            prerequisites = [item for item in prereq_part.split() if item]
             body: list[str] = []
             i += 1
             while i < len(lines):
                 body_line = lines[i]
-                if (
-                    body_line.startswith("	")
-                    or body_line.startswith(" ")
-                ):
+                if body_line.startswith("	") or body_line.startswith(" "):
                     body.append(body_line.strip())
                     i += 1
                     continue
@@ -726,10 +758,9 @@ class DjangoReactApplicationAnalyzer:
             if not target:
                 continue
 
-            category = self.CATEGORY_BY_TARGET.get(
-                target,
-                "other",
-            )
+            help_text = help_entries.get(target)
+            visibility = "public" if help_text else default_target_visibility
+            category = self.CATEGORY_BY_TARGET.get(target, self._infer_command_category(target, prerequisites, body))
             commands.append(
                 OperationalCommandFacts(
                     name=target,
@@ -738,20 +769,22 @@ class DjangoReactApplicationAnalyzer:
                     source="Makefile",
                     target=target,
                     body=body,
-                    environments=self._command_environments(
-                        target
-                    ),
+                    prerequisites=prerequisites,
+                    environments=self._command_environments(target),
                     parameters=self._build_make_parameters(
                         target=target,
                         body=body,
-                        help_parameters=help_parameters,
+                        help_entries=help_entries,
+                        declared_variables=declared_variables,
                     ),
+                    help_text=help_text,
+                    phony=target in phony_targets,
+                    documented=help_text is not None,
+                    visibility=visibility,
                 )
             )
 
-        commands.sort(
-            key=lambda item: (item.category, item.command)
-        )
+        commands.sort(key=lambda item: (item.visibility != "public", item.category, item.command))
         return OperationalCommandsFacts(
             commands=commands,
             scripts=self._analyze_scripts(project),
@@ -770,10 +803,13 @@ class DjangoReactApplicationAnalyzer:
             scope: str,
             environments: list[str],
             required: bool | None,
+            required_by_environment: dict[str, bool] | None,
             sensitive: bool,
             default_value: str | None,
             description: str | None,
+            comment: str | None,
             source: str,
+            environment_value: EnvironmentVariableValueFacts | None = None,
         ) -> None:
             item = variables.get(name)
             if item is None:
@@ -784,152 +820,144 @@ class DjangoReactApplicationAnalyzer:
                     sensitive=sensitive,
                     default_value=default_value,
                     description=description,
+                    comment=comment,
                 )
                 variables[name] = item
 
-            item.scope = self._merge_scope(
-                item.scope,
-                scope,
-            )
-            self._extend_unique(
-                item.environments,
-                environments,
-            )
-            self._extend_unique(
-                item.sources,
-                [source],
-            )
-            item.sensitive = (
-                item.sensitive or sensitive
-            )
+            item.scope = self._merge_scope(item.scope, scope)
+            self._extend_unique(item.environments, environments)
+            self._extend_unique(item.sources, [source])
+            item.sensitive = item.sensitive or sensitive
             if item.required is None:
                 item.required = required
             elif required is True:
                 item.required = True
             if item.default_value is None:
                 item.default_value = default_value
+            elif item.default_value != default_value and default_value is not None:
+                item.default_value = None
             if item.description is None:
                 item.description = description
+            if item.comment is None:
+                item.comment = comment
+            if required_by_environment:
+                item.required_by_environment.update(required_by_environment)
+            if environment_value is not None:
+                if not any(
+                    existing.environment == environment_value.environment
+                    and existing.source == environment_value.source
+                    and existing.value == environment_value.value
+                    for existing in item.values
+                ):
+                    item.values.append(environment_value)
 
         env_file_map = {
-            ".env": ["dev", "prod"],
+            ".env": self._environment_names_for_env_file(project.root / ".env"),
             ".env.dev": ["dev"],
             ".env.prod": ["prod"],
             ".env.template.example": ["dev", "prod"],
         }
 
         for relative_path, env_names in env_file_map.items():
+            if not env_names:
+                continue
             path = project.root / relative_path
             if not path.is_file():
                 continue
-            for name, default_value in self._read_env_keys(
-                path
-            ):
-                upsert(
-                    name,
-                    scope="shared",
-                    environments=env_names,
-                    required=(
-                        False
-                        if default_value is not None
-                        else None
-                    ),
-                    sensitive=self._is_sensitive_name(
-                        name
-                    ),
-                    default_value=(
-                        default_value
-                        if not self._is_sensitive_name(name)
-                        else None
-                    ),
-                    description=self._describe_variable(
-                        name
-                    ),
-                    source=relative_path,
-                )
+            entries = self._read_env_entries(path)
+            for entry in entries:
+                for env_name in env_names:
+                    env_value = EnvironmentVariableValueFacts(
+                        environment=env_name,
+                        value=None if self._is_sensitive_name(entry["key"]) else entry["value"],
+                        source=relative_path,
+                        comment=entry["comment"],
+                    )
+                    upsert(
+                        entry["key"],
+                        scope="shared",
+                        environments=[env_name],
+                        required=False if entry["value"] is not None else None,
+                        required_by_environment={env_name: False if entry["value"] is not None else False},
+                        sensitive=self._is_sensitive_name(entry["key"]),
+                        default_value=(entry["value"] if len(env_names) == 1 and not self._is_sensitive_name(entry["key"]) else None),
+                        description=self._describe_variable(entry["key"]),
+                        comment=entry["comment"],
+                        source=relative_path,
+                        environment_value=env_value,
+                    )
 
-        settings_path = (
-            project.root / "backend" / "App" / "settings.py"
-        )
-        for getenv in self._extract_getenv_calls(
-            settings_path
-        ):
+        settings_path = self._find_django_settings_path(project)
+        settings_source = self._relative_project_path(project, settings_path)
+        for getenv in self._extract_getenv_calls(settings_path):
             upsert(
                 getenv["name"],
                 scope="backend",
                 environments=["dev", "prod"],
-                required=(
-                    False
-                    if getenv["default"] is not None
-                    else True
-                ),
-                sensitive=self._is_sensitive_name(
-                    getenv["name"]
-                ),
-                default_value=(
-                    getenv["default"]
-                    if not self._is_sensitive_name(
-                        getenv["name"]
-                    )
-                    else None
-                ),
-                description=self._describe_variable(
-                    getenv["name"]
-                ),
-                source="backend/App/settings.py",
+                required=False if getenv["default"] is not None else True,
+                required_by_environment={"dev": False if getenv["default"] is not None else True, "prod": False if getenv["default"] is not None else True},
+                sensitive=self._is_sensitive_name(getenv["name"]),
+                default_value=(getenv["default"] if not self._is_sensitive_name(getenv["name"]) else None),
+                description=self._describe_variable(getenv["name"]),
+                comment=None,
+                source=settings_source,
             )
 
-        api_path = (
-            project.root / "frontend" / "src" / "api.js"
-        )
-        for name in self._extract_import_meta_env(api_path):
-            upsert(
-                name,
-                scope="frontend",
-                environments=["dev", "prod"],
-                required=False,
-                sensitive=self._is_sensitive_name(name),
-                default_value=None,
-                description=self._describe_variable(name),
-                source="frontend/src/api.js",
-            )
+        for api_source in self._frontend_source_files(project, names=("api",)):
+            relative_source = self._relative_project_path(project, api_source)
+            for name in self._extract_import_meta_env(api_source):
+                upsert(
+                    name,
+                    scope="frontend",
+                    environments=["dev", "prod"],
+                    required=False,
+                    required_by_environment={"dev": False, "prod": False},
+                    sensitive=self._is_sensitive_name(name),
+                    default_value=None,
+                    description=self._describe_variable(name),
+                    comment=None,
+                    source=relative_source,
+                )
 
-        script_path = (
-            project.root / "scripts" / "generate-env.sh"
-        )
-        for name in self._extract_local_key_names(
-            script_path
-        ):
+        script_path = project.root / "scripts" / "generate-env.sh"
+        for name in self._extract_local_key_names(script_path):
             upsert(
                 name,
                 scope="ops",
                 environments=["dev", "prod"],
                 required=True,
+                required_by_environment={"dev": True, "prod": True},
                 sensitive=self._is_sensitive_name(name),
                 default_value=None,
                 description=self._describe_variable(name),
-                source="scripts/generate-env.sh",
+                comment=None,
+                source=self._relative_project_path(project, script_path),
             )
 
+        compose_requirements = self._compose_variable_requirements(project, environments)
         for environment in environments.items:
             for service in environment.services:
                 for name in service.env_variables:
+                    required = compose_requirements.get(name, {}).get(environment.name)
                     upsert(
                         name,
                         scope=service.role or "shared",
                         environments=[environment.name],
-                        required=True,
-                        sensitive=self._is_sensitive_name(
-                            name
-                        ),
+                        required=required,
+                        required_by_environment={environment.name: required if required is not None else False},
+                        sensitive=self._is_sensitive_name(name),
                         default_value=None,
-                        description=self._describe_variable(
-                            name
-                        ),
+                        description=self._describe_variable(name),
+                        comment=None,
                         source=service.source,
                     )
 
         result = list(variables.values())
+        for item in result:
+            item.values.sort(key=lambda value: (value.environment, value.source))
+            if item.default_value is None and len({(value.environment, value.value) for value in item.values if value.value is not None}) == 1:
+                only = next((value.value for value in item.values if value.value is not None), None)
+                item.default_value = only
         result.sort(key=lambda item: item.name)
         return EnvironmentVariablesFacts(variables=result)
 
@@ -940,30 +968,20 @@ class DjangoReactApplicationAnalyzer:
         api: ApiFacts,
         operational_commands: OperationalCommandsFacts,
     ) -> DjangoFacts:
-        settings_path = (
-            project.root / "backend" / "App" / "settings.py"
-        )
-        urls_path = (
-            project.root / "backend" / "App" / "urls.py"
-        )
-        models_path = (
-            project.root / "backend" / "api" / "models.py"
-        )
-        views_path = (
-            project.root / "backend" / "api" / "views.py"
-        )
-        ensure_admin_path = (
-            project.root
-            / "backend"
-            / "api"
-            / "management"
-            / "commands"
-            / "ensure_admin.py"
-        )
+        settings_path = self._find_django_settings_path(project)
+        settings_relative = self._relative_project_path(project, settings_path)
+        settings_text = self._read_text(settings_path)
+        settings_module = self._path_to_module(settings_path, project.root / "backend")
+        urlconf_module = self._extract_root_urlconf_module(settings_path) or self._manage_default_urlconf(project)
+        urls_path = self._module_to_project_path(project, urlconf_module)
+        urls_relative = self._relative_project_path(project, urls_path)
+        app_source_dir = urls_path.parent if urls_path is not None else settings_path.parent
+        models_path = self._find_backend_file(project, "models.py")
+        views_paths = self._find_backend_files(project, prefix="views")
+        api_urls_path = self._find_backend_file(project, "urls.py", preferred_subdir="api")
+        ensure_admin_path = self._find_backend_file(project, "ensure_admin.py")
 
-        installed_apps = self._parse_installed_apps(
-            settings_path
-        )
+        installed_apps = self._parse_installed_apps(settings_path)
         local_apps = [
             app_name
             for app_name in installed_apps
@@ -971,31 +989,20 @@ class DjangoReactApplicationAnalyzer:
         ]
         auth_mechanisms = []
         permissions = []
-        settings_text = self._read_text(settings_path)
-        views_text = self._read_text(views_path)
+        views_text = "\n".join(self._read_text(path) for path in views_paths)
 
         if "JWTAuthentication" in settings_text:
             auth_mechanisms.append("JWT")
-        if "TokenObtainPairView" in self._read_text(
-            project.root / "backend" / "api" / "urls.py"
-        ):
+        if api_urls_path and "TokenObtainPairView" in self._read_text(api_urls_path):
             auth_mechanisms.append("SimpleJWT")
-        if "Authorization: `Bearer" in self._read_text(
-            project.root / "frontend" / "src" / "api.js"
-        ):
+        if any("Authorization" in self._read_text(path) and "Bearer" in self._read_text(path) for path in self._frontend_source_files(project, names=("api",))):
             auth_mechanisms.append("Bearer token")
 
-        for permission in (
-            "IsAuthenticated",
-            "IsAdminUser",
-            "AllowAny",
-        ):
+        for permission in ("IsAuthenticated", "IsAdminUser", "AllowAny"):
             if permission in views_text or permission in settings_text:
                 permissions.append(permission)
 
-        model_schemas = self._parse_django_model_schemas(
-            models_path
-        )
+        model_schemas = self._parse_django_model_schemas(models_path)
         models = [
             DjangoModelFacts(
                 name=model.name,
@@ -1011,197 +1018,129 @@ class DjangoReactApplicationAnalyzer:
         ]
         create_admin_commands = []
         if ensure_admin_path.is_file():
-            create_admin_commands.append(
-                "python manage.py ensure_admin"
-            )
+            create_admin_commands.append("python manage.py ensure_admin")
+        if any(command.name == "createsuperuser" for command in operational_commands.commands):
+            create_admin_commands.append("make createsuperuser")
 
-        database_engines = self._extract_database_engines(
-            settings_path
-        )
-        runtime_engines = [
-            item.engine
-            for item in database_engines
-            if "test" not in item.context.casefold()
-        ]
-        database_engine = (
-            runtime_engines[0]
-            if runtime_engines
-            else (database_engines[0].engine if database_engines else None)
-        )
+        database_engines = self._extract_database_engines(settings_path)
+        runtime_engines = [item.engine for item in database_engines if "test" not in item.context.casefold()]
+        database_engine = runtime_engines[0] if runtime_engines else (database_engines[0].engine if database_engines else None)
         database_configuration = []
-        for name in (
-            "POSTGRES_DB",
-            "POSTGRES_USER",
-            "POSTGRES_PASSWORD",
-            "POSTGRES_HOST",
-            "POSTGRES_PORT",
-        ):
+        for name in ("POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_HOST", "POSTGRES_PORT"):
             if name in settings_text:
                 database_configuration.append(name)
 
-        view_details = self._collect_view_details(
-            views_path
-        )
+        view_details = self._collect_view_details(views_paths)
         resolved_routes, endpoints = self._build_django_routes_and_endpoints(
             project=project,
             api=api,
             view_details=view_details,
             auth_mechanisms=sorted(set(auth_mechanisms)),
+            frontend_method_sources=self._frontend_methods_by_path(project),
         )
+        admin_enabled = (
+            "django.contrib.admin" in installed_apps
+            and any((route.full_path == "/admin/" or route.relative_path == "admin/") and (route.view or "") == "admin.site.urls" for route in resolved_routes)
+        )
+        source_paths = [
+            self._relative_project_path(project, candidate)
+            for candidate in [settings_path, urls_path, api_urls_path, models_path, *views_paths, ensure_admin_path]
+            if candidate is not None and candidate.is_file()
+        ]
 
         return DjangoFacts(
-            project_module="App",
-            settings_files=[
-                "backend/App/settings.py"
-            ],
+            project_module=app_source_dir.name if app_source_dir else None,
+            settings_module=settings_module,
+            urlconf_module=urlconf_module,
+            settings_files=[settings_relative] if settings_relative else [],
             installed_apps=installed_apps,
             local_apps=local_apps,
             models=models,
             model_schemas=model_schemas,
-            routes=sorted(
-                {
-                    route.path
-                    for route in api.routes
-                }
-            ),
+            routes=sorted({route.path for route in api.routes}),
             resolved_routes=resolved_routes,
             endpoints=endpoints,
-            routers=sorted(
-                registration.prefix
-                for registration in api.router_registrations
-            ),
-            auth_mechanisms=sorted(
-                set(auth_mechanisms)
-            ),
+            routers=sorted(registration.prefix for registration in api.router_registrations),
+            auth_mechanisms=sorted(set(auth_mechanisms)),
             permissions=sorted(set(permissions)),
-            admin_enabled=(
-                "django.contrib.admin" in installed_apps
-                or "admin.site.urls" in self._read_text(
-                    urls_path
-                )
-            ),
-            migration_commands=sorted(
-                set(migration_commands)
-            ),
-            create_admin_commands=create_admin_commands,
+            admin_enabled=admin_enabled,
+            migration_commands=sorted(set(migration_commands)),
+            create_admin_commands=sorted(set(create_admin_commands)),
             database_engine=database_engine,
             database_engines=database_engines,
             database_configuration=database_configuration,
-            source_paths=[
-                "backend/App/settings.py",
-                "backend/App/urls.py",
-                "backend/api/urls.py",
-                "backend/api/models.py",
-                "backend/api/views.py",
-                "backend/api/management/commands/ensure_admin.py",
-            ],
+            source_paths=source_paths,
         )
 
     def _analyze_react(
         self,
         project: Project,
     ) -> ReactFacts:
-        package_path = (
-            project.root / "frontend" / "package.json"
-        )
-        app_path = (
-            project.root / "frontend" / "src" / "App.jsx"
-        )
-        api_path = (
-            project.root / "frontend" / "src" / "api.js"
-        )
-        crypto_path = (
-            project.root / "frontend" / "src" / "crypto.js"
-        )
+        package_path = project.root / "frontend" / "package.json"
         package_data = self._read_json(package_path)
-        scripts = (
-            package_data.get("scripts", {})
-            if isinstance(package_data, dict)
-            else {}
-        )
+        scripts = package_data.get("scripts", {}) if isinstance(package_data, dict) else {}
+        source_files = self._frontend_source_files(project)
+        text_by_file = {
+            self._relative_project_path(project, source): self._read_text(source)
+            for source in source_files
+        }
+        combined_text = "\n".join(text_by_file.values())
 
-        navigation_items = []
-        for label in (
-            "Recherche",
-            "Visibilité",
-            "Administration",
-            "Contact",
-            "Thème",
-        ):
-            if label in self._read_text(app_path):
-                navigation_items.append(label)
-
-        pages = []
-        app_text = self._read_text(app_path)
-        for label in (
-            "Accès privé",
-            "Utilisateurs",
-            "Nouveau contact",
-            "Modifier le contact",
-        ):
-            if label in app_text:
-                pages.append(label)
-
-        api_calls = self._extract_frontend_api_calls(
-            api_path
-        )
+        navigation_items = sorted({
+            match.group(1).strip()
+            for text in text_by_file.values()
+            for match in re.finditer(r">([^<>{}][^<]{1,80})<", text)
+            if any(keyword in match.group(1) for keyword in ("Connexion", "Catég", "Sauvegarde", "Vérif", "Recherche", "Thème", "Utilisateurs"))
+        })
+        pages = sorted({
+            match.group(1).strip()
+            for text in text_by_file.values()
+            for match in re.finditer(r"<h[1-3][^>]*>([^<]+)</h[1-3]>", text)
+        })
+        routes = self._extract_react_routes(source_files)
+        api_calls = self._extract_frontend_api_calls_from_files(source_files)
         auth_mechanisms = []
-        if "Authorization: `Bearer ${options.token}`" in self._read_text(
-            api_path
-        ):
-            auth_mechanisms.append(
-                "JWT Bearer côté frontend"
-            )
-        if "SESSION_STORAGE_KEY" in app_text:
-            auth_mechanisms.append(
-                "Session locale dans localStorage"
-            )
-        if "decryptPrivateFields" in app_text:
-            auth_mechanisms.append(
-                "Déverrouillage local du coffre privé"
-            )
+        if "Authorization" in combined_text and "Bearer" in combined_text:
+            auth_mechanisms.append("JWT Bearer côté frontend")
+        if "localStorage" in combined_text:
+            auth_mechanisms.append("Session locale dans localStorage")
+        if "sessionStorage" in combined_text:
+            auth_mechanisms.append("Session locale dans sessionStorage")
+        if any(token in combined_text for token in ("decryptPayload", "decryptPrivateFields", "ensureKeyPair", "encryptPayload")):
+            auth_mechanisms.append("Déverrouillage local du coffre privé")
 
-        routes = ["/"]
+        crypto_file = self._find_react_crypto_file(source_files)
+        app_path = self._find_react_app_file(source_files)
         crypto = self._analyze_react_crypto(
-            crypto_path=crypto_path,
+            crypto_path=crypto_file,
             app_path=app_path,
         )
 
+        env_names = sorted({
+            name
+            for source in source_files
+            for name in self._extract_import_meta_env(source)
+        })
+        relevant_sources = [
+            self._relative_project_path(project, package_path),
+            *text_by_file.keys(),
+            self._relative_project_path(project, project.root / "frontend" / "vite.config.js") if (project.root / "frontend" / "vite.config.js").is_file() else None,
+        ]
+        relevant_sources = [item for item in relevant_sources if item]
+
         return ReactFacts(
-            entry_point="frontend/src/main.jsx",
-            routes=routes,
+            entry_point=self._relative_project_path(project, app_path) if app_path and app_path.is_file() else None,
+            routes=routes or ["/"],
             pages=pages,
             navigation_items=navigation_items,
             api_calls=api_calls,
-            environment_variables=self._extract_import_meta_env(
-                api_path
-            ),
+            environment_variables=env_names,
             auth_mechanisms=auth_mechanisms,
-            scripts={
-                str(key): str(value)
-                for key, value in scripts.items()
-                if isinstance(key, str)
-                and isinstance(value, str)
-            },
-            dev_command=(
-                "npm run dev"
-                if "dev" in scripts
-                else None
-            ),
-            build_command=(
-                "npm run build"
-                if "build" in scripts
-                else None
-            ),
+            scripts={str(key): str(value) for key, value in scripts.items() if isinstance(key, str) and isinstance(value, str)},
+            dev_command=("npm run dev" if "dev" in scripts else None),
+            build_command=("npm run build" if "build" in scripts else None),
             crypto=crypto,
-            source_paths=[
-                "frontend/package.json",
-                "frontend/src/main.jsx",
-                "frontend/src/App.jsx",
-                "frontend/src/api.js",
-                "frontend/src/crypto.js",
-                "frontend/vite.config.js",
-            ],
+            source_paths=sorted(dict.fromkeys(relevant_sources)),
         )
 
     def _analyze_capabilities(
@@ -1210,6 +1149,7 @@ class DjangoReactApplicationAnalyzer:
         react: ReactFacts,
     ) -> CapabilitiesFacts:
         capabilities: list[CapabilityFacts] = []
+        by_label: dict[str, CapabilityFacts] = {}
 
         def add(
             label: str,
@@ -1220,117 +1160,90 @@ class DjangoReactApplicationAnalyzer:
             permission_condition: str | None = None,
             confidence: str | None = None,
         ) -> None:
-            capabilities.append(
-                CapabilityFacts(
-                    label=label,
-                    status=status,
-                    evidence=list(evidence),
-                    component=component,
-                    endpoint=endpoint,
-                    permission_condition=permission_condition,
-                    confidence=confidence,
-                )
+            existing = by_label.get(label)
+            if existing is not None:
+                existing.evidence = list(dict.fromkeys([*existing.evidence, *evidence]))
+                if existing.endpoint is None:
+                    existing.endpoint = endpoint
+                if existing.component is None:
+                    existing.component = component
+                if existing.permission_condition is None:
+                    existing.permission_condition = permission_condition
+                if existing.confidence != "high" and confidence == "high":
+                    existing.confidence = confidence
+                if existing.status != "detected" and status == "detected":
+                    existing.status = status
+                return
+            capability = CapabilityFacts(
+                label=label,
+                status=status,
+                evidence=list(dict.fromkeys(evidence)),
+                component=component,
+                endpoint=endpoint,
+                permission_condition=permission_condition,
+                confidence=confidence,
             )
+            by_label[label] = capability
+            capabilities.append(capability)
 
-        model_names = {model.name for model in django.models}
-        api_calls = set(react.api_calls)
-
-        if "Contact" in model_names and "GET /contacts/" in api_calls:
-            add(
-                "Consulter les contacts",
-                "backend/api/models.py",
-                "frontend/src/api.js",
-                component="App",
-                endpoint="/api/contacts/",
-                permission_condition="IsAuthenticated",
-                confidence="high",
-            )
-        if "POST /contacts/" in api_calls:
-            add(
-                "Créer un contact",
-                "frontend/src/api.js",
-                "backend/api/views.py",
-                component="App",
-                endpoint="/api/contacts/",
-                permission_condition="IsAuthenticated",
-                confidence="high",
-            )
-        if "PATCH /contacts/{id}/" in api_calls:
-            add(
-                "Modifier un contact",
-                "frontend/src/api.js",
-                "backend/api/views.py",
-                component="App",
-                endpoint="/api/contacts/{id}/",
-                permission_condition="IsAuthenticated",
-                confidence="high",
-            )
-        if "DELETE /contacts/{id}/" in api_calls:
-            add(
-                "Supprimer un contact",
-                "frontend/src/api.js",
-                "backend/api/views.py",
-                component="App",
-                endpoint="/api/contacts/{id}/",
-                permission_condition="IsAuthenticated",
-                confidence="high",
-            )
-        if "POST /contacts/{id}/sync_birthday/" in api_calls:
-            add(
-                "Synchroniser l’anniversaire d’un contact",
-                "frontend/src/api.js",
-                "backend/api/views.py",
-                component="App",
-                endpoint="/api/contacts/{id}/sync_birthday/",
-                permission_condition="IsAuthenticated",
-                confidence="medium",
-            )
-        if "GET /users/" in api_calls and "POST /users/{id}/reset_password/" in api_calls:
-            add(
-                "Administrer les utilisateurs",
-                "frontend/src/App.jsx",
-                "backend/api/views.py",
-                component="AdminPanel",
-                endpoint="/api/users/",
-                permission_condition="IsAdminUser",
-                confidence="high",
-            )
-        if "Déverrouillage local du coffre privé" in react.auth_mechanisms:
-            add(
-                "Gérer des contacts privés chiffrés côté client",
-                "frontend/src/App.jsx",
-                "frontend/src/crypto.js",
-                status="detected",
-                component="App",
-                endpoint=None,
-                permission_condition=None,
-                confidence="medium",
-            )
-        if any(
-            route.full_path == "/api/auth/login/"
-            for route in django.resolved_routes
-        ):
+        if any(route.full_path and "auth/jwt/create" in route.full_path for route in django.resolved_routes):
             add(
                 "S’authentifier à l’application",
-                "backend/api/urls.py",
-                "frontend/src/api.js",
-                status="detected",
-                component="App",
-                endpoint="/api/auth/login/",
+                *[route.full_path for route in django.resolved_routes if route.full_path and "auth/jwt/create" in route.full_path],
+                status="derived",
+                endpoint="/api/auth/jwt/create/",
                 confidence="high",
             )
-        if any(
-            route.full_path and route.full_path.startswith("/api/integrations/contacts/")
-            for route in django.resolved_routes
-        ):
+
+        if react.crypto.detected:
             add(
-                "Exposer une intégration interne de contacts",
-                "backend/api/urls.py",
-                "backend/api/views.py",
-                component=None,
-                endpoint="/api/integrations/contacts/",
+                "Gérer un coffre local chiffré côté client",
+                *react.crypto.source_paths,
+                status="detected",
+                component="frontend",
                 confidence="medium",
             )
+
+        frontend_components = {path.split("/")[-1].removesuffix(".jsx") for path in react.source_paths}
+        resource_labels = {
+            "Category": "catégories",
+            "PasswordEntry": "entrées de mots de passe",
+            "SecretBundle": "secrets applicatifs",
+            "User": "utilisateurs",
+            "Contact": "contacts",
+        }
+        action_labels = {
+            "GET": "Consulter",
+            "POST": "Créer",
+            "PUT": "Modifier",
+            "PATCH": "Modifier",
+            "DELETE": "Supprimer",
+        }
+
+        for endpoint in django.endpoints:
+            if endpoint.resolution_status != "resolved" or not endpoint.path:
+                continue
+            model_name = self._model_name_from_endpoint(endpoint, django.models)
+            if model_name is None:
+                continue
+            resource_label = resource_labels.get(model_name, self._humanize_model_name(model_name))
+            permission = endpoint.permissions[0] if endpoint.permissions else None
+            for method in endpoint.methods:
+                verb = action_labels.get(method)
+                if verb is None:
+                    continue
+                component = self._component_for_endpoint(endpoint.path, frontend_components)
+                add(
+                    f"{verb} {resource_label}",
+                    endpoint.path,
+                    model_name,
+                    *(react.api_calls if any(self._endpoint_matches_api_call(endpoint.path, api_call) and api_call.startswith(method) for api_call in react.api_calls) else []),
+                    status="derived",
+                    component=component,
+                    endpoint=endpoint.path,
+                    permission_condition=permission,
+                    confidence="medium" if not react.api_calls else "high",
+                )
 
         capabilities.sort(key=lambda item: item.label)
         return CapabilitiesFacts(capabilities=capabilities)
@@ -1544,6 +1457,18 @@ class DjangoReactApplicationAnalyzer:
         ):
             items.append(alias)
         return items
+
+    def _compose_interpolation_env_files(
+        self,
+        root: Path,
+        environment: str,
+    ) -> list[str]:
+        candidates = [".env", f".env.{environment}"]
+        return [
+            candidate
+            for candidate in candidates
+            if (root / candidate).is_file()
+        ]
     def _env_defaults_from_files(
         self,
         root: Path,
@@ -1559,7 +1484,7 @@ class DjangoReactApplicationAnalyzer:
                 continue
             for key, default in self._read_env_keys(path):
                 if default is not None:
-                    values.setdefault(key, default)
+                    values[key] = default
         return values
 
     def _resolve_host_placeholders(
@@ -1586,47 +1511,61 @@ class DjangoReactApplicationAnalyzer:
         return resolved
 
     @staticmethod
-    def _extract_make_help_parameters(
+    def _extract_make_help_entries(
         lines: list[str],
-    ) -> dict[str, list[tuple[str, str | None, str | None, bool]]]:
-        mapping: dict[str, list[tuple[str, str | None, str | None, bool]]] = {}
-        pattern = re.compile(
-            r"make\s+([a-z0-9_-]+)\s+([A-Z_]+)=([^)'\s]+)"
-        )
+    ) -> dict[str, str]:
+        entries: dict[str, str] = {}
         for line in lines:
-            lowered = line.casefold()
-            if "make " not in lowered:
+            match = re.match(r"^([a-zA-Z0-9_-]+):(?:[^#]|#(?!#))*##\s*(.+)$", line)
+            if not match:
                 continue
-            cleaned = line.strip().strip("'\"")
-            for target, param, example in pattern.findall(cleaned):
-                optional = "optionnel" in lowered or "aucun fichier spécifié" in lowered
-                entries = mapping.setdefault(target, [])
-                entries.append(
-                    (
-                        param,
-                        example,
-                        cleaned,
-                        optional,
-                    )
-                )
-        return mapping
+            entries[match.group(1).strip()] = match.group(2).strip()
+        return entries
+
+    @staticmethod
+    def _extract_declared_make_variables(
+        lines: list[str],
+    ) -> set[str]:
+        variables: set[str] = {"MAKE", "MAKEFILE_LIST", "CURDIR", "SHELL"}
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            match = re.match(r"^([A-Z_][A-Z0-9_]*)\s*[:?+]?=", stripped)
+            if match:
+                variables.add(match.group(1))
+        return variables
+
+    @staticmethod
+    def _extract_phony_targets(
+        lines: list[str],
+    ) -> set[str]:
+        targets: set[str] = set()
+        for line in lines:
+            stripped = line.strip()
+            if not stripped.startswith(".PHONY:"):
+                continue
+            _, _, remainder = stripped.partition(":")
+            targets.update(item for item in remainder.strip().split() if item)
+        return targets
 
     def _build_make_parameters(
         self,
         *,
         target: str,
         body: list[str],
-        help_parameters: dict[str, list[tuple[str, str | None, str | None, bool]]],
+        help_entries: dict[str, str],
+        declared_variables: set[str],
     ) -> list[OperationalCommandParameterFacts]:
         parameters: dict[str, OperationalCommandParameterFacts] = {}
-
-        for entry in help_parameters.get(target, []):
-            param, example, description, optional = entry
+        help_text = help_entries.get(target, "")
+        for param, example in re.findall(r"([A-Z_]+)=([^\s)]+)", help_text):
             parameters[param] = OperationalCommandParameterFacts(
                 name=param,
-                required=not optional,
+                required=False,
                 example=example,
-                description=description,
+                description=help_text,
+                origin="user-documented",
                 source="Makefile",
             )
 
@@ -1634,21 +1573,72 @@ class DjangoReactApplicationAnalyzer:
             for param in re.findall(r"\$\(([A-Z_]+)\)", line):
                 if param.endswith("_DIR"):
                     continue
-                item = parameters.get(param)
-                if item is None:
+                if param in {"MAKE", "MAKEFILE_LIST", "CURDIR", "SHELL", "APP_ENV", "COMPOSE"}:
+                    continue
+                if param in declared_variables and not self._is_probable_user_make_parameter(line, param):
+                    continue
+                if param not in parameters and self._is_probable_user_make_parameter(line, param):
                     parameters[param] = OperationalCommandParameterFacts(
                         name=param,
-                        required=f'"$(%s)"' % param not in line,
+                        required=f'"$({param})"' not in line and f'$({param})' in line,
                         example=None,
                         description=None,
+                        origin="user-exposed",
                         source="Makefile",
                     )
-                elif f'"$(%s)"' % param in line:
-                    item.required = False
+                elif param in parameters and f'"$({param})"' in line:
+                    parameters[param].required = False
 
         result = list(parameters.values())
         result.sort(key=lambda item: item.name)
         return result
+
+    @staticmethod
+    def _is_probable_user_make_parameter(
+        line: str,
+        param: str,
+    ) -> bool:
+        if param in {"FILE", "SERVICE", "TREE_IGNORE", "BACKUP", "OUT", "FORCE", "INIT_DEV_SSH", "INIT_DEV_REMOTE_DIR", "INIT_DEV_REMOTE_FILE"}:
+            return True
+        return any(
+            snippet in line
+            for snippet in (
+                f'"$({param})"',
+                f'[ -n "$({param})" ]',
+                f'$({param})"',
+                f'"$({param})',
+            )
+        )
+
+    @staticmethod
+    def _infer_command_category(
+        target: str,
+        prerequisites: list[str],
+        body: list[str],
+    ) -> str:
+        lowered = target.casefold()
+        joined = " ".join(body).casefold()
+        if "test" in lowered or "manage.py test" in joined or "npm run test" in joined:
+            return "tests"
+        if "backup" in lowered:
+            return "backup"
+        if "restore" in lowered:
+            return "restore"
+        if any(part in lowered for part in ("up", "start")):
+            return "startup"
+        if any(part in lowered for part in ("down", "stop")):
+            return "shutdown"
+        if "restart" in lowered:
+            return "restart"
+        if "log" in lowered:
+            return "logs"
+        if "migrat" in lowered or "createsuperuser" in lowered:
+            return "migrations"
+        if "env" in lowered:
+            return "environment"
+        if prerequisites and not body:
+            return "alias"
+        return "other"
 
     def _analyze_scripts(
         self,
@@ -1989,56 +1979,60 @@ class DjangoReactApplicationAnalyzer:
 
     def _collect_view_details(
         self,
-        views_path: Path,
+        views_paths: list[Path],
     ) -> dict[str, dict[str, Any]]:
-        try:
-            tree = ast.parse(
-                views_path.read_text(
-                    encoding="utf-8",
-                    errors="ignore",
-                )
-            )
-        except (OSError, SyntaxError):
-            return {}
-
         details: dict[str, dict[str, Any]] = {}
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
-                details[node.name] = {
-                    "view": node.name,
-                    "permissions": self._decorator_name_list(node.decorator_list, "permission_classes"),
-                    "authentication": self._decorator_name_list(node.decorator_list, "authentication_classes"),
-                    "methods": self._decorator_string_list(node.decorator_list, "api_view"),
-                    "actions": [],
-                    "source": "backend/api/views.py",
-                }
-            if isinstance(node, ast.ClassDef):
-                permissions = []
-                authentication = []
-                methods: list[str] = []
-                actions: list[dict[str, Any]] = []
-                for item in node.body:
-                    if isinstance(item, ast.Assign):
-                        for target in item.targets:
-                            if isinstance(target, ast.Name) and target.id == "permission_classes":
-                                permissions = self._list_literal_names(item.value)
-                            if isinstance(target, ast.Name) and target.id == "authentication_classes":
-                                authentication = self._list_literal_names(item.value)
-                    if isinstance(item, ast.FunctionDef):
-                        http_method = self._http_method_for_name(item.name)
-                        if http_method:
-                            methods.append(http_method)
-                        action = self._extract_viewset_action(item)
-                        if action is not None:
-                            actions.append(action)
-                details[node.name] = {
-                    "view": node.name,
-                    "permissions": permissions,
-                    "authentication": authentication,
-                    "methods": list(dict.fromkeys(methods)),
-                    "actions": actions,
-                    "source": "backend/api/views.py",
-                }
+        for views_path in views_paths:
+            try:
+                tree = ast.parse(
+                    views_path.read_text(
+                        encoding="utf-8",
+                        errors="ignore",
+                    )
+                )
+            except (OSError, SyntaxError):
+                continue
+
+            source = views_path.as_posix().split("/backend/", 1)[-1] if "/backend/" in views_path.as_posix() else views_path.as_posix()
+            if not source.startswith("backend/"):
+                source = f"backend/{source.lstrip('/')}"
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef):
+                    details[node.name] = {
+                        "view": node.name,
+                        "permissions": self._decorator_name_list(node.decorator_list, "permission_classes"),
+                        "authentication": self._decorator_name_list(node.decorator_list, "authentication_classes"),
+                        "methods": self._decorator_string_list(node.decorator_list, "api_view"),
+                        "actions": [],
+                        "source": source,
+                    }
+                if isinstance(node, ast.ClassDef):
+                    permissions = []
+                    authentication = []
+                    methods: list[str] = []
+                    actions: list[dict[str, Any]] = []
+                    for item in node.body:
+                        if isinstance(item, ast.Assign):
+                            for target in item.targets:
+                                if isinstance(target, ast.Name) and target.id == "permission_classes":
+                                    permissions = self._list_literal_names(item.value)
+                                if isinstance(target, ast.Name) and target.id == "authentication_classes":
+                                    authentication = self._list_literal_names(item.value)
+                        if isinstance(item, ast.FunctionDef):
+                            http_method = self._http_method_for_name(item.name)
+                            if http_method:
+                                methods.append(http_method)
+                            action = self._extract_viewset_action(item)
+                            if action is not None:
+                                actions.append(action)
+                    details[node.name] = {
+                        "view": node.name,
+                        "permissions": permissions,
+                        "authentication": authentication,
+                        "methods": list(dict.fromkeys(methods)),
+                        "actions": actions,
+                        "source": source,
+                    }
         return details
 
     def _build_django_routes_and_endpoints(
@@ -2048,17 +2042,12 @@ class DjangoReactApplicationAnalyzer:
         api: ApiFacts,
         view_details: dict[str, dict[str, Any]],
         auth_mechanisms: list[str],
+        frontend_method_sources: dict[str, list[str]],
     ) -> tuple[list[DjangoRouteFacts], list[DjangoEndpointFacts]]:
         mounts = self._extract_include_mounts(project)
-        frontend_methods = self._frontend_methods_by_path(
-            project.root / "frontend" / "src" / "api.js"
-        )
         route_entries = list(api.routes)
         for registration in api.router_registrations:
-            detail = view_details.get(
-                registration.viewset.split(".")[-1],
-                {},
-            )
+            detail = view_details.get(registration.viewset.split(".")[-1], {})
             for action in detail.get("actions", []):
                 if not action.get("detail"):
                     continue
@@ -2085,28 +2074,14 @@ class DjangoReactApplicationAnalyzer:
         for route in route_entries:
             if route.view and str(route.view).startswith("include("):
                 continue
-            source_mounts = mounts.get(route.source)
-            if not source_mounts:
-                source_mounts = [
-                    {
-                        "mount_path": None if route.source.endswith("/urls.py") and route.source != "backend/App/urls.py" else route.path,
-                        "resolution_status": "resolved" if route.source == "backend/App/urls.py" else "unresolved",
-                        "source": route.source,
-                    }
-                ]
+            source_mounts = mounts.get(route.source, [{"mount_path": None, "source": route.source}])
             for mount in source_mounts:
-                mount_path = mount["mount_path"]
-                if route.source == "backend/App/urls.py":
-                    relative_path = route.path.lstrip("/")
-                    full_path = route.path
-                    resolution_status = "resolved"
-                    sources = [route.source]
-                else:
-                    relative_path = route.path.lstrip("/")
-                    full_path = self._combine_paths(mount_path, route.path) if mount_path else None
-                    resolution_status = "resolved" if full_path else "unresolved"
-                    sources = [mount["source"], route.source]
-                methods = list(route.methods or frontend_methods.get(full_path or route.path, []))
+                mount_path = mount.get("mount_path")
+                relative_path = route.path.lstrip("/")
+                full_path = self._combine_paths(mount_path, route.path) if mount_path else (route.path if route.source == mounts.get(route.source, [{}])[0].get("source") and route.source.endswith("urls.py") and route.path.startswith("/") and route.source == self._relative_backend_candidate(project, self._module_to_project_path(project, self._extract_root_urlconf_module(self._find_django_settings_path(project)) or self._manage_default_urlconf(project))) else None)
+                resolution_status = "resolved" if full_path else "unresolved"
+                sources = [mount.get("source") or route.source, route.source]
+                methods = list(route.methods or frontend_method_sources.get(full_path or route.path, []))
                 route_fact = DjangoRouteFacts(
                     relative_path=relative_path,
                     mount_path=mount_path,
@@ -2116,7 +2091,7 @@ class DjangoReactApplicationAnalyzer:
                     name=route.name,
                     view=route.view,
                     methods=methods,
-                    sources=list(dict.fromkeys(sources)),
+                    sources=list(dict.fromkeys([source for source in sources if source])),
                 )
                 resolved_routes.append(route_fact)
                 view_name = self._clean_view_name(route.view)
@@ -2139,7 +2114,7 @@ class DjangoReactApplicationAnalyzer:
                         authentication=authentication,
                         actions=[route.name] if route.kind == "router-action" and route.name else [],
                         route_parameters=self._route_parameters(full_path or route.path),
-                        sources=list(dict.fromkeys(sources + ([detail.get("source")] if detail.get("source") else []))),
+                        sources=list(dict.fromkeys([*route_fact.sources, detail.get("source")] if detail.get("source") else route_fact.sources)),
                     )
                 )
         resolved_routes.sort(key=lambda item: ((item.full_path or item.relative_path), item.route_type))
@@ -2151,20 +2126,11 @@ class DjangoReactApplicationAnalyzer:
         project: Project,
     ) -> dict[str, list[dict[str, str | None]]]:
         mounts: dict[str, list[dict[str, str | None]]] = {}
-        url_files = [
-            path
-            for path in project.files
-            if Path(path).name == "urls.py"
-        ]
+        url_files = [path for path in project.files if Path(path).name == "urls.py"]
         for relative_path in url_files:
             path = project.root / relative_path
             try:
-                tree = ast.parse(
-                    path.read_text(
-                        encoding="utf-8",
-                        errors="ignore",
-                    )
-                )
+                tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
             except (OSError, SyntaxError):
                 continue
             for node in ast.walk(tree):
@@ -2186,10 +2152,13 @@ class DjangoReactApplicationAnalyzer:
                 mounts.setdefault(target_file, []).append(
                     {
                         "mount_path": self._normalize_path(mount_path) if mount_path is not None else None,
-                        "resolution_status": "resolved" if mount_path is not None else "unresolved",
                         "source": relative_path,
                     }
                 )
+        root_urlconf = self._module_to_project_path(project, self._extract_root_urlconf_module(self._find_django_settings_path(project)) or self._manage_default_urlconf(project))
+        root_relative = self._relative_project_path(project, root_urlconf)
+        if root_relative and root_relative not in mounts:
+            mounts[root_relative] = [{"mount_path": None, "source": root_relative}]
         return mounts
 
     def _module_to_urls_path(
@@ -2197,17 +2166,10 @@ class DjangoReactApplicationAnalyzer:
         project: Project,
         module_name: str | None,
     ) -> str | None:
-        if not module_name:
+        path = self._module_to_project_path(project, module_name)
+        if path is None:
             return None
-        relative = module_name.replace(".", "/") + ".py"
-        candidates = [
-            relative,
-            f"backend/{relative}",
-        ]
-        for candidate in candidates:
-            if candidate in project.files:
-                return candidate
-        return None
+        return self._relative_project_path(project, path)
 
     @staticmethod
     def _combine_paths(
@@ -2249,12 +2211,14 @@ class DjangoReactApplicationAnalyzer:
 
     def _frontend_methods_by_path(
         self,
-        api_path: Path,
+        project: Project,
     ) -> dict[str, list[str]]:
         mapping: dict[str, list[str]] = {}
-        for item in self._extract_frontend_api_calls(api_path):
+        for item in self._extract_frontend_api_calls_from_files(self._frontend_source_files(project, names=("api",))):
             method, path_value = item.split(" ", 1)
             full_path = self._combine_paths("/api", path_value)
+            if full_path is None:
+                continue
             mapping.setdefault(full_path, [])
             if method not in mapping[full_path]:
                 mapping[full_path].append(method)
@@ -2263,53 +2227,303 @@ class DjangoReactApplicationAnalyzer:
     def _analyze_react_crypto(
         self,
         *,
-        crypto_path: Path,
-        app_path: Path,
+        crypto_path: Path | None,
+        app_path: Path | None,
     ) -> ReactCryptoFacts:
-        crypto_text = self._read_text(crypto_path)
-        app_text = self._read_text(app_path)
+        crypto_text = self._read_text(crypto_path) if crypto_path else ""
+        app_text = self._read_text(app_path) if app_path else ""
         if not crypto_text:
             return ReactCryptoFacts()
         facts = ReactCryptoFacts(
             detected=True,
             source_paths=[
-                "frontend/src/crypto.js",
-                "frontend/src/App.jsx",
+                path for path in (
+                    self._relative_project_path_from_candidate(crypto_path),
+                    self._relative_project_path_from_candidate(app_path),
+                )
+                if path
             ],
         )
         if "AES-GCM" in crypto_text:
             facts.algorithms.append("AES-GCM")
+        if "RSA-OAEP" in crypto_text:
+            facts.algorithms.append("RSA-OAEP")
         if "PBKDF2" in crypto_text:
             facts.key_derivation = "PBKDF2"
         if "SHA-256" in crypto_text:
             facts.key_derivation_hash = "SHA-256"
-        iterations = re.search(r"iterations:\s*(\d+)", crypto_text)
+        iterations = re.search(r"iterations\s*[:=]\s*(\d+)", crypto_text)
         if iterations:
             facts.key_derivation_iterations = int(iterations.group(1))
-        salt = re.search(r"salt:\s*encoder\.encode\(`([^`]+)`\)", crypto_text)
+        salt = re.search(r"salt\s*[:=].*?([A-Za-z0-9:_-]{6,})", crypto_text)
         if salt:
             facts.key_derivation_salt_template = salt.group(1)
-        key_length = re.search(r"deriveBits\([^\)]*,\s*(\d+)\s*\)", crypto_text, re.DOTALL)
+        key_length = re.search(r"length\s*[:=]\s*(\d+)", crypto_text)
         if key_length:
             facts.key_length_bits = int(key_length.group(1))
         nonce = re.search(r"Uint8Array\((\d+)\)", crypto_text)
         if nonce:
             facts.nonce_bytes = int(nonce.group(1))
-        version = re.search(r'PRIVATE_ENCRYPTION_VERSION\s*=\s*"([^"]+)"', crypto_text)
+        version = re.search(r'format\s*[:=]\s*"([^"]+)"|PRIVATE_ENCRYPTION_VERSION\s*=\s*"([^"]+)"', crypto_text)
         if version:
-            facts.format_version = version.group(1)
-        for field_name in ("version", "iv", "ciphertext"):
-            if re.search(rf'{field_name}:', crypto_text):
+            facts.format_version = version.group(1) or version.group(2)
+        for field_name in ("version", "iv", "ciphertext", "data", "key", "salt", "payload", "pub"):
+            if re.search(rf"\b{field_name}\b", crypto_text) and field_name not in facts.payload_fields:
                 facts.payload_fields.append(field_name)
-        facts.cleartext_fields = []
-        if "localStorage" in app_text and "SESSION_STORAGE_KEY" in app_text:
+        if "localStorage" in app_text or "localStorage" in crypto_text:
             facts.key_material_storage = "localStorage"
-        if "decryptPrivateFields" in app_text:
-            facts.unlock_behavior = "Les champs privés sont déchiffrés côté client lors de l’utilisation de la session locale."
-        if "encryptPrivateFields" in crypto_text:
-            facts.lock_behavior = "Les champs privés sont sérialisés en JSON puis chiffrés avant stockage."
-        facts.recovery_supported = None
+        elif "Dexie" in crypto_text:
+            facts.key_material_storage = "IndexedDB"
+        if any(token in app_text for token in ("decryptPayload", "decryptPrivateFields")):
+            facts.unlock_behavior = "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale."
+        if any(token in crypto_text for token in ("encryptPayload", "encryptPrivateFields")):
+            facts.lock_behavior = "Des données privées sont chiffrées côté client avant stockage."
+        facts.recovery_supported = True if "exportKeyBundle" in crypto_text and "importKeyBundle" in crypto_text else None
         return facts
+
+    def _frontend_source_files(
+        self,
+        project: Project,
+        *,
+        names: tuple[str, ...] | None = None,
+    ) -> list[Path]:
+        root = project.root / "frontend" / "src"
+        if not root.is_dir():
+            return []
+        suffixes = {".js", ".jsx", ".ts", ".tsx", ".mjs"}
+        files = [path for path in root.rglob("*") if path.is_file() and path.suffix in suffixes and "node_modules" not in path.parts]
+        if names:
+            lowered = tuple(name.casefold() for name in names)
+            files = [path for path in files if any(path.stem.casefold() == name or name in path.stem.casefold() for name in lowered)]
+        files.sort()
+        return files
+
+    def _find_react_crypto_file(self, source_files: list[Path]) -> Path | None:
+        for path in source_files:
+            lowered = path.as_posix().casefold()
+            if any(token in lowered for token in ("crypto", "vault", "cipher", "secret")):
+                return path
+        return None
+
+    def _find_react_app_file(self, source_files: list[Path]) -> Path | None:
+        for path in source_files:
+            if path.name in {"App.jsx", "App.tsx", "main.jsx", "main.tsx"}:
+                return path
+        return source_files[0] if source_files else None
+
+    def _extract_react_routes(self, source_files: list[Path]) -> list[str]:
+        routes: set[str] = set()
+        for path in source_files:
+            text = self._read_text(path)
+            for match in re.finditer(r"path=\"([^\"]+)\"", text):
+                routes.add(match.group(1))
+            for match in re.finditer(r"to=\"([^\"]+)\"", text):
+                routes.add(match.group(1))
+        return sorted(routes)
+
+    def _extract_frontend_api_calls_from_files(self, source_files: list[Path]) -> list[str]:
+        results: set[str] = set()
+        for path in source_files:
+            text = self._read_text(path)
+            for method, url in re.findall(r"api\.(get|post|put|patch|delete)\(\s*[`\"]([^`\"]+)[`\"]", text, re.I):
+                results.add(f"{method.upper()} {self._normalize_api_call_path(url)}")
+            for method, url in re.findall(r"axios\.(get|post|put|patch|delete)\(\s*[`\"]([^`\"]+)[`\"]", text, re.I):
+                results.add(f"{method.upper()} {self._normalize_api_call_path(url)}")
+            for method, url in re.findall(r"\b(GET|POST|PUT|PATCH|DELETE)\b[^\n]*?[`\"](/[^`\"]+)[`\"]", text):
+                results.add(f"{method} {self._normalize_api_call_path(url)}")
+            for url in re.findall(r"fetch\(\s*[`\"](/[^`\"]+)[`\"]", text):
+                results.add(f"GET {self._normalize_api_call_path(url)}")
+            if path.stem.casefold() == "api":
+                results.update(self._extract_frontend_api_calls(path))
+        return sorted(results)
+
+    def _model_name_from_endpoint(
+        self,
+        endpoint: DjangoEndpointFacts,
+        models: list[DjangoModelFacts],
+    ) -> str | None:
+        path = (endpoint.path or endpoint.relative_path).casefold()
+        mapping = {model.name.casefold(): model.name for model in models}
+        explicit = {
+            "categories": mapping.get("category"),
+            "passwords": mapping.get("passwordentry"),
+            "contacts": mapping.get("contact"),
+            "users": "User",
+            "secrets": mapping.get("secretbundle"),
+        }
+        for segment, model_name in explicit.items():
+            if model_name and f"/{segment}/" in path:
+                return model_name
+        return None
+
+    @staticmethod
+    def _humanize_model_name(model_name: str) -> str:
+        value = re.sub(r"([a-z])([A-Z])", r"\1 \2", model_name).lower()
+        return value + ("s" if not value.endswith("s") else "")
+
+    @staticmethod
+    def _component_for_endpoint(path: str, frontend_components: set[str]) -> str | None:
+        lowered = path.casefold()
+        if "categories" in lowered and "CategoryGuide" in frontend_components:
+            return "CategoryGuide"
+        if "password" in lowered and "PasswordList" in frontend_components:
+            return "PasswordList"
+        if "secret" in lowered and "KeyBackup" in frontend_components:
+            return "KeyBackup"
+        return None
+
+    @staticmethod
+    def _endpoint_matches_api_call(endpoint_path: str, api_call: str) -> bool:
+        _method, path = api_call.split(" ", 1)
+        return path.rstrip("/") in endpoint_path.rstrip("/")
+
+    @staticmethod
+    def _endpoint_fact(
+        *,
+        environment: str,
+        service: str,
+        url: str,
+        source: str,
+    ) -> ServiceEndpointFacts:
+        validity = "valid" if DjangoReactApplicationAnalyzer._is_valid_url_value(url) else "invalid"
+        resolution_status = "resolved" if validity == "valid" else "unresolved"
+        notes = [] if validity == "valid" else ["URL invalide ou interpolation déséquilibrée."]
+        return ServiceEndpointFacts(
+            environment=environment,
+            service=service,
+            url=url,
+            source=source,
+            validity=validity,
+            resolution_status=resolution_status,
+            notes=notes,
+        )
+
+    @staticmethod
+    def _build_url(
+        scheme: str,
+        host: str,
+        port: str | None,
+        path: str = "",
+    ) -> str:
+        base = f"{scheme}://{host}"
+        if port:
+            base += f":{port}"
+        if path:
+            if not path.startswith("/"):
+                path = "/" + path
+            return base + path
+        return base
+
+    @staticmethod
+    def _extract_host_port(port_mapping: str) -> str | None:
+        current = []
+        depth = 0
+        for char in port_mapping:
+            if char == "$":
+                current.append(char)
+                continue
+            if char == "{" and current and current[-1] == "$":
+                depth += 1
+                current.append(char)
+                continue
+            if char == "}" and depth:
+                depth -= 1
+                current.append(char)
+                continue
+            if char == ":" and depth == 0:
+                return "".join(current).strip() or None
+            current.append(char)
+        return port_mapping.strip() or None
+
+    @staticmethod
+    def _is_valid_url_value(url: str) -> bool:
+        if not url or "{" in url and "}" not in url:
+            return False
+        if url.count("${") != url.count("}"):
+            return False
+        return url.startswith("http://") or url.startswith("https://")
+
+    def _find_django_settings_path(self, project: Project) -> Path:
+        for relative_path in project.files:
+            if relative_path.endswith("/settings.py") or relative_path == "settings.py":
+                return project.root / relative_path
+        return project.root / "backend" / "App" / "settings.py"
+
+    def _relative_project_path(self, project: Project, path: Path | None) -> str | None:
+        if path is None:
+            return None
+        try:
+            return path.relative_to(project.root).as_posix()
+        except Exception:
+            return path.as_posix()
+
+    @staticmethod
+    def _relative_project_path_from_candidate(path: Path | None) -> str | None:
+        if path is None:
+            return None
+        parts = path.parts
+        if "frontend" in parts:
+            index = parts.index("frontend")
+            return "/".join(parts[index:])
+        if "backend" in parts:
+            index = parts.index("backend")
+            return "/".join(parts[index:])
+        return path.as_posix()
+
+    @staticmethod
+    def _path_to_module(path: Path, root: Path) -> str | None:
+        try:
+            relative = path.relative_to(root).with_suffix("")
+        except Exception:
+            return None
+        return ".".join(relative.parts)
+
+    def _extract_root_urlconf_module(self, settings_path: Path) -> str | None:
+        text = self._read_text(settings_path)
+        match = re.search(r"ROOT_URLCONF\s*=\s*[\"']([^\"']+)[\"']", text)
+        return match.group(1) if match else None
+
+    def _manage_default_urlconf(self, project: Project) -> str | None:
+        manage_path = project.root / "backend" / "manage.py"
+        text = self._read_text(manage_path)
+        match = re.search(r"DJANGO_SETTINGS_MODULE',\s*'([^']+)'", text)
+        if match:
+            return match.group(1).rsplit(".", 1)[0] + ".urls"
+        return None
+
+    def _module_to_project_path(self, project: Project, module_name: str | None) -> Path | None:
+        if not module_name:
+            return None
+        relative = module_name.replace(".", "/") + ".py"
+        for candidate in (project.root / relative, project.root / "backend" / relative):
+            if candidate.is_file():
+                return candidate
+        return None
+
+    def _find_backend_file(self, project: Project, filename: str, preferred_subdir: str | None = None) -> Path:
+        candidates = self._find_backend_files(project, exact_name=filename)
+        if preferred_subdir:
+            for candidate in candidates:
+                if preferred_subdir in candidate.parts:
+                    return candidate
+        return candidates[0] if candidates else (project.root / "backend" / filename)
+
+    def _find_backend_files(self, project: Project, exact_name: str | None = None, prefix: str | None = None) -> list[Path]:
+        backend_root = project.root / "backend"
+        if not backend_root.is_dir():
+            return []
+        results = []
+        for path in backend_root.rglob("*.py"):
+            if exact_name and path.name != exact_name:
+                continue
+            if prefix and not path.stem.startswith(prefix):
+                continue
+            results.append(path)
+        results.sort()
+        return results
+
+    def _relative_backend_candidate(self, project: Project, path: Path | None) -> str | None:
+        return self._relative_project_path(project, path)
 
     @staticmethod
     def _decorator_name_list(
@@ -2535,10 +2749,10 @@ class DjangoReactApplicationAnalyzer:
             return None
 
     @staticmethod
-    def _read_env_keys(
+    def _read_env_entries(
         path: Path,
-    ) -> list[tuple[str, str | None]]:
-        items: list[tuple[str, str | None]] = []
+    ) -> list[dict[str, str | None]]:
+        items: list[dict[str, str | None]] = []
         try:
             lines = path.read_text(
                 encoding="utf-8",
@@ -2549,24 +2763,110 @@ class DjangoReactApplicationAnalyzer:
 
         for line in lines:
             stripped = line.strip()
-            if (
-                not stripped
-                or stripped.startswith("#")
-                or "=" not in stripped
-            ):
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
                 continue
-            key, value = stripped.split("=", 1)
+            key, raw_value = stripped.split("=", 1)
             key = key.strip()
             if not key:
                 continue
-            value = value.strip()
+            value, comment = DjangoReactApplicationAnalyzer._split_env_value_and_comment(raw_value)
             items.append(
-                (
-                    key,
-                    value if value else None,
-                )
+                {
+                    "key": key,
+                    "value": value,
+                    "comment": comment,
+                }
             )
         return items
+
+    @staticmethod
+    def _split_env_value_and_comment(
+        raw_value: str,
+    ) -> tuple[str | None, str | None]:
+        value_chars: list[str] = []
+        quote: str | None = None
+        escaped = False
+        comment: str | None = None
+        for index, char in enumerate(raw_value):
+            if escaped:
+                value_chars.append(char)
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+                value_chars.append(char)
+                continue
+            if quote:
+                if char == quote:
+                    quote = None
+                value_chars.append(char)
+                continue
+            if char in {'"', "'"}:
+                quote = char
+                value_chars.append(char)
+                continue
+            if char == "#" and (index == 0 or raw_value[index - 1].isspace()):
+                comment = raw_value[index + 1 :].strip() or None
+                break
+            value_chars.append(char)
+        value = "".join(value_chars).strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        value = value.replace(r"\#", "#").strip()
+        return (value, comment)
+
+    @staticmethod
+    def _read_env_keys(
+        path: Path,
+    ) -> list[tuple[str, str | None]]:
+        return [
+            (item["key"], item["value"])
+            for item in DjangoReactApplicationAnalyzer._read_env_entries(path)
+        ]
+
+    def _compose_variable_requirements(
+        self,
+        project: Project,
+        environments: ProjectEnvironmentsFacts,
+    ) -> dict[str, dict[str, bool]]:
+        requirements: dict[str, dict[str, bool]] = {}
+        for environment in environments.items:
+            compose_path = project.root / environment.compose_file
+            text = self._read_text(compose_path)
+            for name, required in self._extract_placeholder_specs(text):
+                requirements.setdefault(name, {})[environment.name] = required
+        return requirements
+
+    @staticmethod
+    def _extract_placeholder_specs(
+        text: str,
+    ) -> list[tuple[str, bool]]:
+        specs: list[tuple[str, bool]] = []
+        for match in re.finditer(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?:(:?[-?])(.*?))?\}", text):
+            name = match.group(1)
+            operator = match.group(2)
+            required = operator in {":?", "?"}
+            specs.append((name, required))
+        return specs
+
+    @staticmethod
+    def _environment_names_for_env_file(
+        path: Path,
+    ) -> list[str]:
+        if not path.exists():
+            return []
+        if path.is_symlink():
+            target = path.resolve().name.casefold()
+            if target == ".env.dev":
+                return ["dev"]
+            if target == ".env.prod":
+                return ["prod"]
+        for item in DjangoReactApplicationAnalyzer._read_env_entries(path):
+            if item["key"] == "APP_ENV" and item["value"]:
+                value = item["value"].casefold()
+                if value in {"dev", "prod"}:
+                    return [value]
+        return ["dev", "prod"]
 
     @staticmethod
     def _extract_getenv_calls(
