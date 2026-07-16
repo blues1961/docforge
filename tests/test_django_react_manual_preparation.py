@@ -1,6 +1,11 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
+from typer.testing import CliRunner
+
+from docforge.cli import app
 from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
 from docforge.manual_blueprint import ManualBlueprintRegistry
@@ -361,10 +366,111 @@ def _write_template_manifest(
         "template_id": "app-template",
         "project_kind": "application-template",
         "base_profile": "django-react",
-        "template_version": "2026-07-16",
+        "template_version": "0.1.0",
         "make_targets": targets,
     }
     (root / "docforge.template.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+runner = CliRunner()
+
+
+def _create_template_bootstrap_fixture(root: Path) -> Path:
+    (root / "scripts").mkdir(parents=True)
+    script_source = Path("../app-template/scripts/docforge-project-metadata.py").read_text(encoding="utf-8")
+    script_path = root / "scripts" / "docforge-project-metadata.py"
+    script_path.write_text(script_source, encoding="utf-8")
+    script_path.chmod(0o755)
+    (root / ".gitignore").write_text(".env\n.env.local\n.env.template\n", encoding="utf-8")
+    (root / "Makefile").write_text("init:\n\t@echo init\n\nup:\n\t@echo up\n", encoding="utf-8")
+    (root / ".env.template").write_text(
+        "APP_NAME=Demo App\nAPP_SLUG=demo-app\nAPP_DEPOT=demo-app\nAPP_NO=4\nAPP_HOST=demo.example.test\nADMIN_USERNAME=admin\nADMIN_EMAIL=admin@example.test\nADMIN_PASSWORD=secret\n",
+        encoding="utf-8",
+    )
+    (root / "README.md").write_text("# __APP_NAME__\n", encoding="utf-8")
+    (root / "frontend").mkdir()
+    (root / "frontend" / "package.json").write_text('{"name": "__APP_SLUG__-frontend"}\n', encoding="utf-8")
+    (root / "docforge.template.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "template_id": "app-template",
+                "project_kind": "application-template",
+                "base_profile": "django-react",
+                "template_version": "0.1.0",
+                "make_targets": [
+                    {
+                        "name": "init",
+                        "origin": "app-template",
+                        "documentation_policy": "quick-start",
+                        "reference_level": "primary",
+                        "audience": "operator",
+                    },
+                    {
+                        "name": "up",
+                        "origin": "app-template",
+                        "documentation_policy": "main-reference",
+                        "reference_level": "primary",
+                        "audience": "operator",
+                    },
+                ],
+            },
+            ensure_ascii=False,
+            indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
+    (root / ".git").mkdir()
+    (root / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    return root / "scripts" / "docforge-project-metadata.py"
+
+
+def _write_generated_project_metadata(root: Path) -> None:
+    payload = {
+        "schema_version": 1,
+        "project_kind": "application",
+        "base_profile": "django-react",
+        "origin_template": {
+            "template_id": "app-template",
+            "template_version": "0.1.0",
+            "manifest_source": "docforge.template.json",
+        },
+        "application_identity": {
+            "app_name": "Contact",
+            "app_slug": "contact",
+            "app_depot": "contact",
+            "app_no": "3",
+            "app_host": "contact.example.test",
+        },
+        "inherited_make_targets": [
+            {
+                "name": name,
+                "origin": "app-template",
+                "documentation_policy": "main-reference",
+                "reference_level": "primary",
+                "audience": "operator",
+            }
+            for name in (
+                "init",
+                "dev",
+                "prod",
+                "up",
+                "down",
+                "restart",
+                "rebuild",
+                "logs",
+                "ps",
+                "check",
+                "migrate",
+                "backup",
+                "restore",
+            )
+        ],
+    }
+    (root / "docforge.project.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -533,6 +639,100 @@ def test_django_react_template_metadata_uses_local_manifest(tmp_path: Path) -> N
     assert any(item.identifier == "template-first-init" for item in knowledge.template.creator_workflows)
     assert any(item.identifier == "template-maintainer-validate" for item in knowledge.template.maintainer_workflows)
     assert commands["up"].provenance == "app-template"
+
+
+def test_django_react_generated_application_metadata_uses_origin_template(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_generated_project_metadata(tmp_path)
+    _project, profile, knowledge = _build_knowledge(tmp_path)
+
+    commands = {item.name: item for item in knowledge.operational_commands.commands}
+
+    assert profile.name == "django-react"
+    assert knowledge.template.detected is True
+    assert knowledge.template.project_kind == "application"
+    assert knowledge.template.origin_template_id == "app-template"
+    assert knowledge.template.template_version == "0.1.0"
+    assert knowledge.template.manifest_source == "docforge.project.json"
+    assert "up" in knowledge.template.manifest_verified_targets
+    assert commands["up"].provenance == "app-template"
+
+
+def test_template_bootstrap_validate_fails_when_placeholder_remains(tmp_path: Path) -> None:
+    script = _create_template_bootstrap_fixture(tmp_path)
+
+    subprocess.run([str(script), "materialize-application"], cwd=tmp_path, check=True)
+    (tmp_path / "LEFTOVER.md").write_text("__APP_NAME__\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [str(script), "validate", "--expect-application"],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 1
+    assert "placeholders connus subsistent" in result.stderr
+
+
+def test_template_bootstrap_refuses_detach_in_source_named_directory(tmp_path: Path) -> None:
+    source_like_root = tmp_path / "app-template"
+    source_like_root.mkdir()
+    script = _create_template_bootstrap_fixture(source_like_root)
+
+    result = subprocess.run(
+        [str(script), "materialize-application", "--detach-git"],
+        cwd=source_like_root,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 1
+    assert "Refus de détacher l'historique Git" in result.stderr
+    assert (source_like_root / ".git").exists()
+
+
+def test_django_react_invalid_local_template_manifest_disables_fallback(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    (tmp_path / "docforge.template.json").write_text('{"project_kind": "application-template",', encoding="utf-8")
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    commands = {item.name: item for item in knowledge.operational_commands.commands}
+
+    assert knowledge.template.detected is False
+    assert knowledge.template.manifest_source == "docforge.template.json"
+    assert knowledge.template.risks
+    assert commands["up"].provenance == "unknown"
+
+
+def test_django_react_profile_command_displays_template_nature(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+
+    result = runner.invoke(app, ["profile", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert "Nature du dépôt" in result.stdout
+    assert "application-template" in result.stdout
+    assert "Identifiant du modèle" in result.stdout
+    assert "app-template" in result.stdout
+    assert "Version du modèle" in result.stdout
+    assert "0.1.0" in result.stdout
+
+
+def test_django_react_profile_command_displays_generated_application_origin(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_generated_project_metadata(tmp_path)
+
+    result = runner.invoke(app, ["profile", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert "Nature du dépôt" in result.stdout
+    assert "application" in result.stdout
+    assert "Origine du modèle" in result.stdout
+    assert "app-template" in result.stdout
+    assert "Version du modèle" in result.stdout
+    assert "0.1.0" in result.stdout
 
 
 def test_django_react_manual_prepare_is_application_oriented(tmp_path: Path) -> None:

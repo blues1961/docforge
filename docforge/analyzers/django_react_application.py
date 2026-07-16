@@ -65,7 +65,9 @@ class ProjectTemplateFacts:
     detected: bool = False
     project_kind: str | None = None
     template_id: str | None = None
+    origin_template_id: str | None = None
     template_version: str | None = None
+    origin_template_version: str | None = None
     base_profile: str | None = None
     manifest_source: str | None = None
     manifest_fallback_used: bool = False
@@ -474,6 +476,7 @@ class DjangoReactApplicationAnalyzer:
     )
     APPLICATION_TARGET_DECLARATION_FILE = "docforge.make-targets.json"
     LOCAL_TEMPLATE_MANIFEST_FILE = "docforge.template.json"
+    LOCAL_PROJECT_METADATA_FILE = "docforge.project.json"
     CATEGORY_BY_TARGET = {
         "init": "setup",
         "dev": "environment",
@@ -578,10 +581,72 @@ class DjangoReactApplicationAnalyzer:
         *,
         operational_commands: OperationalCommandsFacts,
     ) -> ProjectTemplateFacts:
-        manifest = self._load_local_template_manifest(project.root)
-        if not manifest:
-            return ProjectTemplateFacts()
+        template_manifest = self._load_local_template_manifest(project.root)
+        project_metadata = self._load_local_project_metadata(project.root)
 
+        if template_manifest and project_metadata:
+            return ProjectTemplateFacts(
+                detected=False,
+                manifest_source=(
+                    f"{self.LOCAL_TEMPLATE_MANIFEST_FILE}, {self.LOCAL_PROJECT_METADATA_FILE}"
+                ),
+                risks=[
+                    "Le dépôt contient à la fois docforge.template.json et docforge.project.json, ce qui rend la nature template/application ambiguë."
+                ],
+                source_paths=[
+                    self.LOCAL_TEMPLATE_MANIFEST_FILE,
+                    self.LOCAL_PROJECT_METADATA_FILE,
+                ],
+            )
+
+        if template_manifest is not None:
+            if template_manifest.get("invalid"):
+                return ProjectTemplateFacts(
+                    detected=False,
+                    project_kind="application-template",
+                    template_id=template_manifest.get("template_id"),
+                    template_version=template_manifest.get("template_version"),
+                    base_profile=template_manifest.get("base_profile") or "django-react",
+                    manifest_source=template_manifest.get("source"),
+                    manifest_fallback_used=False,
+                    risks=list(template_manifest.get("errors", [])),
+                    source_paths=[self.LOCAL_TEMPLATE_MANIFEST_FILE],
+                )
+            return self._build_template_source_facts(
+                project,
+                operational_commands=operational_commands,
+                manifest=template_manifest,
+            )
+
+        if project_metadata is not None:
+            if project_metadata.get("invalid"):
+                return ProjectTemplateFacts(
+                    detected=False,
+                    project_kind="application",
+                    origin_template_id=project_metadata.get("origin_template_id"),
+                    template_version=project_metadata.get("origin_template_version"),
+                    origin_template_version=project_metadata.get("origin_template_version"),
+                    base_profile=project_metadata.get("base_profile") or "django-react",
+                    manifest_source=project_metadata.get("source"),
+                    manifest_fallback_used=False,
+                    risks=list(project_metadata.get("errors", [])),
+                    source_paths=[self.LOCAL_PROJECT_METADATA_FILE],
+                )
+            return self._build_generated_application_facts(
+                project,
+                operational_commands=operational_commands,
+                metadata=project_metadata,
+            )
+
+        return ProjectTemplateFacts()
+
+    def _build_template_source_facts(
+        self,
+        project: Project,
+        *,
+        operational_commands: OperationalCommandsFacts,
+        manifest: dict[str, Any],
+    ) -> ProjectTemplateFacts:
         command_names = {item.name for item in operational_commands.commands}
         declared_targets = sorted(manifest.get("targets", {}).keys())
         verified_targets = [name for name in declared_targets if name in command_names]
@@ -599,17 +664,17 @@ class DjangoReactApplicationAnalyzer:
                 "scripts/generate-env.sh",
                 "scripts/generate-secrets.sh",
                 "scripts/check-invariants.sh",
+                "scripts/docforge-project-metadata.py",
             }
         )
         evidence = [
             f"template manifest detected: {manifest.get('source')}",
             f"project_kind={manifest.get('project_kind')}",
             f"template_id={manifest.get('template_id')}",
+            f"template_version={manifest.get('template_version')}",
         ]
         if manifest.get("base_profile"):
-            evidence.append(
-                f"base_profile={manifest.get('base_profile')}"
-            )
+            evidence.append(f"base_profile={manifest.get('base_profile')}")
         if verified_targets:
             evidence.append(
                 f"verified make targets: {len(verified_targets)}/{len(declared_targets)}"
@@ -631,19 +696,59 @@ class DjangoReactApplicationAnalyzer:
             creator_workflows=self._template_creator_workflows(operational_commands),
             maintainer_workflows=self._template_maintainer_workflows(operational_commands),
             missing_steps=[
-                "Aucune procédure démontrée de suppression de l’historique Git du template n’est documentée.",
-                "Aucune procédure démontrée de réinitialisation d’un nouveau dépôt Git n’est documentée.",
+                "Aucune procédure démontrée de suppression de l’historique Git du template n’est documentée sans demande explicite.",
                 "Aucune procédure démontrée de création du dépôt distant n’est documentée.",
-                "Aucun mécanisme démontré de remplacement automatique des marqueurs textuels __APP_NAME__ et __APP_SLUG__ n’est fourni.",
-                "Aucune commande démontrée de création initiale du compte administrateur n’est fournie par le template standard.",
+                "Aucune procédure démontrée de premier commit du nouveau dépôt n’est documentée.",
             ],
             risks=[
                 "Un clonage incomplet peut laisser des marqueurs __APP_NAME__ ou __APP_SLUG__ dans le frontend, l’API de santé et la documentation.",
                 "L’absence de .env.template empêche make init et la génération des environnements.",
                 "Une restauration PostgreSQL exécutée sans précaution remplace les données de la base active.",
-                "Le template ne démontre pas de procédure automatisée pour nettoyer .git ou recréer un dépôt distinct après copie.",
+                "Le détachement Git du modèle doit rester explicite et protégé pour éviter d’endommager le dépôt source.",
             ],
             source_paths=source_paths,
+        )
+
+    def _build_generated_application_facts(
+        self,
+        project: Project,
+        *,
+        operational_commands: OperationalCommandsFacts,
+        metadata: dict[str, Any],
+    ) -> ProjectTemplateFacts:
+        command_names = {item.name for item in operational_commands.commands}
+        declared_targets = sorted(metadata.get("targets", {}).keys())
+        verified_targets = [name for name in declared_targets if name in command_names]
+        missing_targets = [name for name in declared_targets if name not in command_names]
+        origin = metadata.get("origin_template", {})
+        identity = metadata.get("application_identity", {})
+        evidence = [
+            f"application metadata detected: {metadata.get('source')}",
+            f"project_kind={metadata.get('project_kind')}",
+            f"origin_template={origin.get('template_id')}",
+            f"origin_template_version={origin.get('template_version')}",
+        ]
+        if identity.get("app_slug"):
+            evidence.append(f"app_slug={identity.get('app_slug')}")
+        if verified_targets:
+            evidence.append(
+                f"verified inherited make targets: {len(verified_targets)}/{len(declared_targets)}"
+            )
+
+        return ProjectTemplateFacts(
+            detected=True,
+            project_kind=metadata.get("project_kind") or "application",
+            origin_template_id=origin.get("template_id"),
+            template_version=origin.get("template_version"),
+            origin_template_version=origin.get("template_version"),
+            base_profile=metadata.get("base_profile") or "django-react",
+            manifest_source=metadata.get("source"),
+            manifest_fallback_used=False,
+            manifest_declared_targets=declared_targets,
+            manifest_verified_targets=verified_targets,
+            manifest_missing_targets=missing_targets,
+            evidence=evidence,
+            source_paths=[self.LOCAL_PROJECT_METADATA_FILE],
         )
 
     def _template_placeholders(
@@ -890,15 +995,69 @@ class DjangoReactApplicationAnalyzer:
             return None
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return None
+        except (OSError, json.JSONDecodeError) as exc:
+            return {
+                "invalid": True,
+                "source": self.LOCAL_TEMPLATE_MANIFEST_FILE,
+                "errors": [f"docforge.template.json invalide: {exc}"],
+                "targets": {},
+            }
         targets = {
             item.get("name"): item
             for item in payload.get("make_targets", [])
             if isinstance(item, dict) and item.get("name")
         }
+        errors: list[str] = []
+        if payload.get("project_kind") != "application-template":
+            errors.append("docforge.template.json doit déclarer project_kind=application-template")
+        if not payload.get("template_id"):
+            errors.append("docforge.template.json doit déclarer template_id")
+        if not payload.get("template_version"):
+            errors.append("docforge.template.json doit déclarer template_version")
         payload["targets"] = targets
         payload["source"] = self.LOCAL_TEMPLATE_MANIFEST_FILE
+        if errors:
+            payload["invalid"] = True
+            payload["errors"] = errors
+        return payload
+
+    def _load_local_project_metadata(
+        self,
+        root: Path,
+    ) -> dict[str, Any] | None:
+        path = root / self.LOCAL_PROJECT_METADATA_FILE
+        if not path.is_file():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            return {
+                "invalid": True,
+                "source": self.LOCAL_PROJECT_METADATA_FILE,
+                "errors": [f"docforge.project.json invalide: {exc}"],
+                "targets": {},
+            }
+        inherited = payload.get("inherited_make_targets", [])
+        targets = {
+            item.get("name"): item
+            for item in inherited
+            if isinstance(item, dict) and item.get("name")
+        }
+        origin = payload.get("origin_template") if isinstance(payload.get("origin_template"), dict) else {}
+        errors: list[str] = []
+        if payload.get("project_kind") != "application":
+            errors.append("docforge.project.json doit déclarer project_kind=application")
+        if not origin.get("template_id"):
+            errors.append("docforge.project.json doit déclarer origin_template.template_id")
+        if not origin.get("template_version"):
+            errors.append("docforge.project.json doit déclarer origin_template.template_version")
+        payload["targets"] = targets
+        payload["source"] = self.LOCAL_PROJECT_METADATA_FILE
+        payload["origin_template_id"] = origin.get("template_id")
+        payload["origin_template_version"] = origin.get("template_version")
+        if errors:
+            payload["invalid"] = True
+            payload["errors"] = errors
         return payload
 
     def _analyze_environments(
@@ -1140,11 +1299,11 @@ class DjangoReactApplicationAnalyzer:
         default_target_visibility = "public" if not help_entries else "internal"
         declared_variables = self._extract_declared_make_variables(lines)
         phony_targets = self._extract_phony_targets(lines)
-        local_template_manifest = self._load_local_template_manifest(
-            project.root
-        )
+        local_template_manifest = self._load_local_template_manifest(project.root)
+        local_project_metadata = self._load_local_project_metadata(project.root)
+        local_origin_manifest = local_template_manifest or local_project_metadata
         template_manifest = (
-            local_template_manifest
+            local_origin_manifest
             or self._load_app_template_target_manifest()
         )
         application_declarations = self._load_application_target_declarations(
@@ -1203,7 +1362,7 @@ class DjangoReactApplicationAnalyzer:
                 help_text=help_text,
                 visibility=visibility,
                 template_manifest=template_manifest,
-                local_template_manifest=local_template_manifest,
+                local_origin_manifest=local_origin_manifest,
                 application_declarations=application_declarations,
             )
             commands.append(
@@ -1301,7 +1460,7 @@ class DjangoReactApplicationAnalyzer:
         help_text: str | None,
         visibility: str,
         template_manifest: dict[str, Any],
-        local_template_manifest: dict[str, Any] | None,
+        local_origin_manifest: dict[str, Any] | None,
         application_declarations: dict[str, MakeTargetDeclarationFacts],
     ) -> tuple[str, str, str | None, list[str], str | None]:
         if visibility != "public":
@@ -1343,7 +1502,7 @@ class DjangoReactApplicationAnalyzer:
         if manifest_entry is not None:
             provenance = (
                 "app-template"
-                if local_template_manifest is not None
+                if local_origin_manifest is not None
                 else "template-standard"
             )
             evidence = [
@@ -1355,7 +1514,7 @@ class DjangoReactApplicationAnalyzer:
                     0,
                     f"signature matches {template_manifest.get('source')}",
                 )
-            elif local_template_manifest is not None:
+            elif local_origin_manifest is not None:
                 evidence.insert(
                     0,
                     "target is publicly declared by the local template manifest",

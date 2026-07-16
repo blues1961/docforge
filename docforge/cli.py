@@ -461,6 +461,29 @@ def verify(
 
     console.print(documents)
 
+
+    if template.detected or template.manifest_source or template.project_kind:
+        additive = Table(title="Métadonnées additives")
+        additive.add_column("Élément")
+        additive.add_column("Valeur")
+
+        if template.project_kind:
+            additive.add_row("Nature du dépôt", template.project_kind)
+        if template.template_id:
+            additive.add_row("Identifiant du modèle", template.template_id)
+        if template.origin_template_id:
+            additive.add_row("Origine du modèle", template.origin_template_id)
+        if template.template_version:
+            additive.add_row("Version du modèle", template.template_version)
+        if template.origin_template_version and template.origin_template_version != template.template_version:
+            additive.add_row("Version d'origine", template.origin_template_version)
+        if template.manifest_source:
+            additive.add_row("Source du manifeste", template.manifest_source)
+        if template.base_profile:
+            additive.add_row("Profil technique de base", template.base_profile)
+
+        console.print(additive)
+
     documentation_findings = [
         finding
         for finding in project.findings
@@ -1068,6 +1091,29 @@ def analyze_template_command(
 
     console.print()
     console.print(documents)
+
+
+    if template.detected or template.manifest_source or template.project_kind:
+        additive = Table(title="Métadonnées additives")
+        additive.add_column("Élément")
+        additive.add_column("Valeur")
+
+        if template.project_kind:
+            additive.add_row("Nature du dépôt", template.project_kind)
+        if template.template_id:
+            additive.add_row("Identifiant du modèle", template.template_id)
+        if template.origin_template_id:
+            additive.add_row("Origine du modèle", template.origin_template_id)
+        if template.template_version:
+            additive.add_row("Version du modèle", template.template_version)
+        if template.origin_template_version and template.origin_template_version != template.template_version:
+            additive.add_row("Version d'origine", template.origin_template_version)
+        if template.manifest_source:
+            additive.add_row("Source du manifeste", template.manifest_source)
+        if template.base_profile:
+            additive.add_row("Profil technique de base", template.base_profile)
+
+        console.print(additive)
 
     environment = Table(
         title="Fichiers d'environnement canoniques"
@@ -1962,7 +2008,14 @@ def profile_command(
     project = FileSystemScanner().scan(path)
     TechnologyDetector().detect(project)
 
-    profile = ProfileDetector().detect(project)
+    profile_detector = ProfileDetector()
+    profile = profile_detector.detect(project)
+    profile_instance = profile_detector.resolve(project)
+    project_knowledge = ProjectKnowledgeBuilder().build(
+        project,
+        profile_instance=profile_instance,
+    )
+    template = project_knowledge.template
 
     console.print(
         f"[green]Profil détecté :[/green] "
@@ -2015,3 +2068,26 @@ def profile_command(
     )
 
     console.print(documents)
+
+
+    if template.detected or template.manifest_source or template.project_kind:
+        additive = Table(title="Métadonnées additives")
+        additive.add_column("Élément")
+        additive.add_column("Valeur")
+
+        if template.project_kind:
+            additive.add_row("Nature du dépôt", template.project_kind)
+        if template.template_id:
+            additive.add_row("Identifiant du modèle", template.template_id)
+        if template.origin_template_id:
+            additive.add_row("Origine du modèle", template.origin_template_id)
+        if template.template_version:
+            additive.add_row("Version du modèle", template.template_version)
+        if template.origin_template_version and template.origin_template_version != template.template_version:
+            additive.add_row("Version d'origine", template.origin_template_version)
+        if template.manifest_source:
+            additive.add_row("Source du manifeste", template.manifest_source)
+        if template.base_profile:
+            additive.add_row("Profil technique de base", template.base_profile)
+
+        console.print(additive)
