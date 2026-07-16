@@ -20,6 +20,10 @@ class ManualBlueprint:
     sections: tuple[ManualSectionDefinition, ...] = field(
         default_factory=tuple
     )
+    document_identifier: str = "manual"
+    document_title: str = "Guide utilisateur"
+    document_audience: str = "user"
+    document_kind: str = "user-guide"
 
 
 class ManualBlueprintRegistry:
@@ -27,13 +31,47 @@ class ManualBlueprintRegistry:
         self,
         profile_name: str,
     ) -> ManualBlueprint:
+        return self.blueprints_for_context(
+            profile_name,
+            project_kind=None,
+        )[0]
+
+    def blueprints_for_context(
+        self,
+        profile_name: str,
+        *,
+        project_kind: str | None,
+    ) -> tuple[ManualBlueprint, ...]:
+        if profile_name == "django-react" and project_kind == "application-template":
+            return (
+                self._django_react_template_creation_blueprint(),
+                self._django_react_template_maintenance_blueprint(),
+            )
+
         if profile_name == "python-cli":
-            return self._python_cli_blueprint()
+            return (self._python_cli_blueprint(),)
 
         if profile_name == "django-react":
-            return self._django_react_blueprint()
+            return (self._django_react_blueprint(),)
 
-        return self._generic_blueprint()
+        return (self._generic_blueprint(),)
+
+    def blueprint_for_document(
+        self,
+        profile_name: str,
+        *,
+        project_kind: str | None,
+        document_identifier: str,
+    ) -> ManualBlueprint:
+        for blueprint in self.blueprints_for_context(
+            profile_name,
+            project_kind=project_kind,
+        ):
+            if blueprint.document_identifier == document_identifier:
+                return blueprint
+        raise KeyError(
+            f"Blueprint documentaire introuvable: {profile_name}/{project_kind}/{document_identifier}"
+        )
 
     def _python_cli_blueprint(self) -> ManualBlueprint:
         sections = (
@@ -167,6 +205,10 @@ class ManualBlueprintRegistry:
         return ManualBlueprint(
             profile_name="python-cli",
             sections=sections,
+            document_identifier="manual",
+            document_title="Guide utilisateur",
+            document_audience="user",
+            document_kind="user-guide",
         )
 
     def _django_react_blueprint(self) -> ManualBlueprint:
@@ -261,6 +303,154 @@ class ManualBlueprintRegistry:
         return ManualBlueprint(
             profile_name="django-react",
             sections=sections,
+            document_identifier="manual",
+            document_title="Guide utilisateur",
+            document_audience="user",
+            document_kind="user-guide",
+        )
+
+    def _django_react_template_creation_blueprint(self) -> ManualBlueprint:
+        sections = (
+            ManualSectionDefinition(
+                "template-creation-overview",
+                "Rôle du modèle et périmètre",
+                "Expliquer à quoi sert app-template, ce qu’il fournit et ce qu’il ne démontre pas encore pour une application finale.",
+                ("project", "profile", "template", "application"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-prerequisites",
+                "Prérequis",
+                "Présenter les prérequis démontrés pour partir du modèle et préparer une nouvelle application.",
+                ("installation", "template", "operational_commands"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-prepare-directory",
+                "Préparer un nouveau répertoire",
+                "Décrire la copie du modèle, la préparation de .env.template et les points d’attention avant la matérialisation.",
+                ("template", "missing_information", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-identity",
+                "Définir l’identité de l’application",
+                "Décrire les variables d’identité et d’administration à renseigner dans .env.template sans inventer de valeurs finales.",
+                ("template", "environment_variables", "missing_information"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-environments",
+                "Générer environnements et secrets",
+                "Expliquer la sélection de l’environnement actif, la génération des fichiers .env.* et la création des secrets locaux.",
+                ("template", "operational_commands", "environment_variables", "workflows"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-materialization",
+                "Matérialiser la nouvelle application",
+                "Décrire la matérialisation via make init, la transformation des métadonnées DocForge et les vérifications associées.",
+                ("template", "operational_commands", "workflows", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-git-transition",
+                "Détacher l’historique Git",
+                "Décrire le détachement Git explicite, ses avertissements et les limites encore non documentées sur le dépôt distant.",
+                ("template", "missing_information", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-start-validate",
+                "Démarrer, migrer et valider",
+                "Présenter le démarrage normal, les migrations, make check et la vérification du profil DocForge obtenu après matérialisation.",
+                ("template", "operational_commands", "service_endpoints", "workflows", "profile"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-troubleshooting",
+                "Problèmes fréquents",
+                "Regrouper les blocages fréquents du bootstrap du modèle, sans inventer de procédure externe.",
+                ("template", "missing_information", "limitations", "operational_commands"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-checklist",
+                "Checklist finale",
+                "Fournir une checklist courte de fin d’instanciation d’une nouvelle application.",
+                ("template", "missing_information", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-creation-limitations",
+                "Informations encore manquantes",
+                "Consolider les points que le modèle ne démontre pas encore pour la création complète d’une nouvelle application.",
+                ("missing_information", "limitations", "template", "source_traceability"),
+            ),
+        )
+        return ManualBlueprint(
+            profile_name="django-react",
+            sections=sections,
+            document_identifier="application-creation-guide",
+            document_title="Guide de création d’une application",
+            document_audience="creator",
+            document_kind="template-creation-guide",
+        )
+
+    def _django_react_template_maintenance_blueprint(self) -> ManualBlueprint:
+        sections = (
+            ManualSectionDefinition(
+                "template-maintenance-overview",
+                "Rôle du squelette et publics",
+                "Présenter le rôle du dépôt source app-template et le distinguer des applications créées à partir du modèle.",
+                ("project", "profile", "template", "application"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-architecture",
+                "Architecture du squelette",
+                "Décrire la structure technique du modèle, ses composants, ses services et ses répertoires clés.",
+                ("application", "environments", "django", "react", "template"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-metadata",
+                "Contrat du modèle et version",
+                "Décrire docforge.template.json, sa version, les cibles déclarées et la compatibilité attendue avec DocForge.",
+                ("template", "operational_commands", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-invariants-placeholders",
+                "Invariants et placeholders",
+                "Documenter les invariants du squelette, les placeholders connus et la façon de valider qu’ils restent cohérents.",
+                ("template", "environment_variables", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-scripts-makefile",
+                "Scripts standards et Makefile",
+                "Présenter les scripts standards du squelette et les responsabilités générales des cibles publiques du Makefile.",
+                ("template", "operational_commands", "workflows"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-canonical-targets",
+                "Cibles canoniques et politique documentaire",
+                "Expliquer les 15 cibles canoniques, leur provenance template et leur politique documentaire.",
+                ("template", "operational_commands"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-validation-release",
+                "Validation avant publication",
+                "Décrire les vérifications de maintenance du modèle, make check, make update et les tests sur copie jetable avant publication d’une nouvelle version.",
+                ("template", "operational_commands", "workflows", "missing_information", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-compatibility",
+                "Compatibilité avec les applications créées",
+                "Présenter la relation entre le dépôt source, docforge.project.json et les applications déjà matérialisées.",
+                ("template", "missing_information", "limitations"),
+            ),
+            ManualSectionDefinition(
+                "template-maintenance-limitations",
+                "Informations encore manquantes",
+                "Consolider les informations non démontrées sur la publication, la mise à jour descendante et les procédures externes.",
+                ("missing_information", "limitations", "template", "source_traceability"),
+            ),
+        )
+        return ManualBlueprint(
+            profile_name="django-react",
+            sections=sections,
+            document_identifier="template-maintenance-guide",
+            document_title="Guide de maintenance du modèle",
+            document_audience="maintainer",
+            document_kind="template-maintenance-guide",
         )
 
     def _generic_blueprint(self) -> ManualBlueprint:
@@ -307,4 +497,8 @@ class ManualBlueprintRegistry:
                     omit_if_fact_paths_missing=("commands",),
                 ),
             ),
+            document_identifier="manual",
+            document_title="Guide",
+            document_audience="user",
+            document_kind="generic-guide",
         )

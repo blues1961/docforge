@@ -1399,3 +1399,198 @@ def test_django_react_markdown_validator_warns_for_destructive_command_without_w
     diagnostics = ManualMarkdownValidator().validate(markdown=markdown, knowledge=manual_knowledge, blueprint=blueprint)
 
     assert any(item.code == "MANUAL011" for item in diagnostics)
+
+
+def _minimal_markdown_for_blueprint(title: str, blueprint) -> str:
+    lines = [title, ""]
+    for section in blueprint.sections:
+        lines.append(f"## {section.title}")
+        lines.append("Contenu démontré.")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def test_django_react_application_template_prepares_two_developer_documents(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+
+    result = ManualPreparationService().prepare(
+        tmp_path,
+        clean=True,
+        mode="both",
+        context_budget=4096,
+    )
+
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    document_ids = [document.identifier for document in result.documents]
+
+    assert document_ids == [
+        "application-creation-guide",
+        "template-maintenance-guide",
+    ]
+    assert result.full_prompt_file is None
+    assert result.section_prompt_files == []
+    assert result.section_context_files == []
+    assert len(manifest["documents"]) == 2
+    assert manifest["project_kind"] == "application-template"
+    assert manifest["section_contexts"] == []
+    assert manifest["full_prompt"] is None
+    assert all(document.blueprint.profile_name == "django-react" for document in result.documents)
+    assert all(document.output_dir.parent.name == "documents" for document in result.documents)
+    assert {
+        document.output_dir.name for document in result.documents
+    } == {"application-creation-guide", "template-maintenance-guide"}
+    assert all(
+        artifact.estimated_tokens <= 4096
+        for document in result.documents
+        for artifact in document.section_artifacts
+    )
+
+    creation_prompt = result.documents[0].full_prompt_file.read_text(encoding="utf-8")
+    maintenance_prompt = result.documents[1].full_prompt_file.read_text(encoding="utf-8")
+    assert "crée une nouvelle application à partir du dépôt modèle" in creation_prompt
+    assert "mainteneur du dépôt modèle" in maintenance_prompt
+
+
+def test_django_react_generated_application_keeps_normal_manual_blueprint(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_generated_project_metadata(tmp_path)
+
+    result = ManualPreparationService().prepare(
+        tmp_path,
+        clean=True,
+        mode="both",
+        context_budget=4096,
+    )
+
+    assert len(result.documents) == 1
+    assert result.documents[0].identifier == "manual"
+    assert result.full_prompt_file is not None
+    assert result.full_prompt_file.name == "manual-prompt.md"
+    assert result.documents[0].output_dir == result.output_dir
+    assert not (result.output_dir / "documents").exists()
+
+
+def test_django_react_application_template_splits_creator_and_maintainer_contexts(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+
+    result = ManualPreparationService().prepare(
+        tmp_path,
+        clean=True,
+        mode="both",
+        context_budget=4096,
+    )
+
+    creation_context = json.loads(result.documents[0].section_context_files[4].read_text(encoding="utf-8"))
+    maintenance_context = json.loads(result.documents[1].section_context_files[4].read_text(encoding="utf-8"))
+
+    creation_commands = {
+        item["name"]
+        for item in creation_context["facts"]["operational_commands"]["primary_commands"]
+    }
+    maintenance_primary = {
+        item["name"]
+        for item in maintenance_context["facts"]["operational_commands"]["primary_commands"]
+    }
+    maintenance_advanced = {
+        item["name"]
+        for item in maintenance_context["facts"]["operational_commands"]["advanced_commands"]
+    }
+
+    assert "init" in creation_commands
+    assert "init" not in maintenance_primary
+    assert "init" not in maintenance_advanced
+    assert "creator_workflows" in creation_context["facts"]["template"]
+    assert "maintainer_workflows" not in creation_context["facts"]["template"]
+    assert "maintainer_workflows" in maintenance_context["facts"]["template"]
+    assert "creator_workflows" not in maintenance_context["facts"]["template"]
+
+
+
+def test_django_react_application_template_validator_supports_document_specific_h1(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    registry = ManualBlueprintRegistry()
+    creation_blueprint = registry.blueprint_for_document(
+        "django-react",
+        project_kind="application-template",
+        document_identifier="application-creation-guide",
+    )
+    maintenance_blueprint = registry.blueprint_for_document(
+        "django-react",
+        project_kind="application-template",
+        document_identifier="template-maintenance-guide",
+    )
+
+    knowledge_payload = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+    validator = ManualMarkdownValidator()
+
+    creation_markdown = _minimal_markdown_for_blueprint(
+        validator.expected_h1(knowledge_payload, creation_blueprint),
+        creation_blueprint,
+    )
+    maintenance_markdown = _minimal_markdown_for_blueprint(
+        validator.expected_h1(knowledge_payload, maintenance_blueprint),
+        maintenance_blueprint,
+    )
+
+    assert not [
+        item for item in validator.validate(markdown=creation_markdown, knowledge=knowledge_payload, blueprint=creation_blueprint)
+        if item.code == "MANUAL012"
+    ]
+    assert not [
+        item for item in validator.validate(markdown=maintenance_markdown, knowledge=knowledge_payload, blueprint=maintenance_blueprint)
+        if item.code == "MANUAL012"
+    ]
+
+
+
+def test_django_react_application_template_manual_validate_cli_requires_document_id(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+
+    markdown_file = tmp_path / "creation-guide.md"
+    blueprint = ManualBlueprintRegistry().blueprint_for_document(
+        "django-react",
+        project_kind="application-template",
+        document_identifier="application-creation-guide",
+    )
+    knowledge_payload = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+    markdown_file.write_text(
+        _minimal_markdown_for_blueprint(
+            ManualMarkdownValidator().expected_h1(knowledge_payload, blueprint),
+            blueprint,
+        ),
+        encoding="utf-8",
+    )
+
+    missing_id = runner.invoke(
+        app,
+        [
+            "manual",
+            "validate",
+            str(markdown_file),
+            "--project-root",
+            str(tmp_path),
+        ],
+    )
+    assert missing_id.exit_code != 0
+    assert "--document-id" in missing_id.output
+
+    ok = runner.invoke(
+        app,
+        [
+            "manual",
+            "validate",
+            str(markdown_file),
+            "--project-root",
+            str(tmp_path),
+            "--document-id",
+            "application-creation-guide",
+        ],
+    )
+    assert ok.exit_code == 0

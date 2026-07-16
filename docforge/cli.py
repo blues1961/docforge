@@ -131,18 +131,33 @@ def manual_prepare_command(
         f"{result.knowledge_file.relative_to(result.root)}"
     )
 
-    if result.full_prompt_file is not None:
-        console.print(
-            f"Prompt complet : "
-            f"{result.full_prompt_file.relative_to(result.root)}"
-        )
-
-    if result.section_artifacts:
-        console.print("Prompts de section :")
-        for artifact in result.section_artifacts:
+    if len(result.documents) > 1:
+        console.print("Documents préparés :")
+        for document in result.documents:
             console.print(
-                f"- {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
+                f"- {document.identifier} | {document.title} | public={document.audience}"
             )
+            if document.full_prompt_file is not None:
+                console.print(
+                    f"  prompt : {document.full_prompt_file.relative_to(result.root)}"
+                )
+            for artifact in document.section_artifacts:
+                console.print(
+                    f"  - {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
+                )
+    else:
+        if result.full_prompt_file is not None:
+            console.print(
+                f"Prompt complet : "
+                f"{result.full_prompt_file.relative_to(result.root)}"
+            )
+
+        if result.section_artifacts:
+            console.print("Prompts de section :")
+            for artifact in result.section_artifacts:
+                console.print(
+                    f"- {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
+                )
 
     console.print(
         f"Manifeste : "
@@ -208,6 +223,11 @@ def manual_validate_command(
         "--json",
         help="Émettre les diagnostics en JSON pour l’automatisation.",
     ),
+    document_id: str | None = typer.Option(
+        None,
+        "--document-id",
+        help="Identifiant du document à valider lorsque plusieurs guides ont été préparés.",
+    ),
 ) -> None:
     """Valider un manuel Markdown contre les artefacts préparés."""
 
@@ -222,8 +242,31 @@ def manual_validate_command(
         )
 
     manual_knowledge = json.loads(knowledge_file.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     profile_name = manual_knowledge.get("profile", {}).get("name") or manual_knowledge.get("project", {}).get("profile_type")
-    blueprint = ManualBlueprintRegistry().blueprint_for_profile(profile_name or "generic")
+    project_kind = manual_knowledge.get("template", {}).get("project_kind")
+    registry = ManualBlueprintRegistry()
+    prepared_documents = manifest.get("documents") if isinstance(manifest, dict) else []
+    if isinstance(prepared_documents, list) and len(prepared_documents) > 1:
+        selected_document_id = document_id
+        if selected_document_id is None:
+            raise typer.BadParameter(
+                "Plusieurs documents ont été préparés. Utilisez --document-id parmi : "
+                + ", ".join(item.get("identifier", "?") for item in prepared_documents)
+            )
+        blueprint = registry.blueprint_for_document(
+            profile_name or "generic",
+            project_kind=project_kind,
+            document_identifier=selected_document_id,
+        )
+    elif document_id is not None:
+        blueprint = registry.blueprint_for_document(
+            profile_name or "generic",
+            project_kind=project_kind,
+            document_identifier=document_id,
+        )
+    else:
+        blueprint = registry.blueprint_for_profile(profile_name or "generic")
     markdown = markdown_file.read_text(encoding="utf-8")
     diagnostics = ManualMarkdownValidator().validate(
         markdown=markdown,

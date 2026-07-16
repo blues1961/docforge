@@ -8,7 +8,7 @@ from pathlib import Path
 
 from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
-from docforge.manual_blueprint import ManualBlueprint
+from docforge.manual_blueprint import ManualBlueprint, ManualBlueprintRegistry
 from docforge.manual_knowledge import ManualKnowledge
 from docforge.manual_prompt import (
     ManualPromptBuilder,
@@ -41,6 +41,21 @@ class ManualSectionArtifact:
     context_budget: int | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ManualPreparedDocument:
+    identifier: str
+    title: str
+    audience: str
+    kind: str
+    output_dir: Path
+    blueprint: ManualBlueprint
+    full_prompt_file: Path | None = None
+    full_prompt_estimated_tokens: int | None = None
+    section_prompt_files: list[Path] = field(default_factory=list)
+    section_context_files: list[Path] = field(default_factory=list)
+    section_artifacts: list[ManualSectionArtifact] = field(default_factory=list)
+
+
 @dataclass(slots=True)
 class ManualPreparationResult:
     root: Path
@@ -52,6 +67,7 @@ class ManualPreparationResult:
     section_context_files: list[Path] = field(default_factory=list)
     section_artifacts: list[ManualSectionArtifact] = field(default_factory=list)
     generated_directory: Path | None = None
+    documents: list[ManualPreparedDocument] = field(default_factory=list)
 
 
 class ManualPreparationService:
@@ -114,27 +130,22 @@ class ManualPreparationService:
             profile_instance=profile_instance,
         )
 
-        blueprint = (
-            self.blueprint
-            or profile_instance.build_manual_blueprint()
-        )
         prompt_builder = (
             self.prompt_builder
             or profile_instance.build_manual_prompt_builder()
         )
         preparation_mode = ManualPreparationMode(mode)
-        active_sections = tuple(
-            section
-            for section in blueprint.sections
-            if not prompt_builder.should_omit_section(
-                manual_knowledge,
-                section,
+
+        if self.blueprint is not None:
+            blueprints = (self.blueprint,)
+        else:
+            project_kind = None
+            if isinstance(manual_knowledge.template, dict):
+                project_kind = manual_knowledge.template.get("project_kind")
+            blueprints = ManualBlueprintRegistry().blueprints_for_context(
+                profile_instance.name,
+                project_kind=project_kind,
             )
-        )
-        active_blueprint = ManualBlueprint(
-            profile_name=blueprint.profile_name,
-            sections=active_sections,
-        )
 
         knowledge_file = resolved_output_dir / "manual-knowledge.json"
         knowledge_file.write_text(
@@ -142,9 +153,90 @@ class ManualPreparationService:
             encoding="utf-8",
         )
 
+        documents: list[ManualPreparedDocument] = []
+        multiple_documents = len(blueprints) > 1
+        documents_root = resolved_output_dir / "documents"
+        if multiple_documents:
+            documents_root.mkdir(parents=True, exist_ok=True)
+
+        for blueprint in blueprints:
+            document_output_dir = (
+                documents_root / blueprint.document_identifier
+                if multiple_documents
+                else resolved_output_dir
+            )
+            if multiple_documents:
+                document_output_dir.mkdir(parents=True, exist_ok=True)
+            documents.append(
+                self._prepare_document(
+                    output_dir=document_output_dir,
+                    knowledge=manual_knowledge,
+                    blueprint=blueprint,
+                    prompt_builder=prompt_builder,
+                    preparation_mode=preparation_mode,
+                    context_budget=context_budget,
+                    legacy_root_layout=not multiple_documents,
+                )
+            )
+
+        primary_document = documents[0]
+        manifest_file = resolved_output_dir / "manual-manifest.json"
+        manifest_file.write_text(
+            self._build_manifest(
+                output_dir=resolved_output_dir,
+                knowledge=manual_knowledge,
+                documents=documents,
+                knowledge_file=knowledge_file,
+                generated_directory=generated_directory,
+                context_budget=context_budget,
+            ),
+            encoding="utf-8",
+        )
+
+        return ManualPreparationResult(
+            root=root,
+            output_dir=resolved_output_dir,
+            knowledge_file=knowledge_file,
+            manifest_file=manifest_file,
+            full_prompt_file=(None if multiple_documents else primary_document.full_prompt_file),
+            section_prompt_files=([] if multiple_documents else list(primary_document.section_prompt_files)),
+            section_context_files=([] if multiple_documents else list(primary_document.section_context_files)),
+            section_artifacts=([] if multiple_documents else list(primary_document.section_artifacts)),
+            generated_directory=generated_directory,
+            documents=documents,
+        )
+
+    def _prepare_document(
+        self,
+        *,
+        output_dir: Path,
+        knowledge: ManualKnowledge,
+        blueprint: ManualBlueprint,
+        prompt_builder: ManualPromptBuilder,
+        preparation_mode: ManualPreparationMode,
+        context_budget: int | None,
+        legacy_root_layout: bool,
+    ) -> ManualPreparedDocument:
+        active_sections = tuple(
+            section
+            for section in blueprint.sections
+            if not prompt_builder.should_omit_section(
+                knowledge,
+                section,
+            )
+        )
+        active_blueprint = ManualBlueprint(
+            profile_name=blueprint.profile_name,
+            sections=active_sections,
+            document_identifier=blueprint.document_identifier,
+            document_title=blueprint.document_title,
+            document_audience=blueprint.document_audience,
+            document_kind=blueprint.document_kind,
+        )
+
         section_contexts = [
             prompt_builder.build_section_context(
-                manual_knowledge,
+                knowledge,
                 section,
                 context_budget=context_budget,
             )
@@ -154,16 +246,14 @@ class ManualPreparationService:
         full_prompt_file: Path | None = None
         full_prompt_estimated_tokens: int | None = None
         if preparation_mode.includes_full_prompt():
-            full_prompt_file = resolved_output_dir / "manual-prompt.md"
+            prompt_name = "manual-prompt.md" if legacy_root_layout else "prompt.md"
+            full_prompt_file = output_dir / prompt_name
             full_prompt = prompt_builder.build_full_prompt(
-                knowledge=manual_knowledge,
+                knowledge=knowledge,
                 blueprint=active_blueprint,
                 context_budget=context_budget,
             )
-            full_prompt_file.write_text(
-                full_prompt,
-                encoding="utf-8",
-            )
+            full_prompt_file.write_text(full_prompt, encoding="utf-8")
             full_prompt_estimated_tokens = prompt_builder.estimate_tokens(
                 full_prompt
             )
@@ -172,20 +262,16 @@ class ManualPreparationService:
         section_context_files: list[Path] = []
         section_artifacts: list[ManualSectionArtifact] = []
         if preparation_mode.includes_sections():
-            section_root = resolved_output_dir / "section-prompts"
-            section_context_root = resolved_output_dir / "section-contexts"
+            section_root = output_dir / "section-prompts"
+            section_context_root = output_dir / "section-contexts"
             section_root.mkdir(parents=True, exist_ok=True)
             section_context_root.mkdir(parents=True, exist_ok=True)
             for index, (section, context) in enumerate(
                 zip(active_blueprint.sections, section_contexts, strict=True),
                 start=1,
             ):
-                section_path = (
-                    section_root / f"{index:02d}-{section.identifier}.md"
-                )
-                context_path = (
-                    section_context_root / f"{index:02d}-{section.identifier}.json"
-                )
+                section_path = section_root / f"{index:02d}-{section.identifier}.md"
+                context_path = section_context_root / f"{index:02d}-{section.identifier}.json"
                 section_path.write_text(
                     prompt_builder.build_section_prompt(
                         blueprint=active_blueprint,
@@ -228,32 +314,18 @@ class ManualPreparationService:
                     )
                 )
 
-        manifest_file = resolved_output_dir / "manual-manifest.json"
-        manifest_file.write_text(
-            self._build_manifest(
-                output_dir=resolved_output_dir,
-                knowledge=manual_knowledge,
-                blueprint=active_blueprint,
-                knowledge_file=knowledge_file,
-                full_prompt_file=full_prompt_file,
-                full_prompt_estimated_tokens=full_prompt_estimated_tokens,
-                section_artifacts=section_artifacts,
-                generated_directory=generated_directory,
-                context_budget=context_budget,
-            ),
-            encoding="utf-8",
-        )
-
-        return ManualPreparationResult(
-            root=root,
-            output_dir=resolved_output_dir,
-            knowledge_file=knowledge_file,
-            manifest_file=manifest_file,
+        return ManualPreparedDocument(
+            identifier=active_blueprint.document_identifier,
+            title=active_blueprint.document_title,
+            audience=active_blueprint.document_audience,
+            kind=active_blueprint.document_kind,
+            output_dir=output_dir,
+            blueprint=active_blueprint,
             full_prompt_file=full_prompt_file,
+            full_prompt_estimated_tokens=full_prompt_estimated_tokens,
             section_prompt_files=section_prompt_files,
             section_context_files=section_context_files,
             section_artifacts=section_artifacts,
-            generated_directory=generated_directory,
         )
 
     def _build_manifest(
@@ -261,11 +333,8 @@ class ManualPreparationService:
         *,
         output_dir: Path,
         knowledge: ManualKnowledge,
-        blueprint: ManualBlueprint,
+        documents: list[ManualPreparedDocument],
         knowledge_file: Path,
-        full_prompt_file: Path | None,
-        full_prompt_estimated_tokens: int | None,
-        section_artifacts: list[ManualSectionArtifact],
         generated_directory: Path,
         context_budget: int | None,
     ) -> str:
@@ -275,78 +344,114 @@ class ManualPreparationService:
             "generated/",
         ]
 
-        if full_prompt_file is not None:
-            expected_outputs.append("manual-prompt.md")
+        single_document = len(documents) == 1 and documents[0].output_dir == output_dir
+        primary_document = documents[0]
 
-        if section_artifacts:
-            expected_outputs.extend(
-                str(
-                    artifact.prompt_file.relative_to(output_dir).as_posix()
+        if single_document:
+            if primary_document.full_prompt_file is not None:
+                expected_outputs.append(
+                    str(primary_document.full_prompt_file.relative_to(output_dir).as_posix())
                 )
-                for artifact in section_artifacts
+            expected_outputs.extend(
+                str(artifact.prompt_file.relative_to(output_dir).as_posix())
+                for artifact in primary_document.section_artifacts
             )
             expected_outputs.extend(
-                str(
-                    artifact.context_file.relative_to(output_dir).as_posix()
-                )
-                for artifact in section_artifacts
+                str(artifact.context_file.relative_to(output_dir).as_posix())
+                for artifact in primary_document.section_artifacts
             )
+        else:
+            for document in documents:
+                base = document.output_dir.relative_to(output_dir).as_posix()
+                expected_outputs.append(f"{base}/")
+                if document.full_prompt_file is not None:
+                    expected_outputs.append(
+                        str(document.full_prompt_file.relative_to(output_dir).as_posix())
+                    )
+                expected_outputs.extend(
+                    str(artifact.prompt_file.relative_to(output_dir).as_posix())
+                    for artifact in document.section_artifacts
+                )
+                expected_outputs.extend(
+                    str(artifact.context_file.relative_to(output_dir).as_posix())
+                    for artifact in document.section_artifacts
+                )
 
         manifest = {
             "schema_version": 2,
             "project_name": knowledge.project.name,
-            "profile_name": blueprint.profile_name,
+            "profile_name": knowledge.profile.get("name") if isinstance(knowledge.profile, dict) else primary_document.blueprint.profile_name,
+            "project_kind": knowledge.template.get("project_kind") if isinstance(knowledge.template, dict) else None,
             "command_provenance_summary": self._build_command_provenance_summary(knowledge),
-            "generated_at": datetime.now(UTC)
-            .replace(microsecond=0)
-            .isoformat(),
+            "generated_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "context_budget": context_budget,
-            "knowledge_file": str(
-                knowledge_file.relative_to(output_dir).as_posix()
-            ),
+            "knowledge_file": str(knowledge_file.relative_to(output_dir).as_posix()),
             "full_prompt": (
-                str(
-                    full_prompt_file.relative_to(output_dir).as_posix()
-                )
-                if full_prompt_file is not None
+                str(primary_document.full_prompt_file.relative_to(output_dir).as_posix())
+                if single_document and primary_document.full_prompt_file is not None
                 else None
             ),
-            "full_prompt_estimated_tokens": full_prompt_estimated_tokens,
-            "section_prompts": [
-                str(
-                    artifact.prompt_file.relative_to(output_dir).as_posix()
-                )
-                for artifact in section_artifacts
-            ],
-            "section_contexts": [
+            "full_prompt_estimated_tokens": (
+                primary_document.full_prompt_estimated_tokens if single_document else None
+            ),
+            "section_prompts": (
+                [
+                    str(artifact.prompt_file.relative_to(output_dir).as_posix())
+                    for artifact in primary_document.section_artifacts
+                ]
+                if single_document
+                else []
+            ),
+            "section_contexts": (
+                [
+                    {
+                        "identifier": artifact.identifier,
+                        "title": artifact.title,
+                        "prompt_file": str(artifact.prompt_file.relative_to(output_dir).as_posix()),
+                        "context_file": str(artifact.context_file.relative_to(output_dir).as_posix()),
+                        "estimated_tokens": artifact.estimated_tokens,
+                        "context_budget": artifact.context_budget,
+                    }
+                    for artifact in primary_document.section_artifacts
+                ]
+                if single_document
+                else []
+            ),
+            "documents": [
                 {
-                    "identifier": artifact.identifier,
-                    "title": artifact.title,
-                    "prompt_file": str(
-                        artifact.prompt_file.relative_to(output_dir).as_posix()
+                    "identifier": document.identifier,
+                    "title": document.title,
+                    "audience": document.audience,
+                    "kind": document.kind,
+                    "output_dir": str(document.output_dir.relative_to(output_dir).as_posix()),
+                    "full_prompt": (
+                        str(document.full_prompt_file.relative_to(output_dir).as_posix())
+                        if document.full_prompt_file is not None
+                        else None
                     ),
-                    "context_file": str(
-                        artifact.context_file.relative_to(output_dir).as_posix()
-                    ),
-                    "estimated_tokens": artifact.estimated_tokens,
-                    "context_budget": artifact.context_budget,
+                    "full_prompt_estimated_tokens": document.full_prompt_estimated_tokens,
+                    "section_prompts": [
+                        str(artifact.prompt_file.relative_to(output_dir).as_posix())
+                        for artifact in document.section_artifacts
+                    ],
+                    "section_contexts": [
+                        {
+                            "identifier": artifact.identifier,
+                            "title": artifact.title,
+                            "prompt_file": str(artifact.prompt_file.relative_to(output_dir).as_posix()),
+                            "context_file": str(artifact.context_file.relative_to(output_dir).as_posix()),
+                            "estimated_tokens": artifact.estimated_tokens,
+                            "context_budget": artifact.context_budget,
+                        }
+                        for artifact in document.section_artifacts
+                    ],
                 }
-                for artifact in section_artifacts
+                for document in documents
             ],
             "expected_outputs": expected_outputs,
-            "generated_directory": str(
-                generated_directory.relative_to(output_dir).as_posix()
-            ),
+            "generated_directory": str(generated_directory.relative_to(output_dir).as_posix()),
         }
-        return (
-            json.dumps(
-                manifest,
-                indent=2,
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
-
+        return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
 
     def _build_command_provenance_summary(
         self,

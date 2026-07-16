@@ -62,7 +62,7 @@ class ManualPromptBuilder:
     DEFAULT_CONTEXT_BUDGET = 4096
 
     COMMON_RULES = (
-        "Rédige un guide utilisateur en Markdown.",
+        "Rédige un document Markdown fidèle aux faits fournis.",
         "Utilise `manual-knowledge.json` comme source unique de vérité et n’utilise aucune connaissance externe pour compléter les procédures ou les caractéristiques du projet.",
         "Suis strictement le blueprint fourni.",
         "N’invente jamais une commande, une option, une procédure, une route, une URL, un paramètre, une variable, un service ou une fonctionnalité.",
@@ -339,6 +339,10 @@ class ManualPromptBuilder:
     ) -> dict[str, Any]:
         return {
             "profile_name": blueprint.profile_name,
+            "document_identifier": blueprint.document_identifier,
+            "document_title": blueprint.document_title,
+            "document_audience": blueprint.document_audience,
+            "document_kind": blueprint.document_kind,
             "sections": [
                 {
                     "identifier": section.identifier,
@@ -653,6 +657,122 @@ class ManualPromptBuilder:
             if isinstance(projection.get("limitations"), dict):
                 projection["limitations"]["items"] = [item for item in projection["limitations"].get("items", []) if item.get("category") in {"security", "api", "credentials", "network"}]
 
+        if section_identifier.startswith("template-creation-"):
+            template = projection.get("template")
+            if isinstance(template, dict):
+                template.pop("maintainer_workflows", None)
+                if section_identifier == "template-creation-identity":
+                    allowed_names = {"APP_NAME", "APP_SLUG", "APP_DEPOT", "APP_NO", "APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                    template["placeholders"] = [
+                        item for item in template.get("placeholders", [])
+                        if item.get("name") in allowed_names
+                    ]
+                if section_identifier == "template-creation-materialization":
+                    template["creator_workflows"] = [
+                        item for item in template.get("creator_workflows", [])
+                        if item.get("identifier") in {"template-generate-environments", "template-first-init", "template-apply-migrations", "template-validate-invariants"}
+                    ]
+                if section_identifier == "template-creation-start-validate":
+                    template["creator_workflows"] = [
+                        item for item in template.get("creator_workflows", [])
+                        if item.get("identifier") in {"template-select-environment", "template-first-init", "template-validate-invariants", "template-apply-migrations"}
+                    ]
+                if section_identifier in {"template-creation-git-transition", "template-creation-checklist"}:
+                    template["creator_workflows"] = [
+                        item for item in template.get("creator_workflows", [])
+                        if "git" in (item.get("identifier") or "") or any("git" in command.casefold() for command in item.get("commands", []))
+                    ] or template.get("creator_workflows", [])[:2]
+            variables_block = projection.get("environment_variables")
+            if isinstance(variables_block, dict) and isinstance(variables_block.get("variables"), list):
+                if section_identifier == "template-creation-identity":
+                    allowed_names = {"APP_NAME", "APP_SLUG", "APP_DEPOT", "APP_NO", "APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                    filtered = []
+                    for item in variables_block["variables"]:
+                        if item.get("name") not in allowed_names:
+                            continue
+                        filtered.append({
+                            "name": item.get("name"),
+                            "required": item.get("required"),
+                            "required_by_environment": item.get("required_by_environment", {}),
+                            "sensitive": item.get("sensitive"),
+                            "description": item.get("description"),
+                        })
+                    projection["environment_variables"] = {"variables": filtered}
+                elif section_identifier == "template-creation-environments":
+                    projection["environment_variables"] = {
+                        "variables": [
+                            {
+                                "name": item.get("name"),
+                                "required": item.get("required"),
+                                "required_by_environment": item.get("required_by_environment", {}),
+                                "sensitive": item.get("sensitive"),
+                                "comment": item.get("comment"),
+                            }
+                            for item in variables_block["variables"]
+                            if item.get("name") in {"APP_ENV", "APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                        ]
+                    }
+            if section_identifier == "template-creation-identity" and isinstance(projection.get("missing_information"), list):
+                projection["missing_information"] = [
+                    item for item in projection["missing_information"]
+                    if item.get("category") in {"template", "credentials", "runtime"}
+                ]
+            if section_identifier == "template-creation-materialization":
+                projection["workflows"] = []
+                if isinstance(projection.get("limitations"), dict):
+                    projection["limitations"]["items"] = [
+                        item for item in projection["limitations"].get("items", [])
+                        if item.get("category") in {"template", "runtime", "workflow"}
+                    ]
+            if section_identifier == "template-creation-start-validate":
+                projection["workflows"] = []
+                if isinstance(projection.get("service_endpoints"), dict):
+                    projection["service_endpoints"] = {
+                        "endpoints": [
+                            item for item in projection["service_endpoints"].get("endpoints", [])
+                            if item.get("environment") == "dev" and item.get("validity") == "valid"
+                        ][:1]
+                    }
+                if isinstance(projection.get("profile"), dict):
+                    projection["profile"] = {
+                        "name": projection["profile"].get("name"),
+                        "label": projection["profile"].get("label"),
+                    }
+            block = projection.get("operational_commands")
+            if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                block["commands"] = [
+                    item for item in block["commands"]
+                    if item.get("audience") == "creator" and item.get("visibility") == "public"
+                ]
+                if section_identifier == "template-creation-materialization":
+                    allowed_names = {"init", "dev", "prod", "up", "migrate", "check"}
+                    block["commands"] = [
+                        item for item in block["commands"]
+                        if item.get("name") in allowed_names
+                    ]
+                if section_identifier == "template-creation-start-validate":
+                    allowed_names = {"dev", "prod", "up", "migrate", "check"}
+                    block["commands"] = [
+                        item for item in block["commands"]
+                        if item.get("name") in allowed_names
+                    ]
+                projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+
+        if section_identifier.startswith("template-maintenance-"):
+            template = projection.get("template")
+            if isinstance(template, dict):
+                template.pop("creator_workflows", None)
+            block = projection.get("operational_commands")
+            if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                block["commands"] = [
+                    item for item in block["commands"]
+                    if item.get("visibility") == "public"
+                    and item.get("provenance") in {"app-template", "template-standard", "application-public"}
+                    and item.get("reference_level") != "omit"
+                    and item.get("name") != "init"
+                ]
+                projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+
         if section_identifier == "troubleshooting":
             if isinstance(projection.get("missing_information"), list):
                 projection["missing_information"] = [item for item in projection["missing_information"] if item.get("category") in {"runtime", "tests", "api", "network", "backup"}]
@@ -715,6 +835,8 @@ class ManualPromptBuilder:
             return ManualPromptBuilder._compact_react(value, section.identifier)
         if path == "capabilities":
             return ManualPromptBuilder._compact_capabilities(value)
+        if path == "template":
+            return ManualPromptBuilder._compact_template(value, section.identifier)
         if path == "source_traceability":
             return ManualPromptBuilder._compact_source_traceability(value)
         if path == "installation":
@@ -1078,6 +1200,63 @@ class ManualPromptBuilder:
         }
 
     @staticmethod
+    def _compact_template(value: Any, section_identifier: str) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {}
+        compact = {
+            "project_kind": value.get("project_kind"),
+            "template_id": value.get("template_id"),
+            "origin_template_id": value.get("origin_template_id"),
+            "template_version": value.get("template_version"),
+            "origin_template_version": value.get("origin_template_version"),
+            "base_profile": value.get("base_profile"),
+            "manifest_source": value.get("manifest_source"),
+            "manifest_verified_targets": value.get("manifest_verified_targets", []),
+            "manifest_missing_targets": value.get("manifest_missing_targets", []),
+            "missing_steps": value.get("missing_steps", []),
+            "risks": value.get("risks", []),
+            "placeholders": [
+                {
+                    "name": item.get("name"),
+                    "kind": item.get("kind"),
+                    "description": item.get("description"),
+                    "required": item.get("required"),
+                }
+                for item in value.get("placeholders", [])
+            ],
+            "creator_workflows": [
+                {
+                    "identifier": item.get("identifier"),
+                    "title": item.get("title"),
+                    "commands": item.get("commands", []),
+                    "preconditions": item.get("preconditions", []),
+                    "expected_results": item.get("expected_results", []),
+                    "personalization_points": item.get("personalization_points", []),
+                    "risks": item.get("risks", []),
+                    "missing_information": item.get("missing_information", []),
+                }
+                for item in value.get("creator_workflows", [])
+            ],
+            "maintainer_workflows": [
+                {
+                    "identifier": item.get("identifier"),
+                    "title": item.get("title"),
+                    "commands": item.get("commands", []),
+                    "preconditions": item.get("preconditions", []),
+                    "expected_results": item.get("expected_results", []),
+                    "risks": item.get("risks", []),
+                    "missing_information": item.get("missing_information", []),
+                }
+                for item in value.get("maintainer_workflows", [])
+            ],
+        }
+        if section_identifier.startswith("template-creation-"):
+            compact.pop("maintainer_workflows", None)
+        if section_identifier.startswith("template-maintenance-"):
+            compact.pop("creator_workflows", None)
+        return ManualPromptBuilder._compact_generic(compact)
+
+    @staticmethod
     def _deduplicate_projection(projection: dict[str, Any]) -> None:
         missing = projection.get("missing_information")
         limitations = projection.get("limitations")
@@ -1179,12 +1358,9 @@ class PythonCliManualPromptBuilder(ManualPromptBuilder):
 
 class DjangoReactManualPromptBuilder(ManualPromptBuilder):
     DJANGO_REACT_RULES = (
-        "Le manuel concerne l’application analysée, jamais DocForge comme produit utilisateur.",
+        "Le manuel concerne l’application analysée ou le dépôt modèle analysé, jamais DocForge comme produit utilisateur.",
         "Les commandes DocForge ne sont pas des commandes d’utilisation de l’application analysée.",
-        "Le manuel ne doit pas commencer par Docker, les variables d’environnement ou l’infrastructure; il doit d’abord expliquer l’application et ce que l’utilisateur peut faire.",
-        "Distingue clairement trois publics lorsque les faits le permettent : utilisateur de l’application, administrateur applicatif et exploitant.",
         "Formule prudemment toute capacité marquée `derived` et ne la présente jamais comme validée en fonctionnement.",
-        "Sépare strictement les environnements de développement et de production.",
         "N’affiche jamais une valeur secrète.",
         "Omet toute procédure dont une commande critique est absente.",
         "Utilise `missing_information` et `limitations.items` comme source prioritaire pour la section des limites, sans reconstruire arbitrairement les absences depuis le JSON brut.",
@@ -1192,9 +1368,7 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         "Lorsqu’un conflit structuré est présent dans `conflicts`, présente-le clairement, n’arbitre jamais entre les valeurs contradictoires et ne décris pas comme validée une procédure affectée par ce conflit.",
         "Pour les routes Django, utilise uniquement `full_path` lorsque `resolution_status` vaut `resolved`; ne compose jamais manuellement un chemin public à partir d’une route relative non résolue.",
         "Une URL syntaxiquement invalide ou contenant une interpolation déséquilibrée ne doit jamais être présentée comme URL d’accès opérationnelle.",
-        "Ne présente jamais simultanément une route relative comme `/auth/login/` et son chemin public résolu comme deux endpoints publics distincts.",
         "Pour les endpoints, utilise les méthodes, permissions, mécanismes d’authentification, paramètres de route et sources rattachés à chaque endpoint; n’attribue jamais des permissions globales à tous les endpoints ou à tous les utilisateurs.",
-        "Ne déclare pas qu’un utilisateur peut créer, modifier ou supprimer une ressource sans preuve provenant de l’endpoint ou du workflow correspondant.",
         "Respecte `workflows.operational_status` : un workflow `requires-context` ne doit jamais être présenté comme immédiatement exécutable et doit garder son contexte manquant explicite.",
         "Lorsqu’une cible alias délègue à des prérequis démontrés, décris l’alias à partir de cette délégation au lieu d’inventer un corps absent.",
         "Ne présente jamais `make check` comme une suite de tests lorsqu’il correspond à une vérification d’invariants ou de diagnostic.",
@@ -1204,18 +1378,41 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         "Pour la base de données, respecte les contextes fournis par ManualKnowledge, par exemple exécution vs test; ne transforme pas automatiquement une différence de contexte en contradiction.",
         "Les métadonnées de `django.models.fields` priment sur toute intuition: type, `required`, `null`, `blank`, `default`, `choices`, relation, unicité et autres contraintes détectées doivent être utilisées telles quelles.",
         "Pour `react.crypto`, décris uniquement l’implémentation détectée et jamais une garantie de sécurité, un audit, une récupération existante ou un modèle zero knowledge non démontré.",
-        "En mode strict, n’ajoute pas de recommandations générales de sécurité comme MFA, rotation des secrets, VPN ou sauvegarde hors site si elles ne figurent pas dans ManualKnowledge.",
-        "Le manuel final doit rester lisible: le démarrage rapide est court, l’exploitation détaille les procédures nécessaires, et la référence des commandes évite de dupliquer les listes dans toutes les sections.",
-        "Chaque catégorie d’information doit avoir une section principale : présentation des services dans `Architecture et référence technique`, URLs dev/prod dans `Installation et configuration`, séquence minimale dans `Démarrage rapide`, détail des commandes et paramètres Make dans `Référence des commandes`, permissions dans `Administration` ou `API`, chiffrement dans `Architecture et référence technique` ou `Sécurité`, sauvegarde et restauration dans `Exploitation`, limitations dans `Limites des informations disponibles`.",
-        "Ne recopie pas intégralement la liste des commandes, des services, des variables, des URLs ou des endpoints dans plusieurs sections; ailleurs, ne fais qu’une mention brève quand c’est nécessaire à la compréhension.",
+        "En mode strict, n’ajoute pas de recommandations générales de sécurité si elles ne figurent pas dans ManualKnowledge.",
+        "Le document final doit rester lisible: le démarrage rapide est court, l’exploitation détaille les procédures nécessaires, et la référence des commandes évite de dupliquer les listes dans toutes les sections.",
         "Les helpers internes du Makefile ne doivent pas encombrer la référence principale; privilégie les commandes publiques, documentées ou réellement utilisées dans les workflows démontrés.",
-        "Le démarrage rapide doit contenir uniquement la sélection du développement, l’initialisation, le démarrage, les migrations si elles sont nécessaires, et l’URL principale; n’y explique pas tous les services, toutes les variables ni toute l’architecture.",
-        "La section de référence des commandes doit contenir les détails opérationnels : commande, fonction, environnement, paramètres facultatifs, statut opérationnel et contexte requis. Les autres sections ne doivent pas recopier cette référence.",
         "N’expose pas dans le manuel final un vocabulaire interne comme `workflow structuré`, `fait structuré`, `permission structurée`, `requires-context`, `ManualKnowledge`, `ProjectKnowledge`, `dataclass`, `builder`, `projection` ou `pipeline documentaire`.",
         "Transforme toujours les identifiants techniques de limites ou d’informations manquantes en phrases lisibles, par exemple `PROJECT-VERSION-MISSING` devient une phrase telle que la version de l’application n’est pas indiquée.",
+        "Lorsque `conflicts` est vide, n’ajoute pas une phrase de remplissage disant qu’aucune contradiction n’est signalée.",
+    )
+
+    USER_GUIDE_RULES = (
+        "Le manuel ne doit pas commencer par Docker, les variables d’environnement ou l’infrastructure; il doit d’abord expliquer l’application et ce que l’utilisateur peut faire.",
+        "Distingue clairement trois publics lorsque les faits le permettent : utilisateur de l’application, administrateur applicatif et exploitant.",
         "Décris la section d’utilisation avec un langage fonctionnel orienté utilisateur; n’invente ni boutons, ni messages affichés, ni captures d’écran, ni parcours non démontrés.",
         "Si `capabilities.capabilities` contient des capacités backend ou frontend démontrées, conserve des sections visibles pour les fonctionnalités principales et l’utilisation de l’application.",
-        "Lorsque `conflicts` est vide, n’ajoute pas une phrase de remplissage disant qu’aucune contradiction n’est signalée.",
+        "Chaque catégorie d’information doit avoir une section principale : présentation des services dans `Architecture et référence technique`, URLs dev/prod dans `Installation et configuration`, séquence minimale dans `Démarrage rapide`, détail des commandes et paramètres Make dans `Référence des commandes`, permissions dans `Administration` ou `API`, chiffrement dans `Architecture et référence technique` ou `Sécurité`, sauvegarde et restauration dans `Exploitation`, limitations dans `Limites des informations disponibles`.",
+        "Ne recopie pas intégralement la liste des commandes, des services, des variables, des URLs ou des endpoints dans plusieurs sections; ailleurs, ne fais qu’une mention brève quand c’est nécessaire à la compréhension.",
+        "Le démarrage rapide doit contenir uniquement la sélection du développement, l’initialisation, le démarrage, les migrations si elles sont nécessaires, et l’URL principale; n’y explique pas tous les services, toutes les variables ni toute l’architecture.",
+        "La section de référence des commandes doit contenir les détails opérationnels : commande, fonction, environnement, paramètres facultatifs, statut opérationnel et contexte requis. Les autres sections ne doivent pas recopier cette référence.",
+    )
+
+    TEMPLATE_CREATION_RULES = (
+        "Rédige un guide destiné au développeur qui crée une nouvelle application à partir du dépôt modèle.",
+        "Ne présente pas ce document comme un guide utilisateur d’application métier.",
+        "Explique clairement le rôle du modèle, ses limites et les étapes réellement démontrées pour matérialiser une nouvelle application.",
+        "Toute opération Git destructive ou irréversible, notamment le détachement de l’historique ou la suppression de `.git`, doit être signalée explicitement avec un avertissement clair.",
+        "Les placeholders comme `APP_NAME`, `APP_SLUG`, `APP_DEPOT`, `APP_NO`, `APP_HOST`, `ADMIN_USERNAME`, `ADMIN_EMAIL` et `ADMIN_PASSWORD` doivent être décrits comme valeurs à personnaliser, jamais comme valeurs finales à recopier telles quelles.",
+        "Ne présente pas `DOCFORGE_SKIP_STARTUP=1` comme une procédure normale d’initialisation si ce mécanisme n’est démontré que pour les tests ou la maintenance.",
+        "Distingue la matérialisation de l’application, la génération des environnements, la génération des secrets et la validation finale avec `make check`.",
+    )
+
+    TEMPLATE_MAINTENANCE_RULES = (
+        "Rédige un guide destiné au mainteneur du dépôt modèle, pas au créateur d’une instance métier ni à l’utilisateur final.",
+        "Explique l’architecture du squelette, le rôle du manifeste template, la politique documentaire des cibles Makefile et les validations avant publication d’une nouvelle version.",
+        "Sépare strictement la maintenance du modèle des étapes de création d’une application à partir de ce modèle.",
+        "Décris les placeholders, les scripts standards, `make check`, `make update` et les procédures de validation démontrées sans inventer de workflow de publication externe.",
+        "Mets en évidence les risques de divergence entre le modèle, son manifeste, les cibles Makefile et les applications déjà matérialisées.",
     )
 
     SECTION_RULES = {
@@ -1252,13 +1449,26 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
             "Dans cette section, consolide les éléments de `missing_information` et `limitations.items` sans les répéter inutilement ni en inventer de nouveaux.",
             "Remplace les identifiants techniques par des phrases lisibles destinées au lecteur final.",
         ),
+        "template-creation-git-transition": (
+            "Cette section doit expliciter les avertissements liés au détachement Git et au remplacement de l’historique du dépôt source.",
+        ),
+        "template-creation-checklist": (
+            "Cette section reste courte, orientée vérification finale, et ne recopie pas tout le détail des commandes déjà documentées plus haut.",
+        ),
+        "template-maintenance-validation-release": (
+            "Cette section regroupe les validations avant publication d’une nouvelle version du modèle et les contrôles de cohérence avec les applications matérialisées.",
+        ),
     }
 
     def profile_rules(
         self,
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
-        return self.DJANGO_REACT_RULES
+        if blueprint.document_kind == "template-creation-guide":
+            return (*self.DJANGO_REACT_RULES, *self.TEMPLATE_CREATION_RULES)
+        if blueprint.document_kind == "template-maintenance-guide":
+            return (*self.DJANGO_REACT_RULES, *self.TEMPLATE_MAINTENANCE_RULES)
+        return (*self.DJANGO_REACT_RULES, *self.USER_GUIDE_RULES)
 
     def additional_guidance(
         self,
@@ -1266,10 +1476,20 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         knowledge: ManualKnowledge,
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
-        return (
-            "Le flux de DocForge s’arrête à la production de `manual-knowledge.json`, des contextes de section et du prompt de rédaction; tu ne dois pas prétendre que DocForge a rédigé ou validé le manuel final.",
-            "Le document peut rester unique, mais fais apparaître sans ambiguïté les sections destinées aux utilisateurs, aux administrateurs et aux exploitants.",
+        common = (
+            "Le flux de DocForge s’arrête à la production de `manual-knowledge.json`, des contextes de section et du prompt de rédaction; tu ne dois pas prétendre que DocForge a rédigé ou validé le document final.",
             "Les URLs résolues peuvent être citées; lorsqu’une URL ou un port reste symbolique dans ManualKnowledge, conserve cette forme au lieu d’inventer une valeur.",
+        )
+        if blueprint.document_kind == "template-creation-guide":
+            return common + (
+                "Le document doit rester orienté vers la création d’une nouvelle application à partir du modèle, avec une checklist finale explicite.",
+            )
+        if blueprint.document_kind == "template-maintenance-guide":
+            return common + (
+                "Le document doit distinguer clairement les commandes et validations du mainteneur de celles du créateur d’application.",
+            )
+        return common + (
+            "Le document peut rester unique, mais fais apparaître sans ambiguïté les sections destinées aux utilisateurs, aux administrateurs et aux exploitants.",
         )
 
     def section_guidance(

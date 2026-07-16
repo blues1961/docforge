@@ -223,6 +223,7 @@ class ManualKnowledge:
     django: dict[str, Any] = field(default_factory=dict)
     react: dict[str, Any] = field(default_factory=dict)
     capabilities: dict[str, Any] = field(default_factory=dict)
+    template: dict[str, Any] = field(default_factory=dict)
     missing_information: list[Any] = field(default_factory=list)
     conflicts: list[ManualConflict] = field(default_factory=list)
     commands: list[ManualCommand] = field(default_factory=list)

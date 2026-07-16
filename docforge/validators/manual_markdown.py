@@ -70,7 +70,7 @@ class ManualMarkdownValidator:
         diagnostics: list[ManualMarkdownDiagnostic] = []
         lines = markdown.splitlines()
         first_non_empty = next((line.strip() for line in lines if line.strip()), "")
-        expected_h1 = self.expected_h1(payload)
+        expected_h1 = self.expected_h1(payload, blueprint)
 
         if not first_non_empty.startswith("# "):
             diagnostics.append(ManualMarkdownDiagnostic(
@@ -96,12 +96,22 @@ class ManualMarkdownValidator:
         return diagnostics
 
     @staticmethod
-    def expected_h1(payload: dict[str, Any]) -> str:
+    def expected_h1(
+        payload: dict[str, Any],
+        blueprint: ManualBlueprint,
+    ) -> str:
         project_name = (
             payload.get("application", {}).get("name")
             or payload.get("project", {}).get("name")
             or "l’application"
         )
+        template_id = payload.get("template", {}).get("template_id") or payload.get("template", {}).get("origin_template_id") or project_name
+        if blueprint.document_kind == "template-creation-guide":
+            return f"# Guide de création d’une application avec {template_id}"
+        if blueprint.document_kind == "template-maintenance-guide":
+            return f"# Guide de maintenance du modèle {template_id}"
+        if blueprint.document_kind == "generic-guide":
+            return f"# Guide de {project_name}"
         return f"# Guide utilisateur de {project_name}"
 
     def _validate_interface_metadata(self, lines: list[str]) -> list[ManualMarkdownDiagnostic]:

@@ -110,7 +110,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                         "exclusion_reason": item.exclusion_reason,
                         "provenance_evidence": list(item.provenance_evidence),
                         "manifest_source": item.manifest_source,
-                        "audience": self._command_audience(item),
+                        "audience": self._command_audience(knowledge, item),
                         "reference_level": self._command_reference_level(item),
                         "destructive": self._command_is_destructive(item),
                         "destructive_effects": self._command_destructive_effects(item),
@@ -156,6 +156,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                     for item in knowledge.capabilities.capabilities
                 ]
             },
+            template=asdict(knowledge.template),
             missing_information=missing_information,
             conflicts=conflicts,
             commands=commands,
@@ -238,7 +239,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                     help=item.help_text or f"Commande opérationnelle catégorie {item.category}.",
                     visibility=item.visibility,
                     documented=item.documented,
-                    audience=self._command_audience(item),
+                    audience=self._command_audience(knowledge, item),
                     reference_level=self._command_reference_level(item),
                     provenance=item.provenance,
                     documentation_policy=item.documentation_policy,
@@ -270,9 +271,14 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             )
         return commands
 
-    def _command_audience(self, command) -> str:
+    def _command_audience(self, knowledge: ProjectKnowledge, command) -> str:
         if command.visibility != "public":
             return "internal"
+        if knowledge.template.project_kind == "application-template":
+            if command.name in {"init", "dev", "prod", "up", "down", "restart", "rebuild", "logs", "ps", "migrate", "backup", "restore", "check"}:
+                return "creator"
+            if command.name in {"update"}:
+                return "maintainer"
         if command.category in {"tests", "diagnostic"}:
             return "operator"
         if command.category in {"backup", "restore", "migrations", "build", "startup", "shutdown", "restart", "environment"}:
