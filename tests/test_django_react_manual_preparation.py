@@ -380,10 +380,13 @@ runner = CliRunner()
 
 def _create_template_bootstrap_fixture(root: Path) -> Path:
     (root / "scripts").mkdir(parents=True)
-    script_source = Path("../app-template/scripts/docforge-project-metadata.py").read_text(encoding="utf-8")
+    template_scripts = Path("../app-template/scripts")
     script_path = root / "scripts" / "docforge-project-metadata.py"
-    script_path.write_text(script_source, encoding="utf-8")
-    script_path.chmod(0o755)
+    for name in ("docforge-project-metadata.py", "app_template_metadata.py"):
+        source = template_scripts / name
+        destination = root / "scripts" / name
+        destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        destination.chmod(0o755)
     (root / ".gitignore").write_text(".env\n.env.local\n.env.template\n", encoding="utf-8")
     (root / "Makefile").write_text("init:\n\t@echo init\n\nup:\n\t@echo up\n", encoding="utf-8")
     (root / ".env.template").write_text(
@@ -675,7 +678,24 @@ def test_template_bootstrap_validate_fails_when_placeholder_remains(tmp_path: Pa
     assert "placeholders connus subsistent" in result.stderr
 
 
-def test_template_bootstrap_refuses_detach_in_source_named_directory(tmp_path: Path) -> None:
+def test_template_bootstrap_fixture_copies_wrapper_and_sibling_module(tmp_path: Path) -> None:
+    script = _create_template_bootstrap_fixture(tmp_path)
+
+    assert script.is_file()
+    assert (tmp_path / "scripts" / "app_template_metadata.py").is_file()
+
+    result = subprocess.run(
+        [str(script), "validate"],
+        cwd=tmp_path.parent,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0
+    assert "ModuleNotFoundError" not in result.stderr
+
+
+def test_template_bootstrap_refuses_materialization_in_source_named_directory(tmp_path: Path) -> None:
     source_like_root = tmp_path / "app-template"
     source_like_root.mkdir()
     script = _create_template_bootstrap_fixture(source_like_root)
@@ -688,7 +708,7 @@ def test_template_bootstrap_refuses_detach_in_source_named_directory(tmp_path: P
     )
 
     assert result.returncode == 1
-    assert "Refus de détacher l'historique Git" in result.stderr
+    assert "Refus de matérialiser directement le dépôt source du modèle" in result.stderr
     assert (source_like_root / ".git").exists()
 
 
