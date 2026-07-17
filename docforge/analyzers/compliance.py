@@ -17,6 +17,20 @@ from docforge.models import Project
 from docforge.scanners import FileSystemScanner
 
 
+OPTIONAL_MATERIALIZATION_SCRIPTS = {
+    "scripts/app_template_metadata.py",
+    "scripts/docforge-project-metadata.py",
+    "scripts/materialize-application.py",
+}
+
+MATERIALIZATION_METADATA_FILES = {
+    ".app-template/template.json",
+    ".app-template/origin.json",
+    "docforge.template.json",
+    "docforge.project.json",
+}
+
+
 @dataclass(slots=True)
 class ComplianceFinding:
     code: str
@@ -212,8 +226,16 @@ class TemplateComplianceAnalyzer:
         report: TemplateComplianceReport,
     ) -> None:
         existing = set(project.files)
+        requires_materialization_scripts = bool(
+            existing.intersection(MATERIALIZATION_METADATA_FILES)
+        )
 
         for path in template.scripts:
+            if (
+                path in OPTIONAL_MATERIALIZATION_SCRIPTS
+                and not requires_materialization_scripts
+            ):
+                continue
             passed = path in existing
 
             self._add_check(
