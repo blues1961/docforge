@@ -1,0 +1,29 @@
+Préparation du manuel terminée.
+Connaissance : .docforge/benchmark-check/v0.9/manual-knowledge.json
+Prompt complet : .docforge/benchmark-check/v0.9/manual-prompt.md
+Prompts de section :
+- .docforge/benchmark-check/v0.9/section-prompts/01-presentation.md (221 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/02-target-audience.md (4063 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/03-prerequisites.md (505 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/04-installation.md (196 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/05-quick-start.md (275 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/06-core-concepts.md (942 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/07-analyze-project.md (95 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/08-detect-profile.md (206 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/09-build-project-knowledge.md (266 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/10-documentation-generation.md (971 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/11-ollama-generation.md (355 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/12-preview-review.md (832 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/13-apply-documents.md (747 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/14-protected-documents.md (836 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/15-project-management.md (554 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/16-audits-compliance.md (683 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/17-configuration.md (469 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/18-security.md (766 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/19-troubleshooting.md (4673 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/20-limitations.md (395 tokens estimés)
+- .docforge/benchmark-check/v0.9/section-prompts/21-cli-reference.md (3870 tokens estimés)
+Manifeste : .docforge/benchmark-check/v0.9/manual-manifest.json
+Résumé des cibles Make documentaires :
+- total détecté : 0 | template local=0 | template standard=0 | applicatives publiques=0 | héritées=0 | internes=0 | inconnues=0
+- documentées : principales=0 | avancées=0 | exclues=0

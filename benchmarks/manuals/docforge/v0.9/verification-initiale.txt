@@ -1,0 +1,97 @@
+
+==> Compilation de docforge/cli.py
+[OK] Compilation de docforge/cli.py
+
+==> Aide de la CLI
+                                                                                                                                                                                              
+ Usage: docforge [OPTIONS] COMMAND [ARGS]...                                                                                                                                                  
+                                                                                                                                                                                              
+ Analyse et documente des projets logiciels.                                                                                                                                                  
+                                                                                                                                                                                              
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.                                                                                                                    │
+│ --show-completion             Show completion for the current shell, to copy it or customize the installation.                                                                             │
+│ --help                        Show this message and exit.                                                                                                                                  │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ analyze                      Analyser un projet sans modifier ses fichiers.                                                                                                                │
+│ verify                       Comparer un projet au standard documentaire.                                                                                                                  │
+│ init                         Créer la configuration locale d'un projet.                                                                                                                    │
+│ document                     Générer un aperçu des documents obligatoires manquants.                                                                                                       │
+│ generate                     Remplir avec Ollama les documents manquants en aperçu.                                                                                                        │
+│ apply                        Copier des documents validés de l'aperçu vers le projet.                                                                                                      │
+│ refresh-all                  Actualiser les aperçus de tous les projets enregistrés.                                                                                                       │
+│ analyze-template             Analyser le modèle canonique des applications auto-hébergées.                                                                                                 │
+│ generate-global-invariants   Générer les invariants globaux depuis app-template.                                                                                                           │
+│ audit-all                    Comparer les applications enregistrées à app-template.                                                                                                        │
+│ approve-invariants           Enregistrer la version approuvée des invariants globaux.                                                                                                      │
+│ verify-invariants            Vérifier que les invariants correspondent à la version approuvée.                                                                                             │
+│ audit-report                 Générer un rapport persistant JSON et Markdown.                                                                                                               │
+│ audit-diff                   Comparer deux rapports de conformité.                                                                                                                         │
+│ status-all                   Afficher l’état quotidien de tous les projets.                                                                                                                │
+│ remediation-plan             Générer un plan de mise en conformité sans appliquer de changement.                                                                                           │
+│ knowledge                    Construire la connaissance structurée d'un projet.                                                                                                            │
+│ profile                      Détecter et afficher le profil d'un projet.                                                                                                                   │
+│ manual                       Préparer les artefacts d’un manuel utilisateur.                                                                                                               │
+│ projects                     Gérer le registre des projets.                                                                                                                                │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+[OK] Aide de la CLI
+
+==> Suite de tests
+........................................................................ [ 30%]
+........................................................................ [ 60%]
+........................................................................ [ 90%]
+......................                                                   [100%]
+238 passed in 3.13s
+[OK] Suite de tests
+
+==> Préparation déterministe du manuel
+Préparation du manuel terminée.
+╭──────────────────────────────────────────────────────────────────────────── Traceback (most recent call last) ─────────────────────────────────────────────────────────────────────────────╮
+│ /home/sylvain/projets/docforge/docforge/cli.py:131 in manual_prepare_command                                                                                                               │
+│                                                                                                                                                                                            │
+│    128 │   )                                                                                                                                                                               │
+│    129 │   console.print(                                                                                                                                                                  │
+│    130 │   │   f"Connaissance : "                                                                                                                                                          │
+│ ❱  131 │   │   f"{result.knowledge_file.relative_to(result.root)}"                                                                                                                         │
+│    132 │   )                                                                                                                                                                               │
+│    133 │                                                                                                                                                                                   │
+│    134 │   if len(result.documents) > 1:                                                                                                                                                   │
+│                                                                                                                                                                                            │
+│ /home/sylvain/miniconda3/lib/python3.13/pathlib/_local.py:385 in relative_to                                                                                                               │
+│                                                                                                                                                                                            │
+│   382 │   │   │   if path == self or path in self.parents:                                                                                                                                 │
+│   383 │   │   │   │   break                                                                                                                                                                │
+│   384 │   │   │   elif not walk_up:                                                                                                                                                        │
+│ ❱ 385 │   │   │   │   raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")                                                                                           │
+│   386 │   │   │   elif path.name == '..':                                                                                                                                                  │
+│   387 │   │   │   │   raise ValueError(f"'..' segment in {str(other)!r} cannot be walked")                                                                                                 │
+│   388 │   │   else:                                                                                                                                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+ValueError: '/tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json' is not in the subpath of '/home/sylvain/projets/docforge'
+[ÉCHEC:1] Préparation déterministe du manuel
+
+==> Validation DocForge du guide
+{
+  "markdown_file": "/home/sylvain/projets/docforge/benchmarks/manuals/docforge/v0.9/docforge-guide-usager.md",
+  "knowledge_file": "/tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json",
+  "errors": [],
+  "warnings": [],
+  "valid": true
+}
+[OK] Validation DocForge du guide
+
+==> Contrôles structurels complémentaires
+Sections attendues présentes : 21/21
+Commandes attendues référencées : 0/0
+[OK] Contrôles structurels complémentaires
+
+==> Empreintes de reproductibilité
+ba03acff4c92b0bb7875f6772d97dc4342573fc1a58e2c5bc9008262376526fb  ./benchmarks/manuals/docforge/v0.9/docforge-guide-usager.md
+9714033b3573c8c5ed6d84f7e85036562434cfd8e6f9ec252cabb2c306b9bfbe  ./benchmarks/manuals/docforge/v0.9/manual-prompt.md
+18d3063aa083386bccb8d4294b8510c0fc7bc7fd6de5166bb41a4fe42787b42a  /tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json
+c6384f03425b46f7f3445342d5f48da5f096f3bf1afca246253906601a152a76  /tmp/docforge-manual-reference.jUEC4F/prepared/manual-manifest.json
+
+Résultat : 5 étape(s) réussie(s), 1 étape(s) en échec.
+La référence ne doit pas être figée tant que les échecs ne sont pas expliqués.
