@@ -136,6 +136,7 @@ documents:
       required: true
       aliases:
       - Environnements
+      - Environnement de développement
       - Production
       - Notes importantes
     - id: commands
@@ -183,6 +184,7 @@ documents:
       required: true
       aliases:
       - Fichiers à lire en premier
+      - Ordre de lecture
       - Ordre de lecture recommandé
       - Fichiers critiques
     - id: architecture
@@ -196,6 +198,7 @@ documents:
       required: true
       aliases:
       - Invariants à respecter
+      - Invariants absolus
       - Règles à respecter avant de coder
     - id: commands
       title: Commandes importantes
@@ -205,7 +208,7 @@ documents:
       - Commandes de vérification
     - id: current_status
       title: État actuel
-      required: true
+      required: false
       aliases:
       - État actuel
       - Fichiers critiques
@@ -242,6 +245,7 @@ documents:
       required: true
       aliases:
       - Conventions de développement
+      - Règles de modification du code
       - Style d'intervention attendu
       - Architecture à respecter
     - id: prohibited_actions
@@ -255,6 +259,7 @@ documents:
       required: true
       aliases:
       - Vérifications obligatoires
+      - Validation avant livraison
       - Lecture minimale obligatoire
       - Priorité des sources
   INVARIANTS.md:
@@ -270,11 +275,12 @@ documents:
       required: true
       aliases:
       - Invariants d'architecture
+      - Invariants de structure
       - Conventions Docker Compose
       - Règles frontend / backend
     - id: environments
       title: Invariants des environnements
-      required: true
+      required: false
       aliases:
       - Invariants des environnements
       - Fichiers d'environnement
@@ -302,6 +308,7 @@ documents:
       required: true
       aliases:
       - Invariants de documentation
+      - Invariants du pipeline documentaire
       - Interface de commande
       - Rôle
   docs/architecture.md:
@@ -315,12 +322,21 @@ documents:
     - id: overview
       title: Vue d'ensemble
       required: true
+      aliases:
+      - Vue d'ensemble
+      - Vue d’ensemble
     - id: components
       title: Composants
       required: true
+      aliases:
+      - Composants
+      - Couches du système
     - id: data_flows
       title: Flux de données
       required: true
+      aliases:
+      - Flux de données
+      - Flux de génération documentaire
     - id: network_flows
       title: Flux réseau
       required: false
@@ -333,6 +349,9 @@ documents:
     - id: decisions
       title: Décisions d'architecture
       required: true
+      aliases:
+      - Décisions d'architecture
+      - Décisions d’architecture
     - id: limitations
       title: Limites et dette technique
       required: false
@@ -349,12 +368,14 @@ documents:
       required: true
       aliases:
       - Objectifs
+      - Objectif
       - But de l'application
     - id: scope
       title: Portée
       required: true
       aliases:
       - Portée
+      - Périmètre
       - Périmètre fonctionnel actuel
     - id: actors
       title: Utilisateurs et acteurs
@@ -371,11 +392,12 @@ documents:
       required: true
       aliases:
       - Exigences techniques
+      - Exigences non fonctionnelles
       - Architecture
       - Modèle de données
     - id: constraints
       title: Contraintes
-      required: true
+      required: false
       aliases:
       - Contraintes
       - Sécurité
@@ -477,6 +499,63 @@ documents:
     - id: recovery
       title: Procédures de récupération
       required: false
+  docs/cli.md:
+    required: false
+    category: reference
+    description: Référence des commandes et options de la CLI du projet.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: overview
+      title: Vue d'ensemble
+      required: true
+    - id: commands
+      title: Commandes
+      required: true
+    - id: workflows
+      title: Workflows
+      required: false
+  docs/configuration.md:
+    required: false
+    category: configuration
+    description: Référence des fichiers, variables et options de configuration.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: overview
+      title: Vue d'ensemble
+      required: true
+    - id: files
+      title: Fichiers de configuration
+      required: true
+    - id: environment
+      title: Variables d'environnement
+      required: false
+    - id: operational_guidance
+      title: Recommandations opérationnelles
+      required: false
+  docs/security.md:
+    required: false
+    category: security
+    description: Contraintes et garanties de sécurité du projet.
+    generation:
+      enabled: true
+      mode: replace
+    sections:
+    - id: overview
+      title: Vue d'ensemble
+      required: true
+    - id: secrets
+      title: Gestion des secrets
+      required: true
+    - id: execution
+      title: Exécution et permissions
+      required: true
+    - id: supply_chain
+      title: Chaîne d'approvisionnement
+      required: false
 profiles:
   base:
     required_documents:
@@ -512,6 +591,15 @@ profiles:
     additional_documents:
     - docs/hardware.md
     - docs/display.md
+  python-cli:
+    extends: base
+    required_documents:
+    - docs/cli.md
+    - docs/configuration.md
+    - docs/security.md
+    excluded_documents:
+    - docs/api.md
+    - docs/deployment.md
 validation:
   fail_on_missing_required_document: true
   fail_on_missing_required_section: false

@@ -332,6 +332,14 @@ def analyze(
 
     project = FileSystemScanner().scan(path)
     TechnologyDetector().detect(project)
+    profile = ProfileDetector().detect(project)
+
+    if profile.name == "python-cli":
+        project.findings = [
+            finding
+            for finding in project.findings
+            if finding.code not in {"ENV002", "ENV003", "ENV004"}
+        ]
 
     if json_output:
         console.print_json(
@@ -344,7 +352,7 @@ def analyze(
 
     console.print(f"\n[bold]Projet :[/bold] {project.name}")
     console.print(f"[bold]Chemin :[/bold] {project.root}")
-    console.print(f"[bold]Profil :[/bold] {project.profile}\n")
+    console.print(f"[bold]Profil :[/bold] {profile.name}\n")
 
     summary = Table(title="Résumé")
     summary.add_column("Élément")
@@ -467,6 +475,11 @@ def verify(
         path=path,
         profile=profile,
     )
+    profile_instance = ProfileDetector().resolve(project)
+    template = ProjectKnowledgeBuilder().build(
+        project,
+        profile_instance=profile_instance,
+    ).template
 
     console.print(
         f"\n[bold]Projet :[/bold] {project.name}"

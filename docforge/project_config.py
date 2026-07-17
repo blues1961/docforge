@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from docforge.models import Project
+from docforge.profiles import ProfileDetector
 from docforge.storage_paths import (
     PROJECT_CONFIG_FILENAME,
     ensure_project_storage_migrated,
@@ -27,18 +28,8 @@ class ProjectConfig:
 
 
 def detect_profile(project: Project) -> str:
-    frameworks = set(project.frameworks)
-
-    if {"Django", "React"}.issubset(frameworks):
-        return "django-react"
-
-    if "Django" in frameworks:
-        return "django-api"
-
-    if "Hugo" in frameworks:
-        return "hugo"
-
-    return "base"
+    profile_name = ProfileDetector().resolve(project).name
+    return "base" if profile_name == "generic" else profile_name
 
 
 def load_project_config(root: Path) -> ProjectConfig | None:

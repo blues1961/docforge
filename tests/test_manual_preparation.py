@@ -76,10 +76,12 @@ def document(
     clean: bool = typer.Option(
         False,
         "--clean",
+        help="Supprimer l'ancien dossier d'aperçu avant la génération.",
     ),
     refresh: bool = typer.Option(
         False,
         "--refresh",
+        help="Régénérer les documents même lorsqu'ils existent déjà dans le projet.",
     ),
 ) -> None:
     pass
@@ -90,10 +92,12 @@ def generate(
     clean: bool = typer.Option(
         False,
         "--clean",
+        help="Recréer entièrement le dossier d'aperçu.",
     ),
     refresh: bool = typer.Option(
         False,
         "--refresh",
+        help="Régénérer les documents avant la génération assistée.",
     ),
 ) -> None:
     pass
@@ -390,6 +394,139 @@ def test_prompt_builder_generates_full_and_section_prompts(
             ensure_ascii=False,
         )
     )
+
+
+def test_cli_reference_compaction_uses_parameter_help_descriptions(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli_project(tmp_path)
+
+    knowledge, profile = _build_manual_knowledge(tmp_path)
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    section = next(
+        item for item in blueprint.sections if item.identifier == "cli-reference"
+    )
+    builder = profile.build_manual_prompt_builder()
+
+    context = builder.build_section_context(knowledge, section)
+    commands = context.projected_facts["commands"]
+    document = next(
+        command for command in commands if command["command_path"] == "document"
+    )
+    parameters = {
+        parameter["name"]: parameter for parameter in document["parameters"]
+    }
+
+    assert parameters["--clean"]["description"] == "Supprimer l'ancien dossier d'aperçu avant la génération."
+    assert parameters["--refresh"]["description"] == "Régénérer les documents même lorsqu'ils existent déjà dans le projet."
+    assert parameters["--clean"]["description"] != parameters["--refresh"]["description"]
+    assert "help" not in parameters["--clean"]
+    assert "flags" not in parameters["--clean"]
+    assert "default" not in parameters["--clean"]
+    assert context.estimated_tokens < 2800
+
+
+def test_cli_reference_compaction_token_growth_stays_bounded(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli_project(tmp_path)
+
+    knowledge, profile = _build_manual_knowledge(tmp_path)
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    section = next(
+        item for item in blueprint.sections if item.identifier == "cli-reference"
+    )
+    builder = profile.build_manual_prompt_builder()
+
+    context = builder.build_section_context(knowledge, section)
+    commands = knowledge.to_dict()["commands"]
+
+    old_commands = []
+    for command in commands:
+        old_commands.append(
+            {
+                "name": command.get("name"),
+                "command_path": command.get("command_path"),
+                "group": command.get("group"),
+                "audience": command.get("audience"),
+                "reference_level": command.get("reference_level"),
+                "provenance": command.get("provenance"),
+                "documentation_policy": command.get("documentation_policy"),
+                "environment": command.get("environment"),
+                "destructive": command.get("destructive"),
+                "destructive_effects": command.get("destructive_effects", []),
+                "help": command.get("help"),
+                "parameters": [
+                    {
+                        "name": parameter.get("name"),
+                        "required": parameter.get("required"),
+                        "example": parameter.get("example"),
+                        "allowed_values": parameter.get("allowed_values", []),
+                        "description": parameter.get("description"),
+                    }
+                    for parameter in command.get("parameters", [])
+                ],
+            }
+        )
+
+    old_payload = {
+        "identifier": section.identifier,
+        "title": section.title,
+        "purpose": section.purpose,
+        "facts": {"commands": old_commands},
+    }
+    new_payload = {
+        "identifier": context.identifier,
+        "title": context.title,
+        "purpose": context.purpose,
+        "facts": context.projected_facts,
+    }
+    old_tokens = builder.estimate_tokens(
+        json.dumps(old_payload, ensure_ascii=False)
+    )
+    new_tokens = builder.estimate_tokens(
+        json.dumps(new_payload, ensure_ascii=False)
+    )
+    prompt_tokens = builder.estimate_tokens(
+        builder.build_section_prompt(
+            blueprint=blueprint,
+            section=section,
+            projected_facts=context.projected_facts,
+            estimated_tokens=context.estimated_tokens,
+            context_budget=2800,
+        )
+    )
+
+    assert new_tokens >= old_tokens
+    assert new_tokens - old_tokens < 120
+    assert prompt_tokens > new_tokens
+    assert prompt_tokens < 2800
+
+
+def test_cli_reference_section_prompt_requires_separate_option_descriptions(
+    tmp_path: Path,
+) -> None:
+    _create_python_cli_project(tmp_path)
+
+    knowledge, profile = _build_manual_knowledge(tmp_path)
+    blueprint = ManualBlueprintRegistry().blueprint_for_profile("python-cli")
+    section = next(
+        item for item in blueprint.sections if item.identifier == "cli-reference"
+    )
+    builder = profile.build_manual_prompt_builder()
+    context = builder.build_section_context(knowledge, section)
+
+    prompt = builder.build_section_prompt(
+        blueprint=blueprint,
+        section=section,
+        projected_facts=context.projected_facts,
+        estimated_tokens=context.estimated_tokens,
+        context_budget=2800,
+    )
+
+    assert "décris séparément chaque option ou argument documenté" in prompt
+    assert "Un exemple de commande combinant plusieurs options ne suffit jamais" in prompt
+    assert "sans interprétation supplémentaire" in prompt
 
 
 def test_manual_service_manifest_and_modes_and_clean(

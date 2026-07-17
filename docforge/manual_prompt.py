@@ -1137,9 +1137,12 @@ class ManualPromptBuilder:
                         {
                             "name": parameter.get("name"),
                             "required": parameter.get("required"),
+                            "description": (
+                                parameter.get("description")
+                                or parameter.get("help")
+                            ),
                             "example": parameter.get("example"),
                             "allowed_values": parameter.get("allowed_values", []),
-                            "description": parameter.get("description"),
                         }
                         for parameter in command.get("parameters", [])
                     ],
@@ -1179,6 +1182,10 @@ class ManualPromptBuilder:
                         {
                             "name": parameter.get("name"),
                             "required": parameter.get("required"),
+                            "description": (
+                                parameter.get("description")
+                                or parameter.get("help")
+                            ),
                             "example": parameter.get("example"),
                             "allowed_values": parameter.get("allowed_values", []),
                             "origin": parameter.get("origin"),
@@ -1598,11 +1605,27 @@ class PythonCliManualPromptBuilder(ManualPromptBuilder):
         "Ne transforme jamais les commandes de maintenance interne ou de génération documentaire en commandes d’usage courant si le projet ne les expose pas comme telles.",
     )
 
+    PYTHON_CLI_SECTION_RULES = {
+        "cli-reference": (
+            "Dans cette section, décris séparément chaque option ou argument documenté lorsque des paramètres structurés sont fournis.",
+            "Un exemple de commande combinant plusieurs options ne suffit jamais à expliquer séparément l’effet de chacune d’elles.",
+            "N’attribue à une option que la sémantique explicitement fournie par `commands.parameters.description`, dérivée du code détecté, sans interprétation supplémentaire.",
+        ),
+    }
+
     def profile_rules(
         self,
         blueprint: ManualBlueprint,
     ) -> tuple[str, ...]:
         return self.PYTHON_CLI_RULES
+
+    def section_guidance(
+        self,
+        *,
+        blueprint: ManualBlueprint,
+        section: ManualSectionDefinition,
+    ) -> tuple[str, ...]:
+        return self.PYTHON_CLI_SECTION_RULES.get(section.identifier, ())
 
 
 class DjangoReactManualPromptBuilder(ManualPromptBuilder):

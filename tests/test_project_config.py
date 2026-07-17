@@ -37,6 +37,45 @@ def test_detect_profile_for_django_react(
     assert detect_profile(project) == "django-react"
 
 
+def test_detect_profile_for_python_cli(
+    tmp_path: Path,
+) -> None:
+    package = tmp_path / "docforge"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "cli.py").write_text(
+        """
+import typer
+
+app = typer.Typer()
+
+
+@app.command()
+def inspect() -> None:
+    pass
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "pyproject.toml").write_text(
+        """
+[project]
+name = "demo-cli"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.scripts]
+demo-cli = "docforge.cli:app"
+""",
+        encoding="utf-8",
+    )
+
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+
+    assert detect_profile(project) == "python-cli"
+
+
 def test_write_and_load_project_config(
     tmp_path: Path,
 ) -> None:
