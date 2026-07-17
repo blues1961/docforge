@@ -51,7 +51,23 @@ def profile() -> None:
 
 
 @app.command()
-def knowledge() -> None:
+def knowledge(
+    path: Path = typer.Argument(
+        Path("."),
+        help="Projet à analyser.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Fichier JSON de destination.",
+    ),
+    print_json: bool = typer.Option(
+        False,
+        "--json",
+        help="Afficher le JSON pur sur la sortie standard.",
+    ),
+) -> None:
     pass
 
 
@@ -230,6 +246,25 @@ def test_manual_knowledge_uses_grouped_commands(
     assert "add" not in command_paths
     assert "list" not in command_paths
     assert "remove" not in command_paths
+
+    knowledge_command = next(
+        command
+        for command in knowledge.commands
+        if command.command_path == "knowledge"
+    )
+    parameter_names = [
+        parameter.name
+        for parameter in knowledge_command.parameters
+    ]
+    parameter_origins = {
+        parameter.name: parameter.origin
+        for parameter in knowledge_command.parameters
+    }
+
+    assert parameter_names == ["PATH", "--output", "--json"]
+    assert parameter_origins["PATH"] == "path"
+    assert parameter_origins["--output"] == "output"
+    assert parameter_origins["--json"] == "print_json"
 
 
 def test_manual_knowledge_avoids_docker_and_filtered_findings_for_python_cli(

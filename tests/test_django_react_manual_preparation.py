@@ -244,6 +244,43 @@ def _write_template_manifest(
     *,
     include_missing_target: bool = False,
 ) -> None:
+    (root / "scripts" / "docforge-project-metadata.py").write_text(
+        "#!/usr/bin/env python3\n"
+        "def _guard_git_detach():\n    pass\n"
+        "# --detach-git\n"
+        "# validate --expect-application\n"
+        "# Le dépôt ne doit pas contenir à la fois docforge.template.json et docforge.project.json\n"
+        "# APP_SLUG et APP_DEPOT ne doivent pas conserver l'identité du modèle source\n"
+        "# _detach_git_history\n"
+        "# __APP_NAME__\n"
+        "# __APP_SLUG__\n",
+        encoding="utf-8",
+    )
+    (root / "scripts" / "generate-secrets.sh").write_text(
+        "#!/usr/bin/env bash\nensure_secret APP_DEPOT\n",
+        encoding="utf-8",
+    )
+    (root / "scripts" / "init.sh").write_text(
+        "#!/usr/bin/env bash\n"
+        "[ -f \".env.template\" ] || exit 1\n"
+        "[ -L \".env\" ] || exit 1\n"
+        "if [ \"${DOCFORGE_INIT_APPLICATION:-0}\" = \"1\" ]; then\n"
+        "  ./scripts/docforge-project-metadata.py materialize-application ${DOCFORGE_DETACH_GIT:+--detach-git}\n"
+        "fi\n"
+        "./scripts/generate-env.sh\n"
+        "./scripts/check-invariants.sh ${DOCFORGE_INIT_APPLICATION:+--expect-application}\n"
+        "if [ \"${DOCFORGE_SKIP_STARTUP:-0}\" = \"1\" ]; then\n"
+        "  exit 0\n"
+        "fi\n"
+        "./scripts/up.sh\n",
+        encoding="utf-8",
+    )
+    (root / "scripts" / "check-invariants.sh").write_text(
+        "#!/usr/bin/env bash\n"
+        "./scripts/docforge-project-metadata.py validate ${1:-}\n"
+        "echo placeholder\n",
+        encoding="utf-8",
+    )
     targets = [
         {
             "name": "help",
@@ -639,8 +676,25 @@ def test_django_react_template_metadata_uses_local_manifest(tmp_path: Path) -> N
     assert "up" in knowledge.template.manifest_verified_targets
     assert {"help", "update", "missing-template-target"}.issubset(set(knowledge.template.manifest_missing_targets))
     assert any(item.name == "APP_NAME" for item in knowledge.template.placeholders)
+    assert knowledge.template.current_state is not None
+    assert knowledge.template.current_state.project_kind == "application-template"
+    assert knowledge.template.target_state is not None
+    assert knowledge.template.target_state.project_kind == "application"
+    assert knowledge.template.target_state.origin_template_id == "app-template"
+    assert knowledge.template.target_state.manifest_source == "docforge.project.json"
+    assert knowledge.template.materialization is not None
+    assert knowledge.template.materialization.activation_variable_name == "DOCFORGE_INIT_APPLICATION"
+    assert knowledge.template.materialization.git_detach_variable_name == "DOCFORGE_DETACH_GIT"
+    assert knowledge.template.materialization.skip_startup_variable_name == "DOCFORGE_SKIP_STARTUP"
+    assert knowledge.template.materialization.activation_command == "DOCFORGE_INIT_APPLICATION=1 DOCFORGE_DETACH_GIT=1 make init"
+    assert knowledge.template.materialization.maintenance_command == "DOCFORGE_INIT_APPLICATION=1 DOCFORGE_DETACH_GIT=1 DOCFORGE_SKIP_STARTUP=1 make init"
+    assert knowledge.template.materialization.generated_metadata_file == "docforge.project.json"
+    assert knowledge.template.materialization.metadata_script == "scripts/docforge-project-metadata.py"
+    assert set(knowledge.template.materialization.placeholders_replaced) == {"__APP_NAME__", "__APP_SLUG__"}
     assert any(item.identifier == "template-first-init" for item in knowledge.template.creator_workflows)
+    assert any(item.identifier == "template-git-transition" for item in knowledge.template.creator_workflows)
     assert any(item.identifier == "template-maintainer-validate" for item in knowledge.template.maintainer_workflows)
+    assert any(item.identifier == "template-maintainer-disposable-copy" for item in knowledge.template.maintainer_workflows)
     assert commands["up"].provenance == "app-template"
 
 
@@ -657,6 +711,9 @@ def test_django_react_generated_application_metadata_uses_origin_template(tmp_pa
     assert knowledge.template.origin_template_id == "app-template"
     assert knowledge.template.template_version == "0.1.0"
     assert knowledge.template.manifest_source == "docforge.project.json"
+    assert knowledge.template.current_state is not None
+    assert knowledge.template.current_state.project_kind == "application"
+    assert knowledge.template.current_state.origin_template_id == "app-template"
     assert "up" in knowledge.template.manifest_verified_targets
     assert commands["up"].provenance == "app-template"
 
@@ -1527,6 +1584,34 @@ def test_django_react_application_template_splits_creator_and_maintainer_context
     assert "creator_workflows" not in maintenance_context["facts"]["template"]
 
 
+def test_django_react_application_template_projects_materialization_facts_into_document_artifacts(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+
+    result = ManualPreparationService().prepare(
+        tmp_path,
+        clean=True,
+        mode="both",
+        context_budget=4096,
+    )
+
+    rendered = "\n".join(
+        file.read_text(encoding="utf-8")
+        for document in result.documents
+        for file in [*document.section_context_files, *document.section_prompt_files, document.full_prompt_file]
+    )
+
+    assert "DOCFORGE_INIT_APPLICATION" in rendered
+    assert "DOCFORGE_DETACH_GIT" in rendered
+    assert "DOCFORGE_SKIP_STARTUP" in rendered
+    assert "docforge.project.json" in rendered
+    assert "scripts/docforge-project-metadata.py" in rendered
+    assert "origin_template_id" in rendered
+    assert "application-template" in rendered
+    assert "project_kind" in rendered
+    assert "Aucune procédure démontrée de suppression de l’historique Git du template" not in rendered
+
+
 
 def test_django_react_application_template_validator_supports_document_specific_h1(tmp_path: Path) -> None:
     _create_django_react_project(tmp_path)
@@ -1614,3 +1699,42 @@ def test_django_react_application_template_manual_validate_cli_requires_document
         ],
     )
     assert ok.exit_code == 0
+
+
+def test_django_react_help_command_is_not_destructive(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    (tmp_path / "Makefile").write_text(
+        '.DEFAULT_GOAL := help\n.PHONY: help init\n\nhelp: ## Afficher les commandes\n	@printf "make down\nmake rebuild SERVICE=backend\n"\n\ninit:\n	./scripts/init.sh\n',
+        encoding="utf-8",
+    )
+    _write_template_manifest(tmp_path)
+
+    _project, profile, knowledge = _build_knowledge(tmp_path)
+    manual_knowledge = profile.build_manual_knowledge_builder().build(
+        project_root=tmp_path,
+        knowledge=knowledge,
+        profile_instance=profile,
+    )
+
+    commands = {
+        item["name"]: item
+        for item in manual_knowledge.operational_commands["commands"]
+    }
+
+    assert commands["help"]["destructive"] is False
+    assert commands["help"]["destructive_effects"] == []
+
+
+def test_django_react_template_script_analysis_includes_materialization_metadata(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_template_manifest(tmp_path)
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    scripts = {item.path: item for item in knowledge.operational_commands.scripts}
+
+    assert "scripts/docforge-project-metadata.py" in scripts
+    assert "scripts/generate-env.sh" in scripts
+    assert "scripts/generate-secrets.sh" in scripts
+    assert any("DOCFORGE_INIT_APPLICATION=1" in item for item in scripts["scripts/init.sh"].metadata_actions)
+    assert "__APP_NAME__" in scripts["scripts/docforge-project-metadata.py"].placeholders_replaced
+    assert "docforge.project.json" in scripts["scripts/docforge-project-metadata.py"].creates_files

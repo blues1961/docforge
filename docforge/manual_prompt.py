@@ -667,21 +667,48 @@ class ManualPromptBuilder:
                         item for item in template.get("placeholders", [])
                         if item.get("name") in allowed_names
                     ]
+                if section_identifier == "template-creation-prerequisites":
+                    project_kind = template.get("project_kind")
+                    current_state = template.get("current_state")
+                    target_state = template.get("target_state")
+                    materialization = template.get("materialization")
+                    template.clear()
+                    template.update({
+                        "project_kind": project_kind,
+                        "current_state": current_state,
+                        "target_state": target_state,
+                    })
+                    if materialization:
+                        template["materialization"] = {
+                            "supported": materialization.get("supported"),
+                            "entrypoint": materialization.get("entrypoint"),
+                            "activation_variable_name": materialization.get("activation_variable_name"),
+                            "activation_variable_value": materialization.get("activation_variable_value"),
+                            "git_detach_variable_name": materialization.get("git_detach_variable_name"),
+                            "git_detach_variable_value": materialization.get("git_detach_variable_value"),
+                            "source_metadata_file": materialization.get("source_metadata_file"),
+                            "generated_metadata_file": materialization.get("generated_metadata_file"),
+                            "metadata_script": materialization.get("metadata_script"),
+                            "source_repository_protected": materialization.get("source_repository_protected"),
+                        }
                 if section_identifier == "template-creation-materialization":
                     template["creator_workflows"] = [
                         item for item in template.get("creator_workflows", [])
-                        if item.get("identifier") in {"template-generate-environments", "template-first-init", "template-apply-migrations", "template-validate-invariants"}
+                        if item.get("identifier") in {"template-generate-environments", "template-first-init", "template-git-transition", "template-apply-migrations", "template-validate-invariants"}
                     ]
                 if section_identifier == "template-creation-start-validate":
                     template["creator_workflows"] = [
                         item for item in template.get("creator_workflows", [])
-                        if item.get("identifier") in {"template-select-environment", "template-first-init", "template-validate-invariants", "template-apply-migrations"}
+                        if item.get("identifier") in {"template-select-environment", "template-first-init", "template-validate-invariants", "template-apply-migrations", "template-git-transition"}
                     ]
                 if section_identifier in {"template-creation-git-transition", "template-creation-checklist"}:
                     template["creator_workflows"] = [
                         item for item in template.get("creator_workflows", [])
                         if "git" in (item.get("identifier") or "") or any("git" in command.casefold() for command in item.get("commands", []))
-                    ] or template.get("creator_workflows", [])[:2]
+                    ] or [
+                        item for item in template.get("creator_workflows", [])
+                        if item.get("identifier") in {"template-first-init", "template-validate-invariants"}
+                    ]
             variables_block = projection.get("environment_variables")
             if isinstance(variables_block, dict) and isinstance(variables_block.get("variables"), list):
                 if section_identifier == "template-creation-identity":
@@ -712,6 +739,49 @@ class ManualPromptBuilder:
                             if item.get("name") in {"APP_ENV", "APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
                         ]
                     }
+                    if isinstance(template, dict):
+                        template["placeholders"] = [
+                            item
+                            for item in template.get("placeholders", [])
+                            if item.get("name") in {"APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                        ]
+                        creator_workflows = [
+                            item
+                            for item in template.get("creator_workflows", [])
+                            if item.get("identifier") in {"template-select-environment", "template-generate-environments"}
+                        ]
+                        project_kind = template.get("project_kind")
+                        materialization = template.get("materialization")
+                        template.clear()
+                        template.update({
+                            "project_kind": project_kind,
+                            "creator_workflows": creator_workflows,
+                        })
+                        if materialization:
+                            template["materialization"] = {
+                                "entrypoint": materialization.get("entrypoint"),
+                                "skip_startup_variable_name": materialization.get("skip_startup_variable_name"),
+                                "skip_startup_audience": materialization.get("skip_startup_audience"),
+                                "skip_startup_normal_workflow": materialization.get("skip_startup_normal_workflow"),
+                            }
+                        template["placeholders"] = [
+                            item
+                            for item in variables_block.get("variables", [])
+                            if item.get("name") in {"APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                        ]
+                    block = projection.get("operational_commands")
+                    if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                        block["commands"] = [
+                            item for item in block["commands"]
+                            if item.get("name") in {"dev", "prod", "init"}
+                        ]
+                        projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+                    if isinstance(projection.get("workflows"), list):
+                        projection["workflows"] = [
+                            item
+                            for item in projection["workflows"]
+                            if item.get("identifier") in {"prepare-dev-config", "prepare-production"}
+                        ]
             if section_identifier == "template-creation-identity" and isinstance(projection.get("missing_information"), list):
                 projection["missing_information"] = [
                     item for item in projection["missing_information"]
@@ -738,6 +808,41 @@ class ManualPromptBuilder:
                         "name": projection["profile"].get("name"),
                         "label": projection["profile"].get("label"),
                     }
+            if section_identifier == "template-creation-troubleshooting":
+                if isinstance(template, dict):
+                    project_kind = template.get("project_kind")
+                    materialization = template.get("materialization")
+                    target_state = template.get("target_state")
+                    template.clear()
+                    template.update({
+                        "project_kind": project_kind,
+                        "target_state": target_state,
+                    })
+                    if materialization:
+                        template["materialization"] = {
+                            "activation_command": materialization.get("activation_command"),
+                            "maintenance_command": materialization.get("maintenance_command"),
+                            "generated_metadata_file": materialization.get("generated_metadata_file"),
+                            "metadata_script": materialization.get("metadata_script"),
+                            "protections": materialization.get("protections", []),
+                        }
+                if isinstance(projection.get("missing_information"), list):
+                    projection["missing_information"] = [
+                        item for item in projection["missing_information"]
+                        if item.get("category") in {"template", "runtime", "workflow", "project"}
+                    ]
+                if isinstance(projection.get("limitations"), dict):
+                    projection["limitations"]["items"] = [
+                        item for item in projection["limitations"].get("items", [])
+                        if item.get("category") in {"template", "runtime", "workflow", "project"}
+                    ]
+                block = projection.get("operational_commands")
+                if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                    block["commands"] = [
+                        item for item in block["commands"]
+                        if item.get("name") in {"init", "check", "dev", "prod"}
+                    ]
+                    projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
             block = projection.get("operational_commands")
             if isinstance(block, dict) and isinstance(block.get("commands"), list):
                 block["commands"] = [
@@ -756,12 +861,42 @@ class ManualPromptBuilder:
                         item for item in block["commands"]
                         if item.get("name") in allowed_names
                     ]
+                if section_identifier == "template-creation-prerequisites":
+                    block["commands"] = [
+                        item for item in block["commands"]
+                        if item.get("name") in {"init", "dev", "prod"}
+                    ]
                 projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
 
         if section_identifier.startswith("template-maintenance-"):
             template = projection.get("template")
             if isinstance(template, dict):
                 template.pop("creator_workflows", None)
+                if section_identifier == "template-maintenance-invariants-placeholders":
+                    materialization = template.get("materialization")
+                    placeholders = [
+                        item
+                        for item in template.get("placeholders", [])
+                        if item.get("name") in {"APP_NAME", "APP_SLUG", "APP_DEPOT", "APP_NO", "__APP_NAME__", "__APP_SLUG__"}
+                    ]
+                    maintainer_workflows = [
+                        item
+                        for item in template.get("maintainer_workflows", [])
+                        if item.get("identifier") in {"template-maintainer-validate", "template-maintainer-disposable-copy"}
+                    ]
+                    project_kind = template.get("project_kind")
+                    template.clear()
+                    template.update({
+                        "project_kind": project_kind,
+                        "placeholders": placeholders,
+                        "maintainer_workflows": maintainer_workflows,
+                    })
+                    if materialization:
+                        template["materialization"] = {
+                            "generated_metadata_file": materialization.get("generated_metadata_file"),
+                            "metadata_script": materialization.get("metadata_script"),
+                            "protections": materialization.get("protections", []),
+                        }
             block = projection.get("operational_commands")
             if isinstance(block, dict) and isinstance(block.get("commands"), list):
                 block["commands"] = [
@@ -771,7 +906,118 @@ class ManualPromptBuilder:
                     and item.get("reference_level") != "omit"
                     and item.get("name") != "init"
                 ]
+                if section_identifier == "template-maintenance-invariants-placeholders":
+                    if isinstance(projection.get("environment_variables"), dict):
+                        projection["environment_variables"] = {
+                            "variables": [
+                                {
+                                    "name": item.get("name"),
+                                    "required": item.get("required"),
+                                    "sensitive": item.get("sensitive"),
+                                    "required_by_environment": item.get("required_by_environment", {}),
+                                }
+                                for item in projection["environment_variables"].get("variables", [])
+                                if item.get("name") in {"APP_NAME", "APP_SLUG", "APP_DEPOT", "APP_NO", "APP_HOST", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"}
+                            ]
+                        }
+                    if isinstance(projection.get("limitations"), dict):
+                        projection["limitations"]["items"] = [
+                            item for item in projection["limitations"].get("items", [])
+                            if item.get("category") in {"template", "runtime", "workflow", "project"}
+                        ]
+                if section_identifier == "template-maintenance-metadata":
+                    if isinstance(template, dict):
+                        materialization = template.get("materialization")
+                        compact_template = {
+                            "project_kind": template.get("project_kind"),
+                            "template_id": template.get("template_id"),
+                            "template_version": template.get("template_version"),
+                            "manifest_source": template.get("manifest_source"),
+                            "manifest_verified_targets": template.get("manifest_verified_targets", []),
+                            "manifest_missing_targets": template.get("manifest_missing_targets", []),
+                            "target_state": template.get("target_state"),
+                        }
+                        if materialization:
+                            compact_template["materialization"] = {
+                                "generated_metadata_file": materialization.get("generated_metadata_file"),
+                                "metadata_script": materialization.get("metadata_script"),
+                            }
+                        projection["template"] = compact_template
+                    if isinstance(projection.get("limitations"), dict):
+                        projection["limitations"]["items"] = [
+                            item for item in projection["limitations"].get("items", [])
+                            if item.get("category") in {"template", "project"}
+                        ]
+                if section_identifier == "template-maintenance-scripts-makefile":
+                    if isinstance(template, dict):
+                        materialization = template.get("materialization")
+                        maintainer_workflows = [
+                            item
+                            for item in template.get("maintainer_workflows", [])
+                            if item.get("identifier") in {"template-maintainer-validate", "template-maintainer-disposable-copy", "template-maintainer-update"}
+                        ]
+                        project_kind = template.get("project_kind")
+                        template.clear()
+                        template.update({
+                            "project_kind": project_kind,
+                            "maintainer_workflows": maintainer_workflows,
+                        })
+                        if materialization:
+                            template["materialization"] = {
+                                "entrypoint": materialization.get("entrypoint"),
+                                "activation_command": materialization.get("activation_command"),
+                                "maintenance_command": materialization.get("maintenance_command"),
+                                "metadata_script": materialization.get("metadata_script"),
+                            }
+                    if isinstance(projection.get("workflows"), list):
+                        projection["workflows"] = []
+                if section_identifier == "template-maintenance-validation-release":
+                    if isinstance(template, dict):
+                        materialization = template.get("materialization")
+                        maintainer_workflows = [
+                            item
+                            for item in template.get("maintainer_workflows", [])
+                            if item.get("identifier") in {"template-maintainer-validate", "template-maintainer-disposable-copy", "template-maintainer-update"}
+                        ]
+                        project_kind = template.get("project_kind")
+                        template.clear()
+                        template.update({
+                            "project_kind": project_kind,
+                            "maintainer_workflows": maintainer_workflows,
+                        })
+                        if materialization:
+                            template["materialization"] = {
+                                "maintenance_command": materialization.get("maintenance_command"),
+                                "generated_metadata_file": materialization.get("generated_metadata_file"),
+                                "metadata_script": materialization.get("metadata_script"),
+                                "protections": materialization.get("protections", []),
+                            }
+                    if isinstance(projection.get("missing_information"), list):
+                        projection["missing_information"] = [
+                            item for item in projection["missing_information"]
+                            if item.get("category") in {"template", "workflow", "project"}
+                        ]
+                    if isinstance(projection.get("limitations"), dict):
+                        projection["limitations"]["items"] = [
+                            item for item in projection["limitations"].get("items", [])
+                            if item.get("category") in {"template", "workflow", "project"}
+                        ]
+                    if isinstance(projection.get("workflows"), list):
+                        projection["workflows"] = []
                 projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+                if section_identifier in {"template-maintenance-metadata", "template-maintenance-canonical-targets", "template-maintenance-scripts-makefile"}:
+                    for key in ("primary_commands", "advanced_commands"):
+                        projection["operational_commands"][key] = [
+                            {
+                                "name": item.get("name"),
+                                "command_path": item.get("command_path"),
+                                "provenance": item.get("provenance"),
+                                "reference_level": item.get("reference_level"),
+                                "documentation_policy": item.get("documentation_policy"),
+                                "destructive": item.get("destructive"),
+                            }
+                            for item in projection["operational_commands"].get(key, [])
+                        ]
 
         if section_identifier == "troubleshooting":
             if isinstance(projection.get("missing_information"), list):
@@ -1211,6 +1457,9 @@ class ManualPromptBuilder:
             "origin_template_version": value.get("origin_template_version"),
             "base_profile": value.get("base_profile"),
             "manifest_source": value.get("manifest_source"),
+            "current_state": value.get("current_state"),
+            "target_state": value.get("target_state"),
+            "materialization": value.get("materialization"),
             "manifest_verified_targets": value.get("manifest_verified_targets", []),
             "manifest_missing_targets": value.get("manifest_missing_targets", []),
             "missing_steps": value.get("missing_steps", []),

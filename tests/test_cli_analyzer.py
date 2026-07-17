@@ -89,6 +89,7 @@ def status_all_command() -> None:
         if parameter.name == "path"
     )
     assert path_parameter.kind == "argument"
+    assert path_parameter.display_name == "PATH"
     assert path_parameter.required is True
     assert path_parameter.help == "Projet à analyser."
 
@@ -98,6 +99,7 @@ def status_all_command() -> None:
         if parameter.name == "clean"
     )
     assert clean_parameter.kind == "option"
+    assert clean_parameter.display_name == "--clean"
     assert clean_parameter.required is False
     assert "--clean" in clean_parameter.flags
 
@@ -173,6 +175,7 @@ def inspect(
     parameter = facts.commands[0].parameters[0]
 
     assert parameter.name == "path"
+    assert parameter.display_name == "PATH"
     assert parameter.kind == "argument"
     assert parameter.required is True
     assert parameter.default is None

@@ -626,13 +626,14 @@ class ManualKnowledgeBuilder:
         parameter: CliParameterFacts,
     ) -> ManualCommandParameter:
         return ManualCommandParameter(
-            name=parameter.name,
+            name=parameter.display_name,
             kind=parameter.kind,
             required=parameter.required,
             flags=list(parameter.flags),
             help=parameter.help,
             type_annotation=parameter.type_annotation,
             default=parameter.default,
+            origin=parameter.name,
         )
 
     def _build_workflows(

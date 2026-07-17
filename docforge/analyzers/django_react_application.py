@@ -61,6 +61,46 @@ class TemplateWorkflowFacts:
 
 
 @dataclass(slots=True)
+class TemplateStateFacts:
+    project_kind: str | None = None
+    template_id: str | None = None
+    origin_template_id: str | None = None
+    template_version: str | None = None
+    manifest_source: str | None = None
+    base_profile: str | None = None
+
+
+@dataclass(slots=True)
+class TemplateMaterializationFacts:
+    supported: bool = False
+    entrypoint: str | None = None
+    activation_command: str | None = None
+    activation_variable_name: str | None = None
+    activation_variable_value: str | None = None
+    git_detach_variable_name: str | None = None
+    git_detach_variable_value: str | None = None
+    explicit_git_detach_only: bool = False
+    source_repository_protected: bool = False
+    allow_source_name_override: bool = False
+    skip_startup_variable_name: str | None = None
+    skip_startup_variable_value: str | None = None
+    skip_startup_audience: str | None = None
+    skip_startup_normal_workflow: bool = True
+    maintenance_command: str | None = None
+    placeholders_replaced: list[str] = field(default_factory=list)
+    source_metadata_file: str | None = None
+    generated_metadata_file: str | None = None
+    metadata_script: str | None = None
+    creates_independent_git_repository: bool = False
+    generated_files: list[str] = field(default_factory=list)
+    removed_files: list[str] = field(default_factory=list)
+    validation_commands: list[str] = field(default_factory=list)
+    protections: list[str] = field(default_factory=list)
+    expected_results: list[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
 class ProjectTemplateFacts:
     detected: bool = False
     project_kind: str | None = None
@@ -76,6 +116,9 @@ class ProjectTemplateFacts:
     manifest_missing_targets: list[str] = field(default_factory=list)
     evidence: list[str] = field(default_factory=list)
     placeholders: list[TemplatePlaceholderFacts] = field(default_factory=list)
+    current_state: TemplateStateFacts | None = None
+    target_state: TemplateStateFacts | None = None
+    materialization: TemplateMaterializationFacts | None = None
     creator_workflows: list[TemplateWorkflowFacts] = field(default_factory=list)
     maintainer_workflows: list[TemplateWorkflowFacts] = field(default_factory=list)
     missing_steps: list[str] = field(default_factory=list)
@@ -157,6 +200,8 @@ class OperationalCommandFacts:
     exclusion_reason: str | None = None
     provenance_evidence: list[str] = field(default_factory=list)
     manifest_source: str | None = None
+    manifest_destructive: bool | None = None
+    manifest_destructive_effects: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -191,6 +236,8 @@ class ScriptAnalysisFacts:
     confirmation_required: bool = False
     destructive_actions: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    metadata_actions: list[str] = field(default_factory=list)
+    placeholders_replaced: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -693,12 +740,27 @@ class DjangoReactApplicationAnalyzer:
             manifest_missing_targets=missing_targets,
             evidence=evidence,
             placeholders=self._template_placeholders(project),
-            creator_workflows=self._template_creator_workflows(operational_commands),
-            maintainer_workflows=self._template_maintainer_workflows(operational_commands),
+            current_state=self._template_current_state(manifest),
+            target_state=self._template_target_state(manifest),
+            materialization=self._template_materialization_facts(
+                project,
+                manifest=manifest,
+                operational_commands=operational_commands,
+            ),
+            creator_workflows=self._template_creator_workflows(
+                project,
+                manifest=manifest,
+                operational_commands=operational_commands,
+            ),
+            maintainer_workflows=self._template_maintainer_workflows(
+                project,
+                manifest=manifest,
+                operational_commands=operational_commands,
+            ),
             missing_steps=[
-                "Aucune procédure démontrée de suppression de l’historique Git du template n’est documentée sans demande explicite.",
                 "Aucune procédure démontrée de création du dépôt distant n’est documentée.",
                 "Aucune procédure démontrée de premier commit du nouveau dépôt n’est documentée.",
+                "Aucune procédure démontrée de mise à niveau d’une application déjà matérialisée vers une nouvelle version du modèle n’est documentée.",
             ],
             risks=[
                 "Un clonage incomplet peut laisser des marqueurs __APP_NAME__ ou __APP_SLUG__ dans le frontend, l’API de santé et la documentation.",
@@ -748,6 +810,13 @@ class DjangoReactApplicationAnalyzer:
             manifest_verified_targets=verified_targets,
             manifest_missing_targets=missing_targets,
             evidence=evidence,
+            current_state=TemplateStateFacts(
+                project_kind=metadata.get("project_kind") or "application",
+                origin_template_id=origin.get("template_id"),
+                template_version=origin.get("template_version"),
+                manifest_source=metadata.get("source"),
+                base_profile=metadata.get("base_profile") or "django-react",
+            ),
             source_paths=[self.LOCAL_PROJECT_METADATA_FILE],
         )
 
@@ -858,11 +927,150 @@ class DjangoReactApplicationAnalyzer:
                 matches.append(rel_path)
         return sorted(matches)
 
+    def _template_current_state(
+        self,
+        manifest: dict[str, Any],
+    ) -> TemplateStateFacts:
+        return TemplateStateFacts(
+            project_kind=manifest.get("project_kind") or "application-template",
+            template_id=manifest.get("template_id"),
+            template_version=manifest.get("template_version"),
+            manifest_source=manifest.get("source"),
+            base_profile=manifest.get("base_profile") or "django-react",
+        )
+
+    def _template_target_state(
+        self,
+        manifest: dict[str, Any],
+    ) -> TemplateStateFacts:
+        return TemplateStateFacts(
+            project_kind="application",
+            origin_template_id=manifest.get("template_id"),
+            template_version=manifest.get("template_version"),
+            manifest_source=self.LOCAL_PROJECT_METADATA_FILE,
+            base_profile=manifest.get("base_profile") or "django-react",
+        )
+
+    def _template_materialization_facts(
+        self,
+        project: Project,
+        *,
+        manifest: dict[str, Any],
+        operational_commands: OperationalCommandsFacts,
+    ) -> TemplateMaterializationFacts:
+        init_path = project.root / "scripts" / "init.sh"
+        metadata_path = project.root / "scripts" / "docforge-project-metadata.py"
+        init_text = self._read_text(init_path) if init_path.is_file() else ""
+        metadata_text = self._read_text(metadata_path) if metadata_path.is_file() else ""
+        command_names = {item.name for item in operational_commands.commands}
+        activation_command = None
+        if "init" in command_names:
+            activation_command = "DOCFORGE_INIT_APPLICATION=1 DOCFORGE_DETACH_GIT=1 make init"
+        maintenance_command = None
+        if "init" in command_names:
+            maintenance_command = (
+                "DOCFORGE_INIT_APPLICATION=1 DOCFORGE_DETACH_GIT=1 "
+                "DOCFORGE_SKIP_STARTUP=1 make init"
+            )
+
+        protections: list[str] = []
+        if "DOCFORGE_INIT_APPLICATION" in init_text:
+            protections.append(
+                "La matérialisation de l’application n’est activée que lorsque DOCFORGE_INIT_APPLICATION=1 est fourni."
+            )
+        if "DOCFORGE_DETACH_GIT" in init_text and "--detach-git" in metadata_text:
+            protections.append(
+                "Le détachement Git reste explicite et n’est déclenché que lorsque DOCFORGE_DETACH_GIT=1 est fourni."
+            )
+        if "_guard_git_detach" in metadata_text or "Refus de détacher l'historique Git" in metadata_text:
+            protections.append(
+                "Le script refuse par défaut de détacher l’historique Git dans un répertoire portant encore le nom du modèle source."
+            )
+        if "Le dépôt ne doit pas contenir à la fois docforge.template.json et docforge.project.json" in metadata_text:
+            protections.append(
+                "La coexistence de docforge.template.json et docforge.project.json provoque une erreur bloquante."
+            )
+        if "APP_SLUG et APP_DEPOT ne doivent pas conserver l'identité du modèle source" in metadata_text:
+            protections.append(
+                "La matérialisation échoue si APP_SLUG ou APP_DEPOT conservent l’identité du modèle source."
+            )
+
+        expected_results = [
+            "docforge.project.json est généré pour l’application matérialisée.",
+            "docforge.template.json est retiré du dépôt matérialisé.",
+            "Le project_kind attendu devient application.",
+            f"origin_template_id attendu: {manifest.get('template_id')}.",
+            f"template_version conservée: {manifest.get('template_version')}.",
+            "Les placeholders __APP_NAME__ et __APP_SLUG__ sont remplacés dans les fichiers texte analysés.",
+        ]
+        if "DOCFORGE_SKIP_STARTUP" in init_text:
+            expected_results.append(
+                "Le démarrage Docker Compose peut être ignoré uniquement avec DOCFORGE_SKIP_STARTUP=1 dans un contexte de test ou de maintenance."
+            )
+
+        validation_commands = []
+        if "check" in command_names:
+            validation_commands.append("make check")
+        if "validate --expect-application" in metadata_text:
+            validation_commands.append(
+                "./scripts/docforge-project-metadata.py validate --expect-application"
+            )
+
+        return TemplateMaterializationFacts(
+            supported=bool(activation_command and metadata_text),
+            entrypoint="make init" if "init" in command_names else None,
+            activation_command=activation_command,
+            activation_variable_name="DOCFORGE_INIT_APPLICATION" if "DOCFORGE_INIT_APPLICATION" in init_text else None,
+            activation_variable_value="1" if "DOCFORGE_INIT_APPLICATION" in init_text else None,
+            git_detach_variable_name="DOCFORGE_DETACH_GIT" if "DOCFORGE_DETACH_GIT" in init_text else None,
+            git_detach_variable_value="1" if "DOCFORGE_DETACH_GIT" in init_text else None,
+            explicit_git_detach_only="DOCFORGE_DETACH_GIT" in init_text,
+            source_repository_protected="_guard_git_detach" in metadata_text or 'basename "$PWD"' in init_text,
+            allow_source_name_override="allow-source-name" in metadata_text or "DOCFORGE_ALLOW_SOURCE_NAME" in init_text,
+            skip_startup_variable_name="DOCFORGE_SKIP_STARTUP" if "DOCFORGE_SKIP_STARTUP" in init_text else None,
+            skip_startup_variable_value="1" if "DOCFORGE_SKIP_STARTUP" in init_text else None,
+            skip_startup_audience="test-maintenance" if "DOCFORGE_SKIP_STARTUP" in init_text else None,
+            skip_startup_normal_workflow=False if "DOCFORGE_SKIP_STARTUP" in init_text else True,
+            maintenance_command=maintenance_command,
+            placeholders_replaced=[
+                placeholder.name
+                for placeholder in self._template_placeholders(project)
+                if placeholder.name in {"__APP_NAME__", "__APP_SLUG__"}
+            ],
+            source_metadata_file=self.LOCAL_TEMPLATE_MANIFEST_FILE,
+            generated_metadata_file=self.LOCAL_PROJECT_METADATA_FILE,
+            metadata_script="scripts/docforge-project-metadata.py" if metadata_path.is_file() else None,
+            creates_independent_git_repository="_detach_git_history" in metadata_text,
+            generated_files=[self.LOCAL_PROJECT_METADATA_FILE],
+            removed_files=[self.LOCAL_TEMPLATE_MANIFEST_FILE],
+            validation_commands=validation_commands,
+            protections=protections,
+            expected_results=expected_results,
+            sources=[
+                source
+                for source in (
+                    "scripts/init.sh" if init_path.is_file() else None,
+                    "scripts/check-invariants.sh" if (project.root / "scripts" / "check-invariants.sh").is_file() else None,
+                    "scripts/docforge-project-metadata.py" if metadata_path.is_file() else None,
+                    self.LOCAL_TEMPLATE_MANIFEST_FILE,
+                )
+                if source is not None
+            ],
+        )
+
     def _template_creator_workflows(
         self,
+        project: Project,
+        *,
+        manifest: dict[str, Any],
         operational_commands: OperationalCommandsFacts,
     ) -> list[TemplateWorkflowFacts]:
         command_names = {item.name for item in operational_commands.commands}
+        materialization = self._template_materialization_facts(
+            project,
+            manifest=manifest,
+            operational_commands=operational_commands,
+        )
         workflows: list[TemplateWorkflowFacts] = []
         workflows.append(
             TemplateWorkflowFacts(
@@ -903,7 +1111,7 @@ class DjangoReactApplicationAnalyzer:
                 preconditions=[".env.template existe et contient les variables d’identité requises."],
                 expected_results=[".env.dev et .env.prod sont régénérés avec les ports dérivés.", ".env.local existe et contient les clés ADMIN_*, POSTGRES_PASSWORD, DJANGO_SECRET_KEY et le token local inter-apps."],
                 personalization_points=["APP_HOST peut être laissé vide pour utiliser ${APP_SLUG}.mon-site.ca ou surchargé ensuite."],
-                risks=["Les marqueurs textuels du frontend et de la documentation ne sont pas remplacés par ces scripts."],
+                risks=["Les marqueurs textuels du frontend et de la documentation ne sont pas remplacés par ces scripts seuls."],
                 sources=["README_DEV.md", "scripts/generate-env.sh", "scripts/generate-secrets.sh"],
             )
         )
@@ -912,14 +1120,52 @@ class DjangoReactApplicationAnalyzer:
                 TemplateWorkflowFacts(
                     identifier="template-first-init",
                     audience="creator",
-                    title="Initialiser et démarrer le squelette",
-                    commands=["make init"],
-                    files=["scripts/init.sh", "docker-compose.dev.yml", "docker-compose.prod.yml"],
-                    preconditions=[".env.template existe.", ".env pointe déjà vers .env.dev ou .env.prod."],
-                    expected_results=[".env.dev, .env.prod et .env.local sont prêts.", "Les invariants sont validés.", "Les services sont démarrés s’ils étaient absents ou arrêtés.", "Le statut des conteneurs est affiché."],
-                    personalization_points=["Choisir l’environnement avant make init via make dev ou make prod."],
-                    risks=["make init ne remplace pas automatiquement les marqueurs textuels __APP_NAME__ et __APP_SLUG__."],
-                    sources=["README.md", "README_DEV.md", "scripts/init.sh"],
+                    title="Matérialiser l’application et lancer l’initialisation",
+                    commands=[materialization.activation_command or "make init"],
+                    files=["scripts/init.sh", "scripts/docforge-project-metadata.py", "docforge.template.json", "docforge.project.json"],
+                    preconditions=[
+                        ".env.template existe et a été personnalisé.",
+                        ".env pointe déjà vers .env.dev ou .env.prod.",
+                        "Le dépôt a été copié dans un nouveau répertoire avant de matérialiser l’application.",
+                    ],
+                    expected_results=[
+                        ".env.dev, .env.prod et .env.local sont prêts.",
+                        "Les métadonnées passent de docforge.template.json à docforge.project.json.",
+                        "project_kind devient application.",
+                        f"origin_template_id attendu: {manifest.get('template_id')}.",
+                        "Les placeholders __APP_NAME__ et __APP_SLUG__ ne subsistent plus dans les fichiers texte analysés.",
+                    ],
+                    personalization_points=[
+                        "Choisir l’environnement avant make init via make dev ou make prod.",
+                        "APP_NAME, APP_SLUG, APP_DEPOT, APP_NO, ADMIN_USERNAME, ADMIN_EMAIL et ADMIN_PASSWORD doivent être renseignés dans .env.template.",
+                    ],
+                    risks=[
+                        "Sans DOCFORGE_INIT_APPLICATION=1, make init conserve le mode template source.",
+                        "Le détachement Git reste optionnel et ne se produit que si DOCFORGE_DETACH_GIT=1 est fourni explicitement.",
+                    ],
+                    sources=["README.md", "README_DEV.md", "scripts/init.sh", "scripts/docforge-project-metadata.py"],
+                )
+            )
+            workflows.append(
+                TemplateWorkflowFacts(
+                    identifier="template-git-transition",
+                    audience="creator",
+                    title="Détacher explicitement l’historique Git du modèle",
+                    commands=[materialization.activation_command or "DOCFORGE_INIT_APPLICATION=1 DOCFORGE_DETACH_GIT=1 make init"],
+                    files=["scripts/init.sh", "scripts/docforge-project-metadata.py", ".git"],
+                    preconditions=[
+                        "La matérialisation est déclenchée depuis une copie de travail et non depuis le dépôt source.",
+                        "DOCFORGE_DETACH_GIT=1 est fourni explicitement.",
+                    ],
+                    expected_results=[
+                        "Un nouveau dépôt Git indépendant est initialisé pour l’application matérialisée.",
+                        "Le dépôt source n’est pas modifié lorsque le répertoire conserve encore le nom du modèle source.",
+                    ],
+                    risks=[
+                        "Le détachement Git est une opération destructive sur l’historique local et doit rester volontaire.",
+                        "Un forçage éventuel avec allow-source-name doit être traité comme une exception dangereuse.",
+                    ],
+                    sources=["scripts/init.sh", "scripts/docforge-project-metadata.py"],
                 )
             )
         if "check" in command_names:
@@ -931,9 +1177,12 @@ class DjangoReactApplicationAnalyzer:
                     commands=["make check"],
                     files=["scripts/check-invariants.sh", ".gitignore", ".env.dev", ".env.prod", ".env.local", ".env"],
                     preconditions=["Les fichiers d’environnement ont été générés."],
-                    expected_results=["Les variables d’identité et les ports dérivés sont vérifiés.", "Le lien symbolique .env et les conventions Git sont validés."],
+                    expected_results=[
+                        "Les variables d’identité et les ports dérivés sont vérifiés.",
+                        "Le lien symbolique .env, les placeholders remplacés et l’état attendu des métadonnées DocForge sont validés.",
+                    ],
                     risks=["Un APP_NO ou un POSTGRES_USER incohérent provoque un échec bloquant."],
-                    sources=["README_DEV.md", "scripts/check-invariants.sh"],
+                    sources=["README_DEV.md", "scripts/check-invariants.sh", "scripts/docforge-project-metadata.py"],
                 )
             )
         if "migrate" in command_names:
@@ -954,9 +1203,17 @@ class DjangoReactApplicationAnalyzer:
 
     def _template_maintainer_workflows(
         self,
+        project: Project,
+        *,
+        manifest: dict[str, Any],
         operational_commands: OperationalCommandsFacts,
     ) -> list[TemplateWorkflowFacts]:
         command_names = {item.name for item in operational_commands.commands}
+        materialization = self._template_materialization_facts(
+            project,
+            manifest=manifest,
+            operational_commands=operational_commands,
+        )
         workflows: list[TemplateWorkflowFacts] = []
         if "check" in command_names:
             workflows.append(
@@ -968,9 +1225,45 @@ class DjangoReactApplicationAnalyzer:
                     files=["INVARIANTS.md", "Makefile", "scripts/check-invariants.sh"],
                     expected_results=["La structure standard, les conventions d’environnement et les ports dérivés restent cohérents."],
                     risks=["Un changement non accompagné dans .gitignore ou les fichiers .env.* brise le bootstrap des futures applications."],
-                    sources=["README.md", "README_DEV.md", "scripts/check-invariants.sh"],
+                    sources=["README.md", "README_DEV.md", "scripts/check-invariants.sh", "scripts/docforge-project-metadata.py"],
                 )
             )
+            if materialization.maintenance_command:
+                workflows.append(
+                    TemplateWorkflowFacts(
+                        identifier="template-maintainer-disposable-copy",
+                        audience="maintainer",
+                        title="Valider la matérialisation sur une copie jetable",
+                        commands=[
+                            "cp .env.template.example .env.template",
+                            "make dev",
+                            materialization.maintenance_command,
+                            "make check",
+                        ],
+                        files=[
+                            ".env.template.example",
+                            "scripts/init.sh",
+                            "scripts/check-invariants.sh",
+                            "scripts/docforge-project-metadata.py",
+                        ],
+                        preconditions=[
+                            "Le test est exécuté sur une copie temporaire du modèle, jamais sur le dépôt source.",
+                            ".env.template contient une identité complète et un bootstrap administrateur valides.",
+                        ],
+                        expected_results=[
+                            "La copie est détectée comme application après matérialisation.",
+                            "Le démarrage Docker Compose peut être ignoré pour ce test avec DOCFORGE_SKIP_STARTUP=1.",
+                        ],
+                        risks=[
+                            "DOCFORGE_SKIP_STARTUP=1 est un mécanisme de test ou de maintenance, pas le workflow normal de création d’une application.",
+                        ],
+                        sources=[
+                            "scripts/init.sh",
+                            "scripts/check-invariants.sh",
+                            "scripts/docforge-project-metadata.py",
+                        ],
+                    )
+                )
         if "update" in command_names:
             workflows.append(
                 TemplateWorkflowFacts(
@@ -987,6 +1280,7 @@ class DjangoReactApplicationAnalyzer:
         return workflows
 
     def _load_local_template_manifest(
+
         self,
         root: Path,
     ) -> dict[str, Any] | None:
@@ -1349,6 +1643,7 @@ class DjangoReactApplicationAnalyzer:
             help_text = help_entries.get(target)
             visibility = "public" if help_text else default_target_visibility
             category = self.CATEGORY_BY_TARGET.get(target, self._infer_command_category(target, prerequisites, body))
+            manifest_entry = template_manifest.get("targets", {}).get(target)
             (
                 provenance,
                 documentation_policy,
@@ -1390,6 +1685,8 @@ class DjangoReactApplicationAnalyzer:
                     exclusion_reason=exclusion_reason,
                     provenance_evidence=provenance_evidence,
                     manifest_source=manifest_source,
+                    manifest_destructive=manifest_entry.get("destructive") if manifest_entry is not None else None,
+                    manifest_destructive_effects=list(manifest_entry.get("destructive_effects", [])) if manifest_entry is not None else [],
                 )
             )
 
@@ -2448,11 +2745,14 @@ class DjangoReactApplicationAnalyzer:
         script_paths = [
             "scripts/init.sh",
             "scripts/env-switch.sh",
+            "scripts/generate-env.sh",
+            "scripts/generate-secrets.sh",
             "scripts/migrate.sh",
             "scripts/backup-db.sh",
             "scripts/restore-db.sh",
             "scripts/update.sh",
             "scripts/check-invariants.sh",
+            "scripts/docforge-project-metadata.py",
             "backend/entrypoint.sh",
         ]
         scripts: list[ScriptAnalysisFacts] = []
@@ -2537,10 +2837,31 @@ class DjangoReactApplicationAnalyzer:
             facts.notes.append(
                 "Le script initialise l’environnement actif, valide les invariants et démarre les services manquants si nécessaire."
             )
+            if "DOCFORGE_INIT_APPLICATION" in text:
+                facts.metadata_actions.append(
+                    "Matérialise docforge.project.json uniquement lorsque DOCFORGE_INIT_APPLICATION=1 est fourni."
+                )
+            if "DOCFORGE_DETACH_GIT" in text:
+                facts.metadata_actions.append(
+                    "Peut détacher explicitement l’historique Git lorsque DOCFORGE_DETACH_GIT=1 est fourni."
+                )
+            if "DOCFORGE_SKIP_STARTUP" in text:
+                facts.metadata_actions.append(
+                    "Permet d’ignorer le démarrage Docker Compose avec DOCFORGE_SKIP_STARTUP=1 dans un contexte de test ou de maintenance."
+                )
         if relative_path == "scripts/env-switch.sh":
             facts.environment_targets = ["dev", "prod"]
             facts.notes.append(
                 "Le choix d’environnement repose sur un lien symbolique .env."
+            )
+        if relative_path == "scripts/generate-env.sh":
+            facts.creates_files.extend([".env.dev", ".env.prod", ".env.local"])
+            facts.notes.append(
+                "Le script génère les fichiers d’environnement dérivés et prépare les variables d’identité et d’administration."
+            )
+        if relative_path == "scripts/generate-secrets.sh":
+            facts.notes.append(
+                "Le script génère ou complète les secrets locaux dérivés du template."
             )
         if relative_path == "scripts/migrate.sh":
             facts.environment_targets = ["dev", "prod"]
@@ -2568,6 +2889,33 @@ class DjangoReactApplicationAnalyzer:
                 facts.notes.append(
                     "Collecte les fichiers statiques en production."
                 )
+        if relative_path == "scripts/check-invariants.sh":
+            facts.metadata_actions.extend(
+                [
+                    "Valide l’état des métadonnées DocForge via scripts/docforge-project-metadata.py validate.",
+                    "Peut exiger un état application matérialisé avec --expect-application.",
+                ]
+            )
+            if "placeholder" in text.casefold():
+                facts.notes.append(
+                    "Le contrôle bloque si des placeholders connus subsistent après matérialisation."
+                )
+        if relative_path == "scripts/docforge-project-metadata.py":
+            facts.creates_files.append(self.LOCAL_PROJECT_METADATA_FILE)
+            facts.destructive_actions.append(
+                "Peut supprimer l’historique Git local puis réinitialiser un nouveau dépôt Git lorsqu’il est appelé avec --detach-git."
+            )
+            facts.metadata_actions.extend(
+                [
+                    "Transforme docforge.template.json en docforge.project.json lors de la matérialisation.",
+                    "Conserve origin_template_id et template_version dans les métadonnées de l’application générée.",
+                    "Refuse la coexistence ambiguë de docforge.template.json et docforge.project.json.",
+                ]
+            )
+            facts.placeholders_replaced.extend(["__APP_NAME__", "__APP_SLUG__"])
+            facts.notes.append(
+                "Le script remplace les placeholders textuels connus, valide les identifiants requis et protège le dépôt source contre un détachement Git accidentel."
+            )
 
         facts.compose_commands = list(dict.fromkeys(facts.compose_commands))
         facts.django_commands = list(dict.fromkeys(facts.django_commands))
@@ -2577,6 +2925,8 @@ class DjangoReactApplicationAnalyzer:
         facts.creates_files = list(dict.fromkeys(facts.creates_files))
         facts.symlinks = list(dict.fromkeys(facts.symlinks))
         facts.generated_secrets = list(dict.fromkeys(facts.generated_secrets))
+        facts.metadata_actions = list(dict.fromkeys(facts.metadata_actions))
+        facts.placeholders_replaced = list(dict.fromkeys(facts.placeholders_replaced))
         return facts
 
     def _extract_database_engines(

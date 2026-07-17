@@ -10,6 +10,7 @@ from docforge.models import Project
 @dataclass(slots=True)
 class CliParameterFacts:
     name: str
+    display_name: str
     kind: str
     type_annotation: str | None = None
     required: bool = True
@@ -352,6 +353,11 @@ class CliAnalyzer:
 
         return CliParameterFacts(
             name=argument.arg,
+            display_name=self._display_name(
+                argument.arg,
+                kind=kind,
+                flags=flags,
+            ),
             kind=kind,
             type_annotation=annotation,
             required=required,
@@ -359,6 +365,27 @@ class CliAnalyzer:
             flags=flags,
             help=help_text,
         )
+
+    @staticmethod
+    def _display_name(
+        parameter_name: str,
+        *,
+        kind: str,
+        flags: list[str],
+    ) -> str:
+        if kind == "option":
+            long_flags = [
+                flag
+                for flag in flags
+                if flag.startswith("--")
+            ]
+            if long_flags:
+                return long_flags[0]
+            if flags:
+                return flags[0]
+        if kind == "argument":
+            return parameter_name.upper()
+        return parameter_name
 
     @staticmethod
     def _first_docstring_line(

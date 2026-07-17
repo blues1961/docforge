@@ -302,19 +302,30 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
 
     @staticmethod
     def _command_is_destructive(command) -> bool:
+        if getattr(command, "manifest_destructive", None) is not None:
+            return bool(command.manifest_destructive)
         return bool(DjangoReactManualKnowledgeBuilder._command_destructive_effects(command))
 
     @staticmethod
     def _command_destructive_effects(command) -> list[str]:
+        manifest_effects = list(getattr(command, "manifest_destructive_effects", []) or [])
+        if getattr(command, "manifest_destructive", None) is not None:
+            return manifest_effects
+
         effects: list[str] = []
-        body = "\n".join(command.body).casefold()
+        executable_lines = [
+            line.casefold()
+            for line in command.body
+            if not line.strip().startswith(("@printf", "printf", "@echo", "echo"))
+        ]
+        body = "\n".join(executable_lines)
         if " down" in f" {body}" or command.category == "shutdown":
             effects.append("Arrêt des services actifs")
         if "psql" in body or command.category == "restore":
             effects.append("Modification ou écrasement potentiel des données PostgreSQL")
         if "rm " in body or "rm -" in body:
             effects.append("Suppression de fichiers")
-        if "build" in body or command.category == "build":
+        if " build" in f" {body}" or command.category == "build":
             effects.append("Reconstruction des images ou services")
         return effects
 

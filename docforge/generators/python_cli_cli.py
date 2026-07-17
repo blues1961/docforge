@@ -107,7 +107,7 @@ class PythonCliCliDocumentGenerator:
                         "| "
                         + " | ".join(
                             [
-                                self._escape(parameter.name),
+                                self._escape(parameter.display_name),
                                 self._escape(
                                     parameter.type_annotation
                                     or "non défini"

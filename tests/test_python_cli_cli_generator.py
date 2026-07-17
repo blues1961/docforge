@@ -34,6 +34,11 @@ def profile(
         ...,
         help="Projet à inspecter.",
     ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Afficher le résultat complet en JSON.",
+    ),
 ) -> None:
     """Détecter le profil d’un projet."""
     pass
@@ -91,6 +96,9 @@ def test_python_cli_cli_document_is_generated(
     assert "- Commande : `projects list`." in result.content
     assert "Détecter le profil d’un projet." in result.content
     assert "Projet à inspecter." in result.content
+    assert "| PATH |" in result.content
+    assert "| --json |" in result.content
+    assert "json_output" not in result.content
     assert "demo-cli" in result.content
     assert "/home/" not in result.content
 
