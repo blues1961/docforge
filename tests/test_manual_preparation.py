@@ -619,8 +619,10 @@ def test_manual_service_does_not_modify_real_project_files(
 
 def test_manual_prepare_cli_command(
     tmp_path: Path,
+    monkeypatch,
 ) -> None:
     _create_python_cli_project(tmp_path)
+    monkeypatch.chdir(tmp_path)
 
     result = runner.invoke(
         app,
@@ -635,14 +637,82 @@ def test_manual_prepare_cli_command(
     )
 
     assert result.exit_code == 0
-    assert "manual-knowledge.json" in result.stdout
-    assert "manual-manifest.json" in result.stdout
+    assert ".docforge/manual/manual-knowledge.json" in result.stdout
+    assert ".docforge/manual/manual-manifest.json" in result.stdout
     assert (
         tmp_path
         / ".docforge"
         / "manual"
         / "manual-knowledge.json"
     ).is_file()
+    assert (
+        tmp_path
+        / ".docforge"
+        / "manual"
+        / "manual-manifest.json"
+    ).is_file()
+
+
+def test_manual_prepare_cli_command_with_relative_output_dir(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    _create_python_cli_project(project_root)
+    monkeypatch.chdir(project_root)
+
+    result = runner.invoke(
+        app,
+        [
+            "manual",
+            "prepare",
+            str(project_root),
+            "--clean",
+            "--mode",
+            "both",
+            "--output-dir",
+            "build/manual-output",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "build/manual-output/manual-knowledge.json" in result.stdout
+    assert "build/manual-output/manual-manifest.json" in result.stdout
+    assert (project_root / "build" / "manual-output" / "manual-knowledge.json").is_file()
+    assert (project_root / "build" / "manual-output" / "manual-manifest.json").is_file()
+
+
+def test_manual_prepare_cli_command_with_external_absolute_output_dir(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    _create_python_cli_project(project_root)
+    external_output_dir = tmp_path / "prepared"
+    monkeypatch.chdir(project_root)
+
+    result = runner.invoke(
+        app,
+        [
+            "manual",
+            "prepare",
+            str(project_root),
+            "--clean",
+            "--mode",
+            "both",
+            "--output-dir",
+            str(external_output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Connaissance :" in result.stdout
+    assert "Manifeste :" in result.stdout
+    assert external_output_dir.as_posix() in result.stdout
+    assert (external_output_dir / "manual-knowledge.json").is_file()
+    assert (external_output_dir / "manual-manifest.json").is_file()
 
 
 def test_manual_service_does_not_call_network_or_ollama(

@@ -69,6 +69,20 @@ app.add_typer(
 )
 
 
+def _display_path(path: Path, *, root: Path) -> str:
+    resolved_path = path.expanduser().resolve()
+    resolved_root = root.expanduser().resolve()
+    cwd = Path.cwd().resolve()
+
+    for base in (cwd, resolved_root):
+        try:
+            return resolved_path.relative_to(base).as_posix()
+        except ValueError:
+            continue
+
+    return resolved_path.as_posix()
+
+
 @app.callback()
 def main() -> None:
     """Assistant local d'analyse et de documentation de projets."""
@@ -128,7 +142,7 @@ def manual_prepare_command(
     )
     console.print(
         f"Connaissance : "
-        f"{result.knowledge_file.relative_to(result.root)}"
+        f"{_display_path(result.knowledge_file, root=result.root)}"
     )
 
     if len(result.documents) > 1:
@@ -139,29 +153,29 @@ def manual_prepare_command(
             )
             if document.full_prompt_file is not None:
                 console.print(
-                    f"  prompt : {document.full_prompt_file.relative_to(result.root)}"
+                    f"  prompt : {_display_path(document.full_prompt_file, root=result.root)}"
                 )
             for artifact in document.section_artifacts:
                 console.print(
-                    f"  - {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
+                    f"  - {_display_path(artifact.prompt_file, root=result.root)} ({artifact.estimated_tokens} tokens estimés)"
                 )
     else:
         if result.full_prompt_file is not None:
             console.print(
                 f"Prompt complet : "
-                f"{result.full_prompt_file.relative_to(result.root)}"
+                f"{_display_path(result.full_prompt_file, root=result.root)}"
             )
 
         if result.section_artifacts:
             console.print("Prompts de section :")
             for artifact in result.section_artifacts:
                 console.print(
-                    f"- {artifact.prompt_file.relative_to(result.root)} ({artifact.estimated_tokens} tokens estimés)"
+                    f"- {_display_path(artifact.prompt_file, root=result.root)} ({artifact.estimated_tokens} tokens estimés)"
                 )
 
     console.print(
         f"Manifeste : "
-        f"{result.manifest_file.relative_to(result.root)}"
+        f"{_display_path(result.manifest_file, root=result.root)}"
     )
 
     try:

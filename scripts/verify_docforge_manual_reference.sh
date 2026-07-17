@@ -183,16 +183,23 @@ missing_artifacts = [
 ]
 
 expected_command_paths = []
+cli_reference_present = "Référence CLI" in headings
 if knowledge_path.exists():
     data = json.loads(knowledge_path.read_text(encoding="utf-8"))
     seen = set()
-    for section in data.get("sections", []):
-        commands = section.get("facts", {}).get("commands", [])
-        for command in commands:
-            command_path = command.get("command_path")
-            if command_path and command_path not in seen:
-                seen.add(command_path)
-                expected_command_paths.append(command_path)
+    for command in data.get("commands", []):
+        if not isinstance(command, dict):
+            continue
+        if command.get("visibility") != "public":
+            continue
+        if command.get("documentation_policy") == "exclude":
+            continue
+        if command.get("reference_level") == "omit":
+            continue
+        command_path = command.get("command_path")
+        if command_path and command_path not in seen:
+            seen.add(command_path)
+            expected_command_paths.append(command_path)
 
 missing_command_references = [
     command_path
@@ -209,14 +216,23 @@ if violations:
     errors.append("Motifs interdits : " + ", ".join(violations))
 if missing_artifacts:
     errors.append("Artefacts de préparation manquants : " + ", ".join(missing_artifacts))
+if cli_reference_present and not expected_command_paths:
+    errors.append(
+        "Aucune commande documentable trouvée dans manual-knowledge.json alors que la section Référence CLI est présente."
+    )
 if missing_command_references:
     errors.append(
         "Commandes absentes de la référence : "
         + ", ".join(missing_command_references)
     )
 
+covered_command_count = len(expected_command_paths) - len(missing_command_references)
 print(f"Sections attendues présentes : {len(expected_sections) - len(missing_sections)}/{len(expected_sections)}")
-print(f"Commandes attendues référencées : {len(expected_command_paths) - len(missing_command_references)}/{len(expected_command_paths)}")
+print(f"Commandes attendues référencées : {covered_command_count}/{len(expected_command_paths)}")
+if expected_command_paths:
+    print("Commandes attendues : " + ", ".join(expected_command_paths))
+if missing_command_references:
+    print("Commandes absentes : " + ", ".join(missing_command_references))
 
 if errors:
     for error in errors:
