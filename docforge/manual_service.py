@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -10,6 +10,9 @@ from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
 from docforge.manual_blueprint import ManualBlueprint, ManualBlueprintRegistry
 from docforge.manual_knowledge import ManualKnowledge
+from docforge.manual_deterministic import ManualDeterministicContentBuilder
+from docforge.validators.command_reference import CommandReferenceValidator
+from docforge.validators.django_react_manual import DjangoReactMultiDocumentValidator
 from docforge.manual_prompt import (
     ManualPromptBuilder,
     SectionPromptContext,
@@ -39,6 +42,7 @@ class ManualSectionArtifact:
     context_file: Path
     estimated_tokens: int
     context_budget: int | None = None
+    deterministic_file: Path | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +134,8 @@ class ManualPreparationService:
             profile_instance=profile_instance,
         )
 
+        self._normalize_project_paths(manual_knowledge, root)
+
         prompt_builder = (
             self.prompt_builder
             or profile_instance.build_manual_prompt_builder()
@@ -141,7 +147,15 @@ class ManualPreparationService:
         else:
             project_kind = None
             if isinstance(manual_knowledge.template, dict):
-                project_kind = manual_knowledge.template.get("project_kind")
+                template = manual_knowledge.template
+                if (
+                    template.get("project_kind") == "application"
+                    and template.get("origin_template_id") == "app-template"
+                    and str(template.get("manifest_source") or "").startswith("heuristic:")
+                ):
+                    project_kind = "application"
+                elif template.get("project_kind") not in {None, "application"}:
+                    project_kind = template.get("project_kind")
             blueprints = ManualBlueprintRegistry().blueprints_for_context(
                 profile_instance.name,
                 project_kind=project_kind,
@@ -155,6 +169,11 @@ class ManualPreparationService:
 
         documents: list[ManualPreparedDocument] = []
         multiple_documents = len(blueprints) > 1
+        if len(blueprints) == 3 and preparation_mode.includes_full_prompt():
+            raise ValueError(
+                "Les préparations multidocument django-react exigent le mode sections : "
+                "les prompts complets dépassent le contexte local prévu."
+            )
         documents_root = resolved_output_dir / "documents"
         if multiple_documents:
             documents_root.mkdir(parents=True, exist_ok=True)
@@ -181,17 +200,32 @@ class ManualPreparationService:
 
         primary_document = documents[0]
         manifest_file = resolved_output_dir / "manual-manifest.json"
-        manifest_file.write_text(
-            self._build_manifest(
-                output_dir=resolved_output_dir,
-                knowledge=manual_knowledge,
-                documents=documents,
-                knowledge_file=knowledge_file,
-                generated_directory=generated_directory,
-                context_budget=context_budget,
-            ),
-            encoding="utf-8",
+        manifest_text = self._build_manifest(
+            output_dir=resolved_output_dir,
+            knowledge=manual_knowledge,
+            documents=documents,
+            knowledge_file=knowledge_file,
+            generated_directory=generated_directory,
+            context_budget=context_budget,
         )
+        manifest_file.write_text(manifest_text, encoding="utf-8")
+        template = manual_knowledge.template if isinstance(manual_knowledge.template, dict) else {}
+        if (
+            profile_instance.name == "django-react"
+            and template.get("detected") is True
+            and template.get("project_kind") == "application"
+            and template.get("origin_template_id") == "app-template"
+            and str(template.get("manifest_source") or "").startswith("heuristic:")
+        ):
+            diagnostics = DjangoReactMultiDocumentValidator().validate(
+                root=resolved_output_dir,
+                manifest=json.loads(manifest_text),
+            )
+            if diagnostics:
+                details = "; ".join(
+                    f"{item.code}: {item.message}" for item in diagnostics
+                )
+                raise ValueError("Préparation multidocument django-react invalide : " + details)
 
         return ManualPreparationResult(
             root=root,
@@ -205,6 +239,25 @@ class ManualPreparationService:
             generated_directory=generated_directory,
             documents=documents,
         )
+
+    @staticmethod
+    def _normalize_project_paths(value: object, project_root: Path) -> object:
+        """Replace project-local absolute paths before any manual artifact is written."""
+        root_text = project_root.as_posix().rstrip("/")
+        if isinstance(value, str):
+            return value.replace(root_text + "/", "").replace(root_text, ".")
+        if isinstance(value, list):
+            for index, item in enumerate(value):
+                value[index] = ManualPreparationService._normalize_project_paths(item, project_root)
+            return value
+        if isinstance(value, dict):
+            for key, item in value.items():
+                value[key] = ManualPreparationService._normalize_project_paths(item, project_root)
+            return value
+        if is_dataclass(value) and not isinstance(value, type):
+            for item in fields(value):
+                object.__setattr__(value, item.name, ManualPreparationService._normalize_project_paths(getattr(value, item.name), project_root))
+        return value
 
     def _prepare_document(
         self,
@@ -261,17 +314,42 @@ class ManualPreparationService:
         section_prompt_files: list[Path] = []
         section_context_files: list[Path] = []
         section_artifacts: list[ManualSectionArtifact] = []
+        deterministic_builder = ManualDeterministicContentBuilder()
+        deterministic_root = output_dir / "deterministic-sections"
         if preparation_mode.includes_sections():
             section_root = output_dir / "section-prompts"
             section_context_root = output_dir / "section-contexts"
             section_root.mkdir(parents=True, exist_ok=True)
             section_context_root.mkdir(parents=True, exist_ok=True)
+            deterministic_root.mkdir(parents=True, exist_ok=True)
             for index, (section, context) in enumerate(
                 zip(active_blueprint.sections, section_contexts, strict=True),
                 start=1,
             ):
                 section_path = section_root / f"{index:02d}-{section.identifier}.md"
                 context_path = section_context_root / f"{index:02d}-{section.identifier}.json"
+                deterministic_path = deterministic_root / f"{index:02d}-{section.identifier}.md"
+                deterministic_content = deterministic_builder.render_section(
+                    knowledge,
+                    section.identifier,
+                )
+                if section.identifier == "cli-reference":
+                    diagnostics = CommandReferenceValidator().validate(
+                        markdown=deterministic_content,
+                        knowledge=knowledge,
+                    )
+                    if diagnostics:
+                        details = "; ".join(
+                            f"{item.code} ({item.command_path}): {item.message}"
+                            for item in diagnostics
+                        )
+                        raise ValueError(
+                            "Référence CLI déterministe invalide : " + details
+                        )
+                deterministic_path.write_text(
+                    deterministic_content,
+                    encoding="utf-8",
+                )
                 section_path.write_text(
                     prompt_builder.build_section_prompt(
                         blueprint=active_blueprint,
@@ -311,6 +389,7 @@ class ManualPreparationService:
                         context_file=context_path,
                         estimated_tokens=context.estimated_tokens,
                         context_budget=context.context_budget,
+                        deterministic_file=deterministic_path,
                     )
                 )
 
@@ -347,44 +426,34 @@ class ManualPreparationService:
         single_document = len(documents) == 1 and documents[0].output_dir == output_dir
         primary_document = documents[0]
 
-        if single_document:
-            if primary_document.full_prompt_file is not None:
+        for document in documents:
+            if document.full_prompt_file is not None:
                 expected_outputs.append(
-                    str(primary_document.full_prompt_file.relative_to(output_dir).as_posix())
+                    str(document.full_prompt_file.relative_to(output_dir).as_posix())
                 )
-            expected_outputs.extend(
-                str(artifact.prompt_file.relative_to(output_dir).as_posix())
-                for artifact in primary_document.section_artifacts
-            )
-            expected_outputs.extend(
-                str(artifact.context_file.relative_to(output_dir).as_posix())
-                for artifact in primary_document.section_artifacts
-            )
-        else:
-            for document in documents:
-                base = document.output_dir.relative_to(output_dir).as_posix()
-                expected_outputs.append(f"{base}/")
-                if document.full_prompt_file is not None:
-                    expected_outputs.append(
-                        str(document.full_prompt_file.relative_to(output_dir).as_posix())
+            for artifact in document.section_artifacts:
+                expected_outputs.extend(
+                    (
+                        str(artifact.prompt_file.relative_to(output_dir).as_posix()),
+                        str(artifact.context_file.relative_to(output_dir).as_posix()),
                     )
-                expected_outputs.extend(
-                    str(artifact.prompt_file.relative_to(output_dir).as_posix())
-                    for artifact in document.section_artifacts
                 )
-                expected_outputs.extend(
-                    str(artifact.context_file.relative_to(output_dir).as_posix())
-                    for artifact in document.section_artifacts
-                )
+                if artifact.deterministic_file is not None:
+                    expected_outputs.append(
+                        str(artifact.deterministic_file.relative_to(output_dir).as_posix())
+                    )
+
 
         manifest = {
-            "schema_version": 2,
+            "schema_version": 4,
             "project_name": knowledge.project.name,
             "profile_name": knowledge.profile.get("name") if isinstance(knowledge.profile, dict) else primary_document.blueprint.profile_name,
             "project_kind": knowledge.template.get("project_kind") if isinstance(knowledge.template, dict) else None,
             "command_provenance_summary": self._build_command_provenance_summary(knowledge),
             "generated_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "context_budget": context_budget,
+            "recommended_generation_mode": "sections" if len(documents) > 1 else "full-or-sections",
+            "full_prompts_supported": len(documents) == 1,
             "knowledge_file": str(knowledge_file.relative_to(output_dir).as_posix()),
             "full_prompt": (
                 str(primary_document.full_prompt_file.relative_to(output_dir).as_posix())
@@ -409,6 +478,8 @@ class ManualPreparationService:
                         "title": artifact.title,
                         "prompt_file": str(artifact.prompt_file.relative_to(output_dir).as_posix()),
                         "context_file": str(artifact.context_file.relative_to(output_dir).as_posix()),
+                        "deterministic_file": str(artifact.deterministic_file.relative_to(output_dir).as_posix()) if artifact.deterministic_file is not None else None,
+                        "generation_mode": "deterministic" if artifact.identifier in ManualDeterministicContentBuilder.FULLY_DETERMINISTIC_SECTIONS else "ollama",
                         "estimated_tokens": artifact.estimated_tokens,
                         "context_budget": artifact.context_budget,
                     }
@@ -440,6 +511,8 @@ class ManualPreparationService:
                             "title": artifact.title,
                             "prompt_file": str(artifact.prompt_file.relative_to(output_dir).as_posix()),
                             "context_file": str(artifact.context_file.relative_to(output_dir).as_posix()),
+                            "deterministic_file": str(artifact.deterministic_file.relative_to(output_dir).as_posix()) if artifact.deterministic_file is not None else None,
+                            "generation_mode": "deterministic" if artifact.identifier in ManualDeterministicContentBuilder.FULLY_DETERMINISTIC_SECTIONS else "ollama",
                             "estimated_tokens": artifact.estimated_tokens,
                             "context_budget": artifact.context_budget,
                         }

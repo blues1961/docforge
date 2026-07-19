@@ -7,6 +7,7 @@ from typing import Any
 from docforge.knowledge import ProjectKnowledge
 from docforge.manual_knowledge import (
     ManualCommand,
+    ManualCommandDescription,
     ManualCommandParameter,
     ManualConfiguration,
     ManualConflict,
@@ -105,7 +106,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                         "phony": item.phony,
                         "documented": item.documented,
                         "visibility": item.visibility,
-                        "provenance": item.provenance,
+                        "provenance": self._manual_command_provenance(knowledge, item),
                         "documentation_policy": item.documentation_policy,
                         "exclusion_reason": item.exclusion_reason,
                         "provenance_evidence": list(item.provenance_evidence),
@@ -171,7 +172,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                 ),
             ),
             documentation_policy=self._build_documentation_policy(
-                profile_instance
+                knowledge
             ),
             source_traceability=self._build_source_traceability(knowledge),
         )
@@ -241,7 +242,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                     documented=item.documented,
                     audience=self._command_audience(knowledge, item),
                     reference_level=self._command_reference_level(item),
-                    provenance=item.provenance,
+                    provenance=self._manual_command_provenance(knowledge, item),
                     documentation_policy=item.documentation_policy,
                     exclusion_reason=item.exclusion_reason,
                     provenance_evidence=list(item.provenance_evidence),
@@ -262,6 +263,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                         )
                         for parameter in item.parameters
                     ],
+                    description=self._make_command_description(item),
                     examples=[item.command],
                     source=ManualFactSource(
                         status="detected",
@@ -270,6 +272,46 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
                 )
             )
         return commands
+
+    @staticmethod
+    def _make_command_description(command) -> ManualCommandDescription:
+        summaries = {
+            "help": "Affiche les cibles Make rendues disponibles par le projet.",
+            "init": "Initialise l’environnement de travail avec la recette détectée.",
+            "dev": "Sélectionne la configuration de développement.",
+            "prod": "Sélectionne la configuration de production.",
+            "up": "Démarre les services définis par le projet.",
+            "down": "Arrête les services actifs.",
+            "restart": "Redémarre les services en exécutant la recette de redémarrage.",
+            "rebuild": "Reconstruit le ou les services demandés.",
+            "logs": "Affiche les journaux du service demandé.",
+            "ps": "Affiche l’état des services.",
+            "check": "Exécute le contrôle ou diagnostic déclaré par le projet.",
+            "migrate": "Applique les migrations définies par la recette du projet.",
+            "backup": "Lance la sauvegarde de base de données démontrée.",
+            "restore": "Lance la restauration de base de données depuis le fichier fourni.",
+            "update": "Exécute la recette de mise à jour déclarée par le projet.",
+        }
+        summary = summaries.get(command.name, f"Exécute la cible Make `{command.name}` détectée.")
+        behavior = command.help_text or (" ; ".join(command.body) if command.body else summary)
+        return ManualCommandDescription(
+            summary=summary,
+            user_purpose="À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+            behavior=behavior,
+            inputs=[parameter.name for parameter in command.parameters],
+            side_effects=DjangoReactManualKnowledgeBuilder._command_destructive_effects(command),
+            provenance={
+                "summary": ManualFactSource(status="derived", sources=(command.source,)),
+                "behavior": ManualFactSource(status="detected", sources=(command.source,)),
+            },
+        )
+
+    @staticmethod
+    def _manual_command_provenance(knowledge: ProjectKnowledge, command) -> str:
+        verified = set(knowledge.template.manifest_verified_targets)
+        if command.name in {"help", "update"} and command.name not in verified:
+            return "application-public"
+        return command.provenance
 
     def _command_audience(self, knowledge: ProjectKnowledge, command) -> str:
         if command.visibility != "public":
@@ -623,7 +665,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
         )
 
         return ManualSecurity(
-            protected_documents=[],
+            protected_documents=list(knowledge.security.protected_documents),
             controls=controls,
             risks=risks,
             validation_commands=[],
@@ -635,16 +677,25 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
 
     @staticmethod
     def _build_documentation_policy(
-        profile_instance: ProjectProfile,
+        knowledge: ProjectKnowledge,
     ) -> ManualDocumentationPolicy:
+        policy = knowledge.profile.document_policy
         return ManualDocumentationPolicy(
-            required_documents=[],
-            optional_documents=[],
-            deterministic_documents=[],
-            protected_documents=[],
+            required_documents=list(policy.required_documents),
+            optional_documents=list(policy.optional_documents),
+            deterministic_documents=list(policy.deterministic_documents),
+            protected_documents=list(policy.protected_documents),
             source=ManualFactSource(
                 status="configured",
-                sources=(f"profile:{profile_instance.name}",),
+                sources=(
+                    f"profile:{knowledge.profile.name}",
+                    *knowledge.template.source_paths,
+                ),
+                notes=(
+                    "Contrat app-template détecté."
+                    if knowledge.template.detected
+                    else "Politique django-react générique.",
+                ),
             ),
         )
 

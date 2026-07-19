@@ -67,7 +67,7 @@ def test_python_cli_specification_analyzer_builds_requirements(
     assert facts.version == "0.1.0"
     assert "python-cli" in facts.supported_profiles
     assert "README.md" in facts.required_documents
-    assert "INVARIANTS.md" in facts.protected_documents
+    assert "INVARIANTS.md" not in facts.protected_documents
     assert facts.functional_requirements
     assert facts.security_requirements
     assert facts.acceptance_criteria

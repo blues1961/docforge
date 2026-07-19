@@ -206,7 +206,7 @@ def test_manual_knowledge_is_json_serializable(
     )
     data = json.loads(knowledge.to_json())
 
-    assert data["schema_version"] == 2
+    assert data["schema_version"] == 3
     assert data["project"]["name"] == "docforge"
     assert data["project"]["cli_entry_point"] == (
         "docforge -> docforge.cli:app"
@@ -322,10 +322,7 @@ def test_manual_knowledge_contains_local_installation_and_workflows(
         "docforge document . --refresh --clean"
         in workflows["generate-preview"].commands
     )
-    assert (
-        "docforge apply . INVARIANTS.md --owner-approved"
-        in workflows["apply-protected-document"].commands
-    )
+    assert "apply-protected-document" not in workflows
 
 
 def test_blueprints_cover_python_cli_and_generic() -> None:
@@ -384,7 +381,7 @@ def test_prompt_builder_generates_full_and_section_prompts(
     assert "aucune connaissance externe" in full_prompt
     assert "`detected` = fait directement démontré" in full_prompt
     assert "`unresolved` = fait incomplet" in full_prompt
-    assert "Version du schéma ManualKnowledge : 2." in full_prompt
+    assert "Version du schéma ManualKnowledge : 3." in full_prompt
     assert "`oaicite`" in full_prompt
     assert "Titre de section : Présentation" in section_prompt
     assert "BEGIN SECTION FACTS" in section_prompt
@@ -499,8 +496,8 @@ def test_cli_reference_compaction_token_growth_stays_bounded(
 
     assert new_tokens >= old_tokens
     assert new_tokens - old_tokens < 120
-    assert prompt_tokens > new_tokens
-    assert prompt_tokens < 2800
+    assert prompt_tokens < new_tokens
+    assert prompt_tokens < 100
 
 
 def test_cli_reference_section_prompt_requires_separate_option_descriptions(
@@ -524,9 +521,8 @@ def test_cli_reference_section_prompt_requires_separate_option_descriptions(
         context_budget=2800,
     )
 
-    assert "décris séparément chaque option ou argument documenté" in prompt
-    assert "Un exemple de commande combinant plusieurs options ne suffit jamais" in prompt
-    assert "sans interprétation supplémentaire" in prompt
+    assert "entièrement rendue depuis les faits structurés" in prompt
+    assert "aucun texte narratif ni syntaxe" in prompt
 
 
 def test_manual_service_manifest_and_modes_and_clean(
@@ -548,6 +544,7 @@ def test_manual_service_manifest_and_modes_and_clean(
     assert both.full_prompt_file is not None
     assert both.full_prompt_file.is_file()
     assert both.section_prompt_files
+    assert (both.output_dir / "deterministic-sections" / "21-cli-reference.md").is_file()
     assert both.section_context_files
     assert both.generated_directory is not None
     assert both.generated_directory.is_dir()
@@ -881,3 +878,75 @@ def test_manual_validate_cli_reports_errors_and_json(tmp_path: Path) -> None:
     assert bad.exit_code == 1
     assert "MANUAL002" in bad.stdout
     assert "MANUAL006" in bad.stdout
+
+
+def test_python_cli_manual_knowledge_keeps_secret_protection_abstract(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, _profile = _build_manual_knowledge(tmp_path)
+
+    security = knowledge.to_dict()["security"]
+    assert ".env.local" not in json.dumps(security, ensure_ascii=False)
+    assert any(
+        control["identifier"] == "SEC-001"
+        and control["description"] == "Le manuel ne doit contenir aucun secret ni reproduire de valeur sensible."
+        and control["evidence"] is None
+        for control in security["controls"]
+    )
+
+
+def test_python_cli_prompt_does_not_project_django_sensitive_path_example(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+
+    context_payloads = [path.read_text(encoding="utf-8") for path in result.section_context_files]
+    prompt_payloads = [path.read_text(encoding="utf-8") for path in result.section_prompt_files]
+    assert all(".env.local" not in payload for payload in [*context_payloads, *prompt_payloads])
+
+
+def test_python_cli_sensitive_sections_are_fully_deterministic(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    sections = {item["identifier"]: item for item in manifest["section_contexts"]}
+
+    for identifier in {"configuration", "security", "protected-documents", "cli-reference"}:
+        assert sections[identifier]["generation_mode"] == "deterministic"
+    security = (result.output_dir / sections["security"]["deterministic_file"]).read_text(encoding="utf-8")
+    configuration = (result.output_dir / sections["configuration"]["deterministic_file"]).read_text(encoding="utf-8")
+    protected = (result.output_dir / sections["protected-documents"]["deterministic_file"]).read_text(encoding="utf-8")
+    assert "Le manuel ne doit contenir aucun secret ni reproduire de valeur sensible." in security
+    assert "exclus automatiquement" not in security
+    assert "~/.config/docforge/projects.yml" in configuration
+    assert "INVARIANTS.md" not in protected
+    assert "docforge apply" in protected
+    assert "--owner-approved" not in protected
+
+
+def test_python_cli_prompts_do_not_contain_forbidden_pipeline_expression(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    assert all(
+        "pipeline documentaire" not in path.read_text(encoding="utf-8").casefold()
+        for path in result.section_prompt_files
+    )
+
+
+def test_python_cli_detected_invariants_are_not_a_profile_requirement(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    (tmp_path / "INVARIANTS.md").write_text("# Local invariants\n", encoding="utf-8")
+    knowledge, profile = _build_manual_knowledge(tmp_path)
+
+    assert "INVARIANTS.md" not in profile.document_policy().required_documents
+    assert "INVARIANTS.md" not in knowledge.documentation_policy.required_documents
+    assert "INVARIANTS.md" in knowledge.security.protected_documents
+    assert not knowledge.template.get("detected", False)
+    assert any(item.identifier == "apply-protected-document" for item in knowledge.workflows)
+
+
+def test_generic_python_cli_never_inherits_app_template_contract(tmp_path: Path) -> None:
+    _create_python_cli_project(tmp_path)
+    knowledge, profile = _build_manual_knowledge(tmp_path)
+
+    assert profile.name == "python-cli"
+    assert not knowledge.template.get("detected", False)
+    assert "INVARIANTS.md" not in knowledge.documentation_policy.required_documents

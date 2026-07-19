@@ -112,6 +112,6 @@ def test_project_knowledge_contains_security_facts(
     )
 
     assert knowledge.security.controls
-    assert "INVARIANTS.md" in (
+    assert "INVARIANTS.md" not in (
         knowledge.security.protected_documents
     )

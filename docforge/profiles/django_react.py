@@ -89,7 +89,6 @@ class DjangoReactProfile(ProjectProfile):
                 "README_DEV.md",
                 "CODEX_START.md",
                 "AGENTS.md",
-                "INVARIANTS.md",
                 "docs/architecture.md",
                 "docs/specification.md",
                 "docs/api.md",
@@ -100,15 +99,12 @@ class DjangoReactProfile(ProjectProfile):
                 "README_DEV.md",
                 "CODEX_START.md",
                 "AGENTS.md",
-                "INVARIANTS.md",
                 "docs/architecture.md",
                 "docs/specification.md",
                 "docs/api.md",
                 "docs/deployment.md",
             ),
-            protected_documents=(
-                "INVARIANTS.md",
-            ),
+            protected_documents=(),
         )
 
     def build_manual_knowledge_builder(self):

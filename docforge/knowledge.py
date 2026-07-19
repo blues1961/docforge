@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -139,12 +139,13 @@ class ProjectKnowledgeBuilder:
             profile.name,
         )
 
+        protected_documents = set(profile.document_policy.protected_documents)
+        if (project.root / "INVARIANTS.md").is_file():
+            protected_documents.add("INVARIANTS.md")
         analyzer_context = AnalysisContext(
             project=project,
             profile_name=profile.name,
-            protected_documents=(
-                profile.document_policy.protected_documents
-            ),
+            protected_documents=tuple(sorted(protected_documents)),
         )
         analyzer_results = (
             profile_instance.build_analyzer_registry()
@@ -169,6 +170,11 @@ class ProjectKnowledgeBuilder:
         )
         if application_result is None:
             application_result = DjangoReactApplicationFacts()
+
+        profile = self._apply_template_contract_policy(
+            profile,
+            application_result.template,
+        )
 
         technologies = sorted(
             technology.name
@@ -215,6 +221,38 @@ class ProjectKnowledgeBuilder:
             capabilities=application_result.capabilities,
             template=application_result.template,
             findings=findings,
+        )
+
+    @staticmethod
+    def _apply_template_contract_policy(
+        profile: ProfileFacts,
+        template: ProjectTemplateFacts,
+    ) -> ProfileFacts:
+        """Apply app-template obligations only after contract detection."""
+        if not (
+            profile.name == "django-react"
+            and template.detected
+            and template.project_kind == "application"
+            and template.base_profile == "django-react"
+        ):
+            return profile
+
+        policy = profile.document_policy
+        required = tuple(sorted({*policy.required_documents, "INVARIANTS.md"}))
+        deterministic = tuple(
+            sorted({*policy.deterministic_documents, "INVARIANTS.md"})
+        )
+        protected = tuple(
+            sorted({*policy.protected_documents, "INVARIANTS.md"})
+        )
+        return replace(
+            profile,
+            document_policy=replace(
+                policy,
+                required_documents=required,
+                deterministic_documents=deterministic,
+                protected_documents=protected,
+            ),
         )
 
     def _filtered_findings(

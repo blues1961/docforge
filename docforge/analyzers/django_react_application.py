@@ -593,6 +593,7 @@ class DjangoReactApplicationAnalyzer:
         )
         facts.template = self._analyze_template_project(
             project,
+            environments=facts.environments,
             operational_commands=facts.operational_commands,
         )
 
@@ -626,6 +627,7 @@ class DjangoReactApplicationAnalyzer:
         self,
         project: Project,
         *,
+        environments: ProjectEnvironmentsFacts,
         operational_commands: OperationalCommandsFacts,
     ) -> ProjectTemplateFacts:
         template_manifest = self._load_local_template_manifest(project.root)
@@ -685,7 +687,99 @@ class DjangoReactApplicationAnalyzer:
                 metadata=project_metadata,
             )
 
-        return ProjectTemplateFacts()
+        return self._detect_app_template_contract(
+            project,
+            environments=environments,
+            operational_commands=operational_commands,
+        )
+
+    def _detect_app_template_contract(
+        self,
+        project: Project,
+        *,
+        environments: ProjectEnvironmentsFacts,
+        operational_commands: OperationalCommandsFacts,
+    ) -> ProjectTemplateFacts:
+        """Recognize a generated app only from independent contract evidence."""
+        invariants_path = project.root / "INVARIANTS.md"
+        if not invariants_path.is_file():
+            return ProjectTemplateFacts()
+
+        try:
+            invariants = invariants_path.read_text(
+                encoding="utf-8",
+                errors="ignore",
+            )
+        except OSError:
+            return ProjectTemplateFacts()
+
+        invariant_markers = (
+            "contrat technique",
+            "APP_DEPOT",
+            "docker-compose.dev.yml",
+            "docker-compose.prod.yml",
+        )
+        matched_markers = [
+            marker for marker in invariant_markers
+            if marker.casefold() in invariants.casefold()
+        ]
+        invariant_contract = len(matched_markers) >= 3
+
+        standard_targets = {
+            "init", "dev", "prod", "up", "down", "restart", "rebuild",
+            "logs", "ps", "check", "migrate", "backup", "restore",
+        }
+        matched_targets = sorted(
+            command.name
+            for command in operational_commands.commands
+            if command.name in standard_targets
+            and command.provenance in {"template-standard", "app-template"}
+        )
+        standard_make_contract = len(matched_targets) >= 8
+
+        compose_pair = all(
+            (project.root / name).is_file()
+            for name in ("docker-compose.dev.yml", "docker-compose.prod.yml")
+        )
+        service_names = {
+            service.name
+            for environment in environments.items
+            for service in environment.services
+        }
+        standard_services = {"db", "backend", "frontend"}.issubset(service_names)
+
+        if not (
+            invariant_contract
+            and standard_make_contract
+            and compose_pair
+            and standard_services
+        ):
+            return ProjectTemplateFacts()
+
+        evidence = [
+            "contrat app-template détecté dans INVARIANTS.md: "
+            + ", ".join(matched_markers),
+            f"cibles Make app-template vérifiées: {len(matched_targets)}",
+            "docker-compose.dev.yml et docker-compose.prod.yml détectés",
+            "services app-template détectés: db, backend, frontend",
+        ]
+        return ProjectTemplateFacts(
+            detected=True,
+            project_kind="application",
+            origin_template_id="app-template",
+            base_profile="django-react",
+            manifest_source="heuristic: INVARIANTS.md + Makefile + Docker Compose",
+            manifest_fallback_used=True,
+            manifest_declared_targets=matched_targets,
+            manifest_verified_targets=matched_targets,
+            evidence=evidence,
+            source_paths=[
+                "INVARIANTS.md",
+                "Makefile",
+                "docker-compose.dev.yml",
+                "docker-compose.prod.yml",
+            ],
+        )
 
     def _build_template_source_facts(
         self,

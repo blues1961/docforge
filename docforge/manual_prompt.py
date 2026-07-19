@@ -67,12 +67,19 @@ class ManualPromptBuilder:
         "Suis strictement le blueprint fourni.",
         "N’invente jamais une commande, une option, une procédure, une route, une URL, un paramètre, une variable, un service ou une fonctionnalité.",
         "N’ajoute pas de bonnes pratiques générales comme si elles étaient démontrées par le projet.",
-        "Utilise toujours `command_path` pour référencer les commandes.",
+        "Utilise `command_path` pour identifier ou titrer une commande.",
+        "Utilise `invocation` pour toute commande destinée à être copiée et exécutée.",
+        "Ne reconstruis jamais une syntaxe de commande à partir de `name` seul.",
+        "Les blocs Markdown déterministes fournis séparément sont la seule source des commandes exécutables, de leurs paramètres et des chemins de configuration; ne les répète, ne les reformule et ne les complète jamais.",
+        "Rédige uniquement l’explication narrative qui accompagne les blocs déterministes.",
+        "Conserve les statuts `detected`, `derived`, `configured` et `unresolved` dans leur sens : une configuration n’est jamais présentée comme un comportement observé automatiquement.",
+        "Ne cite que les options et paramètres associés à la commande dans ManualKnowledge.",
         "Vérifie silencieusement chaque commande, paramètre, route, URL, variable, service, permission, workflow et champ cité avant de rédiger; cette vérification ne doit pas apparaître dans le manuel.",
         "Signale explicitement les informations manquantes et les limites sans reconstruire arbitrairement des faits absents.",
         "Ne produis jamais de chemin local propre à une machine.",
         "N’ajoute jamais de référence de citation interne comme `oaicite`.",
         "N’expose jamais de secret ni de valeur sensible; seuls les noms non sensibles ou les noms de variables peuvent être cités.",
+        "Ne cite aucun nom concret de fichier sensible, de plateforme ou de mécanisme d’automatisation à titre d’exemple : il doit être présent dans les faits de cette section et démontré par le profil courant.",
         "Retourne uniquement le Markdown du manuel.",
     )
 
@@ -201,7 +208,7 @@ class ManualPromptBuilder:
             fact_breakdown[path] = self.estimate_tokens(json.dumps(compact_value, ensure_ascii=False))
 
         ManualPromptBuilder._deduplicate_projection(projection)
-        ManualPromptBuilder._postprocess_section_projection(section.identifier, projection)
+        ManualPromptBuilder._postprocess_section_projection(section.identifier, projection, payload)
 
         preview_payload = {
             "identifier": section.identifier,
@@ -247,6 +254,8 @@ class ManualPromptBuilder:
         effective_blueprint = blueprint or ManualBlueprint(
             profile_name="generic"
         )
+        if section.identifier in {"cli-reference", "configuration", "security", "protected-documents"}:
+            return "BEGIN INSTRUCTIONS\nCette section est entièrement rendue depuis les faits structurés; aucun texte narratif ni syntaxe ne doit être produit.\nEND INSTRUCTIONS\n"
         lines = [
             "BEGIN INSTRUCTIONS",
             *self.rules(effective_blueprint),
@@ -491,8 +500,125 @@ class ManualPromptBuilder:
         ]
 
     @staticmethod
-    def _postprocess_section_projection(section_identifier: str, projection: dict[str, Any]) -> None:
+    def _postprocess_section_projection(section_identifier: str, projection: dict[str, Any], payload: dict[str, Any] | None = None) -> None:
         ManualPromptBuilder._keep_only_workflows(projection, section_identifier)
+
+        if section_identifier.startswith("user-"):
+            # Build every user section from the same canonical facts; individual
+            # contexts are only audience-specific slices of this view.
+            source = payload or projection
+            application = source.get("application", {})
+            capabilities = source.get("capabilities", {}).get("capabilities", [])
+            react = source.get("react", {})
+            django = source.get("django", {})
+            endpoints = source.get("service_endpoints", {}).get("endpoints", [])
+            security = source.get("security", {})
+            frontend_urls = [
+                item.get("url") for item in endpoints
+                if item.get("service") == "frontend" and item.get("environment") == "prod"
+                and item.get("validity") == "valid" and item.get("url")
+            ]
+            user_capabilities = ManualPromptBuilder._filter_user_capabilities(capabilities)
+            crypto = react.get("crypto", {}) if isinstance(react, dict) else {}
+            auth = []
+            if isinstance(django, dict):
+                auth.extend(django.get("auth_mechanisms", []))
+            if isinstance(react, dict):
+                auth.extend(react.get("auth_mechanisms", []))
+            controls = []
+            for item in security.get("controls", []) if isinstance(security, dict) else []:
+                if item.get("category") in {"authentification", "secrets"}:
+                    controls.append({"category": item.get("category"), "description": item.get("description")})
+            canonical = {
+                "application": {"name": application.get("name"), "category": application.get("category")},
+                "production_frontend_urls": frontend_urls[:1],
+                "roles": sorted({item.get("permission_condition") for item in user_capabilities if item.get("permission_condition")}),
+                "features": [item.get("label") for item in user_capabilities if item.get("label")][:12],
+                "user_actions": [item.get("label") for item in user_capabilities if item.get("label")][:12],
+                "authentication_required": bool(auth),
+                "local_encrypted_vault": bool(crypto.get("detected")),
+                "lock_behavior": crypto.get("lock_behavior"),
+                "unlock_behavior": crypto.get("unlock_behavior"),
+                "recovery": "Aucune procédure de récupération n’est démontrée." if crypto.get("recovery_supported") is None else crypto.get("recovery_supported"),
+                "security_guidance": controls,
+            }
+            slices = {
+                "user-presentation": ("application",),
+                "user-roles": ("roles",),
+                "user-access": ("production_frontend_urls", "authentication_required"),
+                "user-authentication": ("authentication_required", "roles"),
+                "user-main-features": ("features",),
+                "user-application-usage": ("user_actions", "authentication_required"),
+                "user-functional-administration": ("roles", "features"),
+                "user-security": ("local_encrypted_vault", "lock_behavior", "unlock_behavior", "recovery", "security_guidance"),
+                "user-troubleshooting": ("authentication_required",),
+            }
+            projection.clear()
+            if section_identifier == "user-limitations":
+                projection["limitations"] = {
+                    "missing_information": source.get("missing_information", []),
+                    "items": source.get("limitations", {}).get("items", []),
+                }
+            else:
+                projection["user_view"] = {key: canonical[key] for key in slices.get(section_identifier, ())}
+            return
+
+        if section_identifier.startswith("operator-"):
+            # Compose source traces may mention local implementation files. They
+            # are not configuration facts unless ManualKnowledge exposes them.
+            known_files = {
+                item.get("path") for item in (payload or {}).get("configuration", {}).get("files", [])
+                if isinstance(item, dict) and item.get("path")
+            }
+            forbidden = {item for item in {".env.local", "pyproject.toml"} if item not in known_files}
+            def scrub(value: Any) -> Any:
+                if isinstance(value, str):
+                    return None if value in forbidden else value
+                if isinstance(value, list):
+                    return [clean for item in value if (clean := scrub(item)) is not None]
+                if isinstance(value, dict):
+                    return {key: clean for key, item in value.items() if (clean := scrub(item)) is not None}
+                return value
+            projection.clear() if False else None
+            for key, value in list(projection.items()):
+                projection[key] = scrub(value)
+            if section_identifier == "operator-environment-variables":
+                variables = projection.get("environment_variables")
+                if isinstance(variables, dict):
+                    projection["environment_variables"] = {
+                        "variables": [
+                            {"name": item.get("name"), "sensitive": item.get("sensitive")}
+                            for item in variables.get("variables", [])
+                        ]
+                    }
+            if section_identifier in {"operator-make-commands", "operator-start-stop", "operator-migrations-administration", "operator-backup-restore", "operator-deployment"}:
+                block = projection.get("operational_commands")
+                if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                    projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+            return
+
+        if section_identifier.startswith("developer-"):
+            if section_identifier == "developer-development-configuration":
+                variables = projection.get("environment_variables")
+                if isinstance(variables, dict):
+                    projection["environment_variables"] = {
+                        "variables": [
+                            {"name": item.get("name"), "sensitive": item.get("sensitive")}
+                            for item in variables.get("variables", [])
+                        ]
+                    }
+            if section_identifier == "developer-routes-api":
+                django = projection.get("django")
+                if isinstance(django, dict):
+                    django["resolved_routes"] = [
+                        item for item in django.get("resolved_routes", [])
+                        if item.get("resolution_status") == "resolved"
+                    ]
+            if section_identifier == "developer-commands":
+                block = projection.get("operational_commands")
+                if isinstance(block, dict) and isinstance(block.get("commands"), list):
+                    projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+            return
 
         if section_identifier == "quick-start":
             endpoints = projection.get("service_endpoints", {}).get("endpoints", []) if isinstance(projection.get("service_endpoints"), dict) else []
@@ -1393,8 +1519,19 @@ class ManualPromptBuilder:
             ],
             "endpoints": endpoints,
         }
-        if section_identifier in {"technical-reference", "troubleshooting"}:
+        if section_identifier in {"technical-reference", "troubleshooting", "developer-routes-api"}:
             compact["unresolved_routes"] = unresolved_routes
+            if section_identifier == "developer-routes-api":
+                compact["resolved_routes"] = [
+                    {
+                        "full_path": route.get("full_path"),
+                        "methods": route.get("methods", []),
+                        "permissions": route.get("permissions", []),
+                        "resolution_status": route.get("resolution_status"),
+                    }
+                    for route in value.get("resolved_routes", [])
+                    if route.get("resolution_status") == "resolved"
+                ]
             compact["database_engine"] = value.get("database_engine")
             compact["database_engines"] = value.get("database_engines", [])
             compact["database_configuration"] = value.get("database_configuration", [])
@@ -1414,7 +1551,7 @@ class ManualPromptBuilder:
             "auth_mechanisms": value.get("auth_mechanisms", []),
             "crypto": value.get("crypto", {}),
         }
-        if section_identifier in {"technical-reference", "security"}:
+        if section_identifier in {"technical-reference", "security", "developer-architecture", "developer-frontend", "developer-authentication", "developer-security"}:
             compact["api_calls"] = value.get("api_calls", [])
             compact["environment_variables"] = value.get("environment_variables", [])
         return ManualPromptBuilder._compact_generic(compact)
@@ -1653,7 +1790,7 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         "En mode strict, n’ajoute pas de recommandations générales de sécurité si elles ne figurent pas dans ManualKnowledge.",
         "Le document final doit rester lisible: le démarrage rapide est court, l’exploitation détaille les procédures nécessaires, et la référence des commandes évite de dupliquer les listes dans toutes les sections.",
         "Les helpers internes du Makefile ne doivent pas encombrer la référence principale; privilégie les commandes publiques, documentées ou réellement utilisées dans les workflows démontrés.",
-        "N’expose pas dans le manuel final un vocabulaire interne comme `workflow structuré`, `fait structuré`, `permission structurée`, `requires-context`, `ManualKnowledge`, `ProjectKnowledge`, `dataclass`, `builder`, `projection` ou `pipeline documentaire`.",
+        "N’expose pas dans le manuel final un vocabulaire interne ni les identifiants techniques des structures de génération.",
         "Transforme toujours les identifiants techniques de limites ou d’informations manquantes en phrases lisibles, par exemple `PROJECT-VERSION-MISSING` devient une phrase telle que la version de l’application n’est pas indiquée.",
         "Lorsque `conflicts` est vide, n’ajoute pas une phrase de remplissage disant qu’aucune contradiction n’est signalée.",
     )
@@ -1686,6 +1823,21 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
         "Décris les placeholders, les scripts standards, `make check`, `make update` et les procédures de validation démontrées sans inventer de workflow de publication externe.",
         "Mets en évidence les risques de divergence entre le modèle, son manifeste, les cibles Makefile et les applications déjà matérialisées.",
     )
+
+    MULTI_DOCUMENT_RULES = {
+        "user-guide": (
+            "Ce guide est destiné à l’utilisateur et à l’administrateur fonctionnel. N’y mentionne ni commandes Make, ni Docker Compose, ni déploiement, ni noms de variables d’environnement, ni liste exhaustive de routes API.",
+            "N’expose l’architecture technique que lorsqu’elle aide directement à comprendre l’accès, l’authentification ou une fonction démontrée.",
+        ),
+        "operator-guide": (
+            "Ce guide est destiné à l’exploitant. Les tableaux déterministes de services, cibles Make, variables et documents protégés constituent la référence technique à conserver telle quelle.",
+            "Ne transforme jamais les noms de variables de configuration en valeurs ou en secrets.",
+        ),
+        "developer-reference": (
+            "Cette référence est destinée au développement et à la maintenance. Les routes résolues et les invariants démontrés y sont documentés, sans inventer de contrat API ou de procédure de mise en production.",
+            "Les noms de variables sont autorisés; leurs valeurs ne le sont jamais.",
+        ),
+    }
 
     SECTION_RULES = {
         "quick-start": (
@@ -1740,6 +1892,11 @@ class DjangoReactManualPromptBuilder(ManualPromptBuilder):
             return (*self.DJANGO_REACT_RULES, *self.TEMPLATE_CREATION_RULES)
         if blueprint.document_kind == "template-maintenance-guide":
             return (*self.DJANGO_REACT_RULES, *self.TEMPLATE_MAINTENANCE_RULES)
+        if (
+            blueprint.document_identifier != "manual"
+            and blueprint.document_kind in self.MULTI_DOCUMENT_RULES
+        ):
+            return (*self.DJANGO_REACT_RULES, *self.MULTI_DOCUMENT_RULES[blueprint.document_kind])
         return (*self.DJANGO_REACT_RULES, *self.USER_GUIDE_RULES)
 
     def additional_guidance(

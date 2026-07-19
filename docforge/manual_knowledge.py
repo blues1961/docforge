@@ -64,6 +64,20 @@ class ManualCommandParameter:
 
 
 @dataclass(slots=True)
+class ManualCommandDescription:
+    """User-facing command facts, separate from the executable signature."""
+
+    summary: str
+    user_purpose: str
+    behavior: str
+    inputs: list[str] = field(default_factory=list)
+    outputs: list[str] = field(default_factory=list)
+    side_effects: list[str] = field(default_factory=list)
+    next_step: str | None = None
+    provenance: dict[str, ManualFactSource] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
 class ManualCommand:
     name: str
     command_path: str
@@ -85,6 +99,7 @@ class ManualCommand:
     parameters: list[ManualCommandParameter] = field(
         default_factory=list
     )
+    description: ManualCommandDescription | None = None
     examples: list[str] = field(default_factory=list)
     source: ManualFactSource = field(
         default_factory=lambda: ManualFactSource(
@@ -264,7 +279,7 @@ class ManualKnowledge:
 
 
 class ManualKnowledgeBuilder:
-    SCHEMA_VERSION = 2
+    SCHEMA_VERSION = 3
 
     def build(
         self,
@@ -334,7 +349,8 @@ class ManualKnowledgeBuilder:
             ),
             commands=commands,
             workflows=self._build_workflows(
-                command_lookup
+                command_lookup,
+                protected_documents=knowledge.security.protected_documents,
             ),
             configuration=ManualConfiguration(
                 user_config_root=(
@@ -383,15 +399,10 @@ class ManualKnowledgeBuilder:
                 protected_documents=list(
                     knowledge.security.protected_documents
                 ),
-                controls=[
-                    {
-                        "identifier": item.identifier,
-                        "category": item.category,
-                        "description": item.description,
-                        "evidence": item.evidence,
-                    }
-                    for item in knowledge.security.controls
-                ],
+                controls=self._build_security_controls(
+                    knowledge,
+                    profile_name=profile_instance.name,
+                ),
                 risks=list(knowledge.security.risks),
                 validation_commands=list(
                     knowledge.security.validation_commands
@@ -494,6 +505,30 @@ class ManualKnowledgeBuilder:
                 }
             ),
         )
+
+    @staticmethod
+    def _build_security_controls(
+        knowledge: ProjectKnowledge,
+        *,
+        profile_name: str,
+    ) -> list[dict[str, Any]]:
+        """Project concrete sensitive-path evidence only into its demonstrated profile."""
+        controls: list[dict[str, Any]] = []
+        for item in knowledge.security.controls:
+            evidence = item.evidence
+            description = item.description
+            if profile_name == "python-cli" and item.identifier == "SEC-001":
+                description = "Le manuel ne doit contenir aucun secret ni reproduire de valeur sensible."
+                evidence = None
+            controls.append(
+                {
+                    "identifier": item.identifier,
+                    "category": item.category,
+                    "description": description,
+                    "evidence": evidence,
+                }
+            )
+        return controls
 
     def _build_installation(
         self,
@@ -604,6 +639,21 @@ class ManualKnowledgeBuilder:
                 f"docforge {command.command_path} . --refresh --clean"
             )
 
+        source = ManualFactSource(
+            status="detected",
+            sources=(command.module, command.function_name),
+        )
+        summary = command.help or "Description non résolue."
+        description_source = (
+            source
+            if command.help
+            else ManualFactSource(
+                status="unresolved",
+                sources=(command.module, command.function_name),
+                notes=("La commande ne possède pas de docstring exploitable.",),
+            )
+        )
+
         return ManualCommand(
             name=command.name,
             command_path=command.command_path,
@@ -614,11 +664,33 @@ class ManualKnowledgeBuilder:
                 self._build_parameter(parameter)
                 for parameter in command.parameters
             ],
-            examples=examples,
-            source=ManualFactSource(
-                status="detected",
-                sources=(command.module, command.function_name),
+            description=ManualCommandDescription(
+                summary=summary,
+                user_purpose=(
+                    f"Utiliser cette commande pour {summary[:1].lower()}{summary[1:]}"
+                    if command.help
+                    else "Usage à préciser à partir de sources supplémentaires."
+                ),
+                behavior=summary,
+                inputs=[
+                    parameter.help or parameter.display_name
+                    for parameter in command.parameters
+                ],
+                provenance={
+                    "summary": description_source,
+                    "user_purpose": ManualFactSource(
+                        status="derived" if command.help else "unresolved",
+                        sources=(command.module, command.function_name),
+                    ),
+                    "behavior": description_source,
+                    "inputs": source,
+                    "outputs": ManualFactSource(status="unresolved"),
+                    "side_effects": ManualFactSource(status="unresolved"),
+                    "next_step": ManualFactSource(status="unresolved"),
+                },
             ),
+            examples=examples,
+            source=source,
         )
 
     @staticmethod
@@ -639,6 +711,8 @@ class ManualKnowledgeBuilder:
     def _build_workflows(
         self,
         command_lookup: dict[str, CliCommandFacts],
+        *,
+        protected_documents: list[str],
     ) -> list[ManualWorkflow]:
         workflows: list[ManualWorkflow] = []
 
@@ -718,16 +792,17 @@ class ManualKnowledgeBuilder:
             if "apply" in command_lookup
             else [],
         )
-        add_workflow(
-            "apply-protected-document",
-            "Appliquer un document protégé",
-            "Appliquer un document protégé avec autorisation explicite du propriétaire.",
-            [
-                "docforge apply . INVARIANTS.md --owner-approved",
-            ]
-            if "apply" in command_lookup
-            else [],
-        )
+        if "INVARIANTS.md" in protected_documents:
+            add_workflow(
+                "apply-protected-document",
+                "Appliquer un document protégé",
+                "Appliquer un document protégé avec autorisation explicite du propriétaire.",
+                [
+                    "docforge apply . INVARIANTS.md --owner-approved",
+                ]
+                if "apply" in command_lookup
+                else [],
+            )
         add_workflow(
             "generate-with-ollama",
             "Utiliser Ollama avec docforge generate",

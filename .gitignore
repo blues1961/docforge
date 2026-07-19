@@ -12,3 +12,5 @@ htmlcov/
 # Rapports d'audit générés
 reports/*.json
 reports/history/
+# Exécutions locales de benchmark : réponses Ollama, timings et chemins de machine
+benchmarks/manuals/*/runs/

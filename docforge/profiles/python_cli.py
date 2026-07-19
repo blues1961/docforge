@@ -88,7 +88,6 @@ class PythonCliProfile(ProjectProfile):
                 "README_DEV.md",
                 "CODEX_START.md",
                 "AGENTS.md",
-                "INVARIANTS.md",
                 "docs/architecture.md",
                 "docs/cli.md",
                 "docs/specification.md",
@@ -104,16 +103,13 @@ class PythonCliProfile(ProjectProfile):
                 "README_DEV.md",
                 "CODEX_START.md",
                 "AGENTS.md",
-                "INVARIANTS.md",
                 "docs/architecture.md",
                 "docs/cli.md",
                 "docs/configuration.md",
                 "docs/specification.md",
                 "docs/security.md",
             ),
-            protected_documents=(
-                "INVARIANTS.md",
-            ),
+            protected_documents=(),
         )
 
     @staticmethod

@@ -42,6 +42,13 @@ class ManualBlueprintRegistry:
         *,
         project_kind: str | None,
     ) -> tuple[ManualBlueprint, ...]:
+        if profile_name == "django-react" and project_kind == "application":
+            return (
+                self._django_react_user_guide_blueprint(),
+                self._django_react_operator_guide_blueprint(),
+                self._django_react_developer_reference_blueprint(),
+            )
+
         if profile_name == "django-react" and project_kind == "application-template":
             return (
                 self._django_react_template_creation_blueprint(),
@@ -85,7 +92,7 @@ class ManualBlueprintRegistry:
                 "target-audience",
                 "Public visé",
                 "Décrire les utilisateurs pertinents à partir du type de projet et de la CLI détectée.",
-                ("project", "profile", "commands"),
+                ("project", "profile"),
             ),
             ManualSectionDefinition(
                 "prerequisites",
@@ -187,7 +194,7 @@ class ManualBlueprintRegistry:
                 "troubleshooting",
                 "Dépannage",
                 "Guider le lecteur en cas de problème connu ou d’information manquante.",
-                ("limitations", "security", "commands"),
+                ("limitations", "security"),
             ),
             ManualSectionDefinition(
                 "limitations",
@@ -307,6 +314,84 @@ class ManualBlueprintRegistry:
             document_title="Guide utilisateur",
             document_audience="user",
             document_kind="user-guide",
+        )
+
+    @staticmethod
+    def _sections(*items: tuple[str, str, str, tuple[str, ...]]) -> tuple[ManualSectionDefinition, ...]:
+        return tuple(
+            ManualSectionDefinition(identifier, title, purpose, facts)
+            for identifier, title, purpose, facts in items
+        )
+
+    def _django_react_user_guide_blueprint(self) -> ManualBlueprint:
+        return ManualBlueprint(
+            profile_name="django-react",
+            document_identifier="user-guide",
+            document_title="Guide utilisateur",
+            document_audience="utilisateur et administrateur fonctionnel",
+            document_kind="user-guide",
+            sections=self._sections(
+                ("user-presentation", "Présentation", "Présenter Contact et son objectif fonctionnel.", ("application", "project", "profile")),
+                ("user-roles", "Public visé et rôles", "Distinguer les utilisateurs et l’administration fonctionnelle.", ("capabilities", "django", "react")),
+                ("user-access", "Accès à l’application", "Indiquer uniquement les accès d’interface démontrés.", ("service_endpoints", "react")),
+                ("user-authentication", "Authentification", "Expliquer les mécanismes d’authentification démontrés sans procédure technique.", ("django", "react", "security")),
+                ("user-main-features", "Fonctionnalités principales", "Présenter les capacités fonctionnelles démontrées.", ("capabilities", "react", "django")),
+                ("user-application-usage", "Utilisation de l’application", "Décrire les parcours fonctionnels démontrés.", ("capabilities", "react", "django")),
+                ("user-functional-administration", "Administration fonctionnelle", "Présenter la gestion fonctionnelle des comptes lorsque démontrée.", ("capabilities", "django")),
+                ("user-security", "Sécurité pour l’utilisateur", "Présenter les protections pertinentes pour l’utilisateur.", ("security", "react")),
+                ("user-troubleshooting", "Dépannage", "Présenter les problèmes utilisables sans procédures d’exploitation.", ("missing_information", "limitations")),
+                ("user-limitations", "Limites des informations disponibles", "Signaler les informations fonctionnelles non démontrées.", ("missing_information", "limitations")),
+            ),
+        )
+
+    def _django_react_operator_guide_blueprint(self) -> ManualBlueprint:
+        return ManualBlueprint(
+            profile_name="django-react",
+            document_identifier="operator-guide",
+            document_title="Guide d’exploitation",
+            document_audience="administrateur système ou exploitant",
+            document_kind="operator-guide",
+            sections=self._sections(
+                ("operator-presentation", "Présentation opérationnelle", "Présenter le périmètre d’exploitation démontré.", ("application", "profile", "template")),
+                ("operator-prerequisites", "Prérequis démontrés", "Lister les prérequis détectés pour l’exploitation.", ("installation", "missing_information")),
+                ("operator-environments", "Environnements développement et production", "Comparer les environnements détectés.", ("environments", "service_endpoints")),
+                ("operator-installation-configuration", "Installation et configuration", "Présenter la configuration et les séquences démontrées.", ("installation", "workflows", "template")),
+                ("operator-compose-services", "Services Docker Compose", "Fournir le tableau déterministe des services Compose.", ("environments",)),
+                ("operator-make-commands", "Commandes Make", "Fournir la référence déterministe des cibles Make publiques.", ("operational_commands",)),
+                ("operator-start-stop", "Démarrage et arrêt", "Présenter les commandes et workflows de démarrage et arrêt.", ("operational_commands", "workflows")),
+                ("operator-migrations-administration", "Migrations et administration", "Présenter les faits démontrés de migrations et d’administration.", ("operational_commands", "workflows", "django")),
+                ("operator-backup-restore", "Sauvegarde et restauration", "Présenter les commandes démontrées de sauvegarde et restauration.", ("operational_commands", "workflows", "missing_information")),
+                ("operator-deployment", "Déploiement", "Présenter les éléments de production démontrés.", ("environments", "operational_commands", "workflows")),
+                ("operator-environment-variables", "Variables de configuration, noms uniquement", "Fournir la liste déterministe des noms de variables.", ("environment_variables",)),
+                ("operator-protected-documents", "Documents protégés et contrat app-template", "Présenter le contrat et les documents protégés démontrés.", ("template", "security", "documentation_policy")),
+                ("operator-security", "Sécurité", "Fournir les contrôles de sécurité déterministes.", ("security",)),
+                ("operator-troubleshooting", "Dépannage", "Présenter les diagnostics opérationnels démontrés.", ("missing_information", "limitations", "operational_commands")),
+                ("operator-limitations", "Limites des informations disponibles", "Consolider les limites de l’exploitation.", ("missing_information", "limitations")),
+            ),
+        )
+
+    def _django_react_developer_reference_blueprint(self) -> ManualBlueprint:
+        return ManualBlueprint(
+            profile_name="django-react",
+            document_identifier="developer-reference",
+            document_title="Référence développeur",
+            document_audience="développeur et mainteneur",
+            document_kind="developer-reference",
+            sections=self._sections(
+                ("developer-presentation", "Présentation technique", "Présenter le périmètre technique démontré.", ("application", "template")),
+                ("developer-architecture", "Architecture Django et React", "Présenter les composants Django et React.", ("application", "django", "react")),
+                ("developer-services", "Organisation des services", "Décrire les services Compose et leurs rôles.", ("environments",)),
+                ("developer-backend", "Backend", "Présenter les modèles et composants backend démontrés.", ("django",)),
+                ("developer-frontend", "Frontend", "Présenter les pages et capacités frontend démontrées.", ("react", "capabilities")),
+                ("developer-authentication", "Authentification", "Présenter les mécanismes et permissions démontrés.", ("django", "react", "security")),
+                ("developer-routes-api", "Routes et API", "Fournir le tableau déterministe des routes et API résolues.", ("django",)),
+                ("developer-models-capabilities", "Modèles ou capacités démontrées", "Présenter les modèles et capacités sans extrapolation.", ("django", "capabilities")),
+                ("developer-development-configuration", "Configuration de développement", "Présenter les noms de variables et l’environnement de développement.", ("environment_variables", "environments")),
+                ("developer-commands", "Commandes de développement et de test", "Présenter les commandes Make pertinentes pour le développement.", ("operational_commands", "workflows", "missing_information")),
+                ("developer-invariants", "Invariants techniques", "Présenter le contrat app-template et INVARIANTS.md.", ("template", "security", "documentation_policy")),
+                ("developer-security", "Sécurité", "Fournir les contrôles de sécurité déterministes.", ("security", "django", "react")),
+                ("developer-missing-information", "Informations techniques manquantes", "Consolider les limites techniques connues.", ("missing_information", "limitations")),
+            ),
         )
 
     def _django_react_template_creation_blueprint(self) -> ManualBlueprint:

@@ -12,7 +12,10 @@ from docforge.manual_blueprint import ManualBlueprintRegistry
 from docforge.manual_django_react import DjangoReactManualKnowledgeBuilder
 from docforge.manual_prompt import DjangoReactManualPromptBuilder
 from docforge.manual_service import ManualPreparationService
-from docforge.validators import ManualMarkdownValidator
+from docforge.validators import (
+    DjangoReactMultiDocumentValidator,
+    ManualMarkdownValidator,
+)
 from docforge.profiles import ProfileDetector
 from docforge.scanners import FileSystemScanner
 
@@ -915,7 +918,8 @@ def test_django_react_blueprint_and_prompt_and_section_omission(tmp_path: Path) 
     assert "Chaque catégorie d’information doit avoir une section principale" in prompt
     assert "Ne recopie pas intégralement la liste des commandes, des services, des variables, des URLs ou des endpoints" in prompt
     assert "Le démarrage rapide doit contenir uniquement" in prompt
-    assert "N’expose pas dans le manuel final un vocabulaire interne comme `workflow structuré`" in prompt
+    assert "N’expose pas dans le manuel final un vocabulaire interne" in prompt
+    assert "pipeline documentaire" not in prompt.casefold()
     assert "`PROJECT-VERSION-MISSING` devient une phrase" in prompt
     assert manifest["profile_name"] == "django-react"
     assert any("operational-commands-reference" in item for item in manifest["section_prompts"])
@@ -1738,3 +1742,215 @@ def test_django_react_template_script_analysis_includes_materialization_metadata
     assert any("DOCFORGE_INIT_APPLICATION=1" in item for item in scripts["scripts/init.sh"].metadata_actions)
     assert "__APP_NAME__" in scripts["scripts/docforge-project-metadata.py"].placeholders_replaced
     assert "docforge.project.json" in scripts["scripts/docforge-project-metadata.py"].creates_files
+
+
+def test_django_react_manual_knowledge_retains_demonstrated_env_local(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+
+    data = json.loads(result.knowledge_file.read_text(encoding="utf-8"))
+    assert ".env.local" in data["configuration"]["ignored_paths"]
+
+
+def _write_app_template_contract(root: Path) -> None:
+    (root / "INVARIANTS.md").write_text(
+        """# INVARIANTS.md
+
+Ce fichier est le contrat technique du projet.
+APP_DEPOT doit être défini.
+docker-compose.dev.yml et docker-compose.prod.yml sont obligatoires.
+""",
+        encoding="utf-8",
+    )
+
+
+def test_django_react_generic_policy_does_not_impose_invariants() -> None:
+    from docforge.profiles.django_react import DjangoReactProfile
+
+    policy = DjangoReactProfile().document_policy()
+    assert "INVARIANTS.md" not in policy.required_documents
+    assert "INVARIANTS.md" not in policy.protected_documents
+
+
+def test_django_react_app_template_contract_is_detected_and_projected(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+    manual = DjangoReactManualKnowledgeBuilder().build(
+        project_root=tmp_path,
+        knowledge=knowledge,
+        profile_instance=ProfileDetector().resolve(_project),
+    )
+
+    assert knowledge.template.detected is True
+    assert knowledge.template.project_kind == "application"
+    assert knowledge.template.origin_template_id == "app-template"
+    assert len(knowledge.template.evidence) == 4
+    assert knowledge.template.source_paths == [
+        "INVARIANTS.md", "Makefile", "docker-compose.dev.yml", "docker-compose.prod.yml"
+    ]
+    assert "INVARIANTS.md" in knowledge.profile.document_policy.required_documents
+    assert "INVARIANTS.md" in knowledge.security.protected_documents
+    assert "INVARIANTS.md" in manual.documentation_policy.required_documents
+    assert "INVARIANTS.md" in manual.documentation_policy.protected_documents
+    assert "INVARIANTS.md" in manual.security.protected_documents
+    assert all(
+        command.provenance == "template-standard"
+        for command in knowledge.operational_commands.commands
+        if command.name in {"init", "dev", "up", "migrate", "backup", "restore"}
+    )
+
+
+def test_django_react_isolated_invariants_file_is_not_app_template(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    (tmp_path / "Makefile").write_text("help:\n\t@echo help\n", encoding="utf-8")
+    _write_app_template_contract(tmp_path)
+
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    assert knowledge.template.detected is False
+    assert "INVARIANTS.md" not in knowledge.profile.document_policy.required_documents
+    assert "INVARIANTS.md" in knowledge.security.protected_documents
+
+
+def test_django_react_standard_makefile_without_contract_is_not_app_template(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+
+    _project, _profile, knowledge = _build_knowledge(tmp_path)
+
+    assert knowledge.template.detected is False
+    assert "INVARIANTS.md" not in knowledge.profile.document_policy.required_documents
+    assert "INVARIANTS.md" not in knowledge.security.protected_documents
+
+
+def test_django_react_app_template_prepares_three_separated_documents(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+
+    result = ManualPreparationService().prepare(
+        tmp_path,
+        clean=True,
+        mode="sections",
+        context_budget=4096,
+    )
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+
+    assert [document.identifier for document in result.documents] == [
+        "user-guide", "operator-guide", "developer-reference",
+    ]
+    assert [item["identifier"] for item in manifest["documents"]] == [
+        "user-guide", "operator-guide", "developer-reference",
+    ]
+    assert not DjangoReactMultiDocumentValidator().validate(
+        root=result.output_dir, manifest=manifest
+    )
+
+    contexts = {
+        document["identifier"]: {
+            entry["identifier"]: json.loads(
+                (result.output_dir / entry["context_file"]).read_text(encoding="utf-8")
+            )["facts"]
+            for entry in document["section_contexts"]
+        }
+        for document in manifest["documents"]
+    }
+    user = contexts["user-guide"]
+    assert all(set(facts) <= {"user_view", "limitations"} for facts in user.values())
+    assert "limitations" in user["user-limitations"]
+    assert set(user["user-presentation"]["user_view"]) == {"application"}
+    assert "production_frontend_urls" in user["user-access"]["user_view"]
+    assert all("operational_commands" not in facts for facts in user.values())
+    assert all("environment_variables" not in facts for facts in user.values())
+    assert all(
+        not facts.get("django", {}).get("resolved_routes", [])
+        for facts in user.values()
+        if isinstance(facts, dict)
+    )
+
+    operator = contexts["operator-guide"]
+    assert operator["operator-make-commands"]["operational_commands"]
+    assert {tuple(item) for item in operator["operator-environment-variables"]["environment_variables"]["variables"]} <= {("name", "sensitive")}
+    developer = contexts["developer-reference"]
+    assert (
+        developer["developer-routes-api"]["django"]["resolved_routes"]
+        or developer["developer-routes-api"]["django"]["endpoints"]
+    )
+    assert "INVARIANTS.md" in operator["operator-protected-documents"]["security"]["protected_documents"]
+    assert "INVARIANTS.md" in developer["developer-invariants"]["security"]["protected_documents"]
+    assert developer["developer-security"]["security"]["risks"]
+
+    operator_document = next(item for item in manifest["documents"] if item["identifier"] == "operator-guide")
+    developer_document = next(item for item in manifest["documents"] if item["identifier"] == "developer-reference")
+    operator_fragments = {
+        item["identifier"]: (result.output_dir / item["deterministic_file"]).read_text(encoding="utf-8")
+        for item in operator_document["section_contexts"]
+    }
+    developer_fragments = {
+        item["identifier"]: (result.output_dir / item["deterministic_file"]).read_text(encoding="utf-8")
+        for item in developer_document["section_contexts"]
+    }
+    assert "| Environnement | Service | Rôle | Dépendances |" in operator_fragments["operator-compose-services"]
+    assert "#### `logs`" in operator_fragments["operator-make-commands"]
+    assert "make logs SERVICE=SERVICE" in operator_fragments["operator-make-commands"]
+    assert "`APP_ENV`" in operator_fragments["operator-environment-variables"]
+    assert "supersecret" not in "\n".join(operator_fragments.values())
+    assert "super-secret-key" not in "\n".join(developer_fragments.values())
+    assert "| Route | Méthodes | Permissions |" in developer_fragments["developer-routes-api"]
+    assert "INVARIANTS.md" in developer_fragments["developer-invariants"]
+
+    paths = manifest["expected_outputs"]
+    assert len(paths) == len(set(paths))
+    assert all(
+        "/home/" not in (result.output_dir / item).read_text(encoding="utf-8")
+        for item in paths if not item.endswith("/")
+    )
+    assert manifest["recommended_generation_mode"] == "sections"
+    assert manifest["full_prompts_supported"] is False
+    assert all(
+        (path.startswith("documents/user-guide/")
+         or path.startswith("documents/operator-guide/")
+         or path.startswith("documents/developer-reference/")
+         or path in {"manual-knowledge.json", "manual-manifest.json", "generated/"})
+        for path in paths
+    )
+
+
+def test_django_react_generic_and_python_cli_keep_a_single_document() -> None:
+    registry = ManualBlueprintRegistry()
+
+    generic = registry.blueprints_for_context("django-react", project_kind=None)
+    python_cli = registry.blueprints_for_context("python-cli", project_kind=None)
+
+    assert [blueprint.document_identifier for blueprint in generic] == ["manual"]
+    assert [blueprint.document_identifier for blueprint in python_cli] == ["manual"]
+
+
+def test_django_react_multidocument_validator_rejects_audience_leak(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    user = next(item for item in manifest["documents"] if item["identifier"] == "user-guide")
+    context_file = result.output_dir / user["section_contexts"][0]["context_file"]
+    payload = json.loads(context_file.read_text(encoding="utf-8"))
+    payload["facts"]["operational_commands"] = {"commands": [{"invocation": "make up"}]}
+    context_file.write_text(json.dumps(payload), encoding="utf-8")
+
+    diagnostics = DjangoReactMultiDocumentValidator().validate(
+        root=result.output_dir, manifest=manifest
+    )
+
+    assert any(item.code == "DJANGO_MANUAL008" for item in diagnostics)
+
+
+def test_django_react_contact_style_triptych_rejects_full_prompts(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+
+    try:
+        ManualPreparationService().prepare(tmp_path, clean=True, mode="both")
+    except ValueError as error:
+        assert "mode sections" in str(error)
+    else:
+        raise AssertionError("Le triptyque django-react doit refuser les prompts complets.")
