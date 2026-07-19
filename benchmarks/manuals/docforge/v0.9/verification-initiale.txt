@@ -59,7 +59,7 @@ Préparation du manuel terminée.
 │    133 │                                                                                                                                                                                   │
 │    134 │   if len(result.documents) > 1:                                                                                                                                                   │
 │                                                                                                                                                                                            │
-│ /home/sylvain/miniconda3/lib/python3.13/pathlib/_local.py:385 in relative_to                                                                                                               │
+│ <python-runtime>/lib/python3.13/pathlib/_local.py:385 in relative_to                                                                                                               │
 │                                                                                                                                                                                            │
 │   382 │   │   │   if path == self or path in self.parents:                                                                                                                                 │
 │   383 │   │   │   │   break                                                                                                                                                                │
