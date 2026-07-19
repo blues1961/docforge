@@ -1,0 +1,25 @@
+Capacités techniques disponibles :
+- Aide
+- Changement de thème
+- Connexion
+- Consulter les catégories
+- Consulter les entrées de mots de passe
+- Consulter les secrets applicatifs
+- Créer des catégories
+- Créer des entrées de mots de passe
+- Créer des secrets applicatifs
+- Exportation de clé
+- Guide des catégories
+- Générateur de mots de passe
+- Gérer un coffre local chiffré côté client
+- Importation de clé
+- Modifier des catégories
+- Modifier des entrées de mots de passe
+- Modifier des secrets applicatifs
+- Recherche
+- Révélation d’une valeur
+- Supprimer des catégories
+- Supprimer des entrées de mots de passe
+- Supprimer des secrets applicatifs
+- S’authentifier à l’application
+- Vérification de clé

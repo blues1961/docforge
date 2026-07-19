@@ -1,0 +1,433 @@
+{
+  "identifier": "operator-make-commands",
+  "title": "Commandes Make",
+  "purpose": "Fournir la référence déterministe des cibles Make publiques.",
+  "estimated_tokens": 2195,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "operational_commands": 8673
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "operational_commands": {
+      "primary_commands": [
+        {
+          "name": "ps",
+          "category": "diagnostic",
+          "command_path": "make ps",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "dev",
+          "category": "environment",
+          "command_path": "make dev",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "logs",
+          "category": "logs",
+          "command_path": "make logs",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "migrate",
+          "category": "migrations",
+          "command_path": "make migrate",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": false,
+          "destructive_effects": [
+            "Migration ou modification du schéma ou de l’état de la base de données"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "help",
+          "category": "other",
+          "command_path": "make help",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "application-public",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "restart",
+          "category": "restart",
+          "command_path": "make restart",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "init",
+          "category": "setup",
+          "command_path": "make init",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Initialisation de l’environnement de travail"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "down",
+          "category": "shutdown",
+          "command_path": "make down",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "up",
+          "category": "startup",
+          "command_path": "make up",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": false,
+          "destructive_effects": [
+            "Démarrage des services définis par le projet"
+          ],
+          "parameters": []
+        }
+      ],
+      "advanced_commands": [
+        {
+          "name": "backup",
+          "category": "backup",
+          "command_path": "make backup",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Création d’un artefact de sauvegarde de base de données"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "rebuild",
+          "category": "build",
+          "command_path": "make rebuild",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [
+            "env-check"
+          ],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "update",
+          "category": "build",
+          "command_path": "make update",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "application-public",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "check",
+          "category": "diagnostic",
+          "command_path": "make check",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "prod",
+          "category": "environment",
+          "command_path": "make prod",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Sélection de l’environnement de production"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "restore",
+          "category": "restore",
+          "command_path": "make restore",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": true,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Modification ou écrasement potentiel des données PostgreSQL"
+          ],
+          "parameters": [
+            {
+              "name": "FILE",
+              "required": false,
+              "allowed_values": [],
+              "origin": "user-exposed"
+            }
+          ]
+        }
+      ],
+      "excluded_commands_summary": {
+        "total": 56,
+        "by_provenance": {
+          "internal": 7,
+          "legacy": 8,
+          "unknown": 37,
+          "developer-public": 4
+        },
+        "reasons": [
+          {
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative.",
+            "count": 37
+          },
+          {
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale.",
+            "count": 8
+          },
+          {
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur.",
+            "count": 7
+          },
+          {
+            "reason": "Aucune raison d’exclusion documentée.",
+            "count": 4
+          }
+        ],
+        "commands": [
+          {
+            "name": "exec-vite",
+            "provenance": "internal",
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur."
+          },
+          {
+            "name": "pull-secret-all-remote",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "pull-secret-single",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "push-secret-all-remote",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "push-secret-single",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "backup-db",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "backup-env",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "pull-prod-backup",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "create-env",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "env-check",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "env-check-base",
+            "provenance": "internal",
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur."
+          },
+          {
+            "name": "env-check-local",
+            "provenance": "internal",
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur."
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "identifier": "operator-presentation",
+  "title": "Présentation opérationnelle",
+  "purpose": "Présenter le périmètre d’exploitation démontré.",
+  "estimated_tokens": 362,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "application": 68,
+    "profile": 131,
+    "template": 153
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "application": {
+      "name": "gestionnaireMDP",
+      "category": "django-react",
+      "backend_framework": "Django",
+      "frontend_framework": "React/Vite",
+      "prepared_by": "DocForge",
+      "source_paths": [
+        "backend/App/settings.py",
+        "frontend/package.json",
+        "docker-compose.dev.yml",
+        "… (+1 autres sources)"
+      ]
+    },
+    "profile": {
+      "name": "django-react",
+      "label": "Application Django/React",
+      "description": "Application auto-hébergée avec backend Django, frontend React/Vite et orchestration Docker Compose.",
+      "confidence": 100,
+      "evidence": [
+        "framework détecté : Django",
+        "framework détecté : React",
+        "framework détecté : Vite",
+        "structure détectée : docker-compose.dev.yml",
+        "structure détectée : docker-compose.prod.yml",
+        "structure détectée : backend",
+        "structure détectée : frontend"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [],
+        "notes": []
+      }
+    },
+    "template": {
+      "project_kind": "application",
+      "origin_template_id": "app-template",
+      "base_profile": "django-react",
+      "manifest_source": "heuristic: INVARIANTS.md + Makefile + Docker Compose",
+      "manifest_verified_targets": [
+        "backup",
+        "check",
+        "dev",
+        "down",
+        "init",
+        "logs",
+        "migrate",
+        "prod",
+        "ps",
+        "rebuild",
+        "restart",
+        "restore",
+        "up"
+      ],
+      "manifest_missing_targets": [],
+      "missing_steps": [],
+      "risks": [],
+      "placeholders": [],
+      "creator_workflows": [],
+      "maintainer_workflows": []
+    }
+  }
+}

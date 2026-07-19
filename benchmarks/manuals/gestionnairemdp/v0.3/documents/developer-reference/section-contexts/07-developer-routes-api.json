@@ -1,0 +1,769 @@
+{
+  "identifier": "developer-routes-api",
+  "title": "Routes et API",
+  "purpose": "Fournir le tableau déterministe des routes et API résolues.",
+  "estimated_tokens": 3021,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "django": 2981
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "django": {
+      "settings_module": "gestionnaire_mdp.settings",
+      "urlconf_module": "gestionnaire_mdp.urls",
+      "installed_apps": [
+        "api",
+        "corsheaders",
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.messages",
+        "django.contrib.sessions",
+        "django.contrib.staticfiles",
+        "rest_framework",
+        "rest_framework_simplejwt.token_blacklist"
+      ],
+      "admin_enabled": true,
+      "routers": [
+        "/categories",
+        "/passwords"
+      ],
+      "auth_mechanisms": [
+        "Bearer token",
+        "JWT",
+        "SimpleJWT"
+      ],
+      "models": [
+        {
+          "name": "Category",
+          "fields": [
+            "owner",
+            "name",
+            "description"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "PasswordEntry",
+          "fields": [
+            "owner",
+            "title",
+            "url",
+            "category",
+            "ciphertext",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "SecretBundle",
+          "fields": [
+            "owner",
+            "app",
+            "environment",
+            "payload",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        }
+      ],
+      "model_schemas": [
+        {
+          "name": "Category",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "name",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "description",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        },
+        {
+          "name": "PasswordEntry",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "title",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "url",
+              "field_type": "URLField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "category",
+              "field_type": "ForeignKey",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": "Category",
+              "unique": false,
+              "on_delete": "models.SET_NULL"
+            },
+            {
+              "name": "ciphertext",
+              "field_type": "JSONField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        },
+        {
+          "name": "SecretBundle",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "app",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "environment",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "payload",
+              "field_type": "JSONField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "dict",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/admin/",
+          "methods": [],
+          "view": "urls",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/create/",
+          "methods": [
+            "POST"
+          ],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/logout/",
+          "methods": [
+            "POST"
+          ],
+          "view": "JWTLogoutView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/verify/",
+          "methods": [],
+          "view": "TokenVerifyView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/csrf/",
+          "methods": [],
+          "view": "csrf",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/login/",
+          "methods": [],
+          "view": "login_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/logout/",
+          "methods": [],
+          "view": "logout_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/whoami/",
+          "methods": [],
+          "view": "whoami",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/whoami/",
+          "methods": [],
+          "view": "jwt_whoami",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWTAuthentication"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/categories/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "CategoryViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/categories/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "CategoryViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/csrf/",
+          "methods": [],
+          "view": "csrf",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/healthz/",
+          "methods": [],
+          "view": "healthz",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/login/",
+          "methods": [],
+          "view": "login_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/logout/",
+          "methods": [],
+          "view": "logout_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/passwords/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "PasswordViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/passwords/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "PasswordViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/secrets/",
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "view": "SecretsView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/whoami/",
+          "methods": [],
+          "view": "jwt_whoami",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWTAuthentication"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        }
+      ],
+      "unresolved_routes": [],
+      "resolved_routes": [
+        {
+          "full_path": "/admin/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/create/",
+          "methods": [
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/logout/",
+          "methods": [
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/verify/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/session/csrf/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/session/login/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/session/logout/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/session/whoami/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/whoami/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/categories/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/categories/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/csrf/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/healthz/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/login/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/logout/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/passwords/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/passwords/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/secrets/",
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/whoami/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        }
+      ],
+      "database_engine": "django.db.backends.postgresql",
+      "database_engines": [
+        {
+          "engine": "django.db.backends.postgresql",
+          "context": "default",
+          "source": "backend/App/settings.py"
+        }
+      ],
+      "database_configuration": [
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_HOST",
+        "POSTGRES_PORT"
+      ]
+    }
+  }
+}

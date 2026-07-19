@@ -1,0 +1,21 @@
+{
+  "identifier": "user-access",
+  "title": "Accès à l’application",
+  "purpose": "Indiquer uniquement les accès d’interface démontrés.",
+  "estimated_tokens": 62,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "service_endpoints": 224,
+    "react": 1145
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "production_frontend_urls": [
+        "https://mdp.mon-site.ca"
+      ],
+      "authentication_required": true
+    }
+  }
+}

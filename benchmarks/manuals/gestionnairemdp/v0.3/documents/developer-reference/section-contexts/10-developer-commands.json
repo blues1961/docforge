@@ -1,0 +1,384 @@
+{
+  "identifier": "developer-commands",
+  "title": "Commandes de développement et de test",
+  "purpose": "Présenter les commandes Make pertinentes pour le développement.",
+  "estimated_tokens": 2103,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "operational_commands": 8703,
+    "workflows": 851,
+    "missing_information": 652
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "operational_commands": {
+      "primary_commands": [],
+      "advanced_commands": [],
+      "excluded_commands_summary": {
+        "total": 67,
+        "by_provenance": {
+          "internal": 7,
+          "legacy": 8,
+          "template-standard": 13,
+          "unknown": 37,
+          "application-public": 2
+        },
+        "reasons": [
+          {
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative.",
+            "count": 37
+          },
+          {
+            "reason": "Aucune raison d’exclusion documentée.",
+            "count": 15
+          },
+          {
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale.",
+            "count": 8
+          },
+          {
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur.",
+            "count": 7
+          }
+        ],
+        "commands": [
+          {
+            "name": "exec-vite",
+            "provenance": "internal",
+            "reason": "Helper interne ou garde-fou auxiliaire non retenu dans la référence utilisateur."
+          },
+          {
+            "name": "pull-secret-all-remote",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "pull-secret-single",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "push-secret-all-remote",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "push-secret-single",
+            "provenance": "legacy",
+            "reason": "Alias ou compatibilité historique non retenu dans la référence principale."
+          },
+          {
+            "name": "backup",
+            "provenance": "template-standard",
+            "reason": null
+          },
+          {
+            "name": "backup-db",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "backup-env",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "pull-prod-backup",
+            "provenance": "unknown",
+            "reason": "Provenance documentaire non démontrée: cible publique hors app-template et sans déclaration applicative."
+          },
+          {
+            "name": "rebuild",
+            "provenance": "template-standard",
+            "reason": null
+          },
+          {
+            "name": "update",
+            "provenance": "application-public",
+            "reason": null
+          },
+          {
+            "name": "check",
+            "provenance": "template-standard",
+            "reason": null
+          }
+        ]
+      }
+    },
+    "workflows": [
+      {
+        "identifier": "prepare-dev-config",
+        "title": "Préparer la configuration de développement",
+        "summary": "Sélectionner le mode dev puis initialiser les fichiers d’environnement.",
+        "commands": [
+          "make dev",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-development",
+        "title": "Démarrer le développement",
+        "summary": "Sélectionner l’environnement dev puis démarrer les services.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "apply-migrations",
+        "title": "Appliquer les migrations",
+        "summary": "Exécuter la procédure de migration détectée.",
+        "commands": [
+          "make migrate"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "create-admin",
+        "title": "Créer un administrateur",
+        "summary": "La création d’un administrateur est exposée par une commande opérationnelle détectée.",
+        "commands": [
+          "make createsuperuser"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "open-frontend",
+        "title": "Ouvrir le frontend",
+        "summary": "Démarrer les services puis ouvrir le frontend détecté.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_VITE_PORT:-5174}"
+        ]
+      },
+      {
+        "identifier": "open-django-admin",
+        "title": "Accéder à l’administration Django",
+        "summary": "Démarrer les services puis ouvrir l’administration détectée.",
+        "commands": [
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_API_PORT:-8002}/admin/"
+        ]
+      },
+      {
+        "identifier": "view-logs",
+        "title": "Consulter les journaux",
+        "summary": "Afficher les logs des services actifs.",
+        "commands": [
+          "make logs"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "run-tests",
+        "title": "Lancer les tests",
+        "summary": "Une commande opérationnelle agrège les suites de tests démontrées pour l’application.",
+        "commands": [
+          "make test"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "`make check` reste une vérification d’invariants ou de diagnostic et n’est pas utilisé comme workflow de tests."
+        ]
+      },
+      {
+        "identifier": "stop-services",
+        "title": "Arrêter les services",
+        "summary": "Arrêter les services de l’environnement actif.",
+        "commands": [
+          "make down"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "rebuild-images",
+        "title": "Reconstruire les images",
+        "summary": "Reconstruire les images Docker de l’environnement actif.",
+        "commands": [
+          "make rebuild"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "prepare-production",
+        "title": "Préparer la production",
+        "summary": "Sélectionner prod puis initialiser les fichiers requis.",
+        "commands": [
+          "make prod",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-production",
+        "title": "Démarrer la production",
+        "summary": "Sélectionner prod puis démarrer les services.",
+        "commands": [
+          "make prod",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "backup-database",
+        "title": "Sauvegarder la base",
+        "summary": "Créer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make backup"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "restore-database",
+        "title": "Restaurer la base",
+        "summary": "Restaurer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make restore"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "missing_information": [
+      {
+        "identifier": "PROJECT-VERSION-MISSING",
+        "category": "project",
+        "severity": "warning",
+        "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+        "affected_sections": [
+          "presentation",
+          "installation"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "ProjectKnowledge.application"
+        ]
+      },
+      {
+        "identifier": "PYTHON-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Python n’est pas déterminable statiquement.",
+        "affected_sections": [
+          "installation",
+          "prerequisites"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "backend/gestionnaire_mdp/settings.py"
+        ]
+      },
+      {
+        "identifier": "NODE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "frontend"
+        ],
+        "sources": [
+          "frontend/package.json",
+          "frontend/Dockerfile.dev"
+        ]
+      },
+      {
+        "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "deployment"
+        ],
+        "sources": [
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml",
+          "Makefile"
+        ]
+      },
+      {
+        "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+        "affected_sections": [
+          "tests",
+          "api"
+        ],
+        "sources": [
+          "backend/gestionnaire_mdp/settings.py",
+          "backend/gestionnaire_mdp/urls.py",
+          "backend/api/urls.py",
+          "… (+31 autres sources)"
+        ]
+      },
+      {
+        "identifier": "API-SCHEMA-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+        "affected_sections": [
+          "api"
+        ],
+        "sources": [
+          "backend/api/urls.py",
+          "backend/api/views.py",
+          "backend/api/views_auth.py",
+          "… (+2 autres sources)"
+        ]
+      },
+      {
+        "identifier": "API-ERROR-CODES-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+        "affected_sections": [
+          "api",
+          "troubleshooting"
+        ],
+        "sources": [
+          "backend/api/urls.py",
+          "backend/api/views.py",
+          "backend/api/views_auth.py",
+          "… (+2 autres sources)"
+        ]
+      },
+      {
+        "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+        "category": "backup",
+        "severity": "warning",
+        "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+        "affected_sections": [
+          "backup-restore",
+          "operations"
+        ],
+        "sources": [
+          "Makefile"
+        ]
+      }
+    ]
+  }
+}

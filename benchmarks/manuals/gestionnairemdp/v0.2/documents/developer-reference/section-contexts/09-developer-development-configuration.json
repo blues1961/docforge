@@ -1,0 +1,273 @@
+{
+  "identifier": "developer-development-configuration",
+  "title": "Configuration de développement",
+  "purpose": "Présenter les noms de variables et l’environnement de développement.",
+  "estimated_tokens": 867,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "environment_variables": 2797,
+    "environments": 443
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "environment_variables": {
+      "variables": [
+        {
+          "name": "ADMIN_EMAIL",
+          "sensitive": false
+        },
+        {
+          "name": "ADMIN_PASSWORD",
+          "sensitive": true
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "sensitive": false
+        },
+        {
+          "name": "ALLOWED_HOSTS",
+          "sensitive": false
+        },
+        {
+          "name": "APP_DEPOT",
+          "sensitive": false
+        },
+        {
+          "name": "APP_ENV",
+          "sensitive": false
+        },
+        {
+          "name": "APP_HOST",
+          "sensitive": false
+        },
+        {
+          "name": "APP_NAME",
+          "sensitive": false
+        },
+        {
+          "name": "APP_NO",
+          "sensitive": false
+        },
+        {
+          "name": "APP_SLUG",
+          "sensitive": false
+        },
+        {
+          "name": "CORS_ALLOWED_ORIGINS",
+          "sensitive": false
+        },
+        {
+          "name": "CSRF_TRUSTED_ORIGINS",
+          "sensitive": false
+        },
+        {
+          "name": "DEV_API_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "DEV_DB_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "DEV_VITE_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "DJANGO_DEBUG",
+          "sensitive": false
+        },
+        {
+          "name": "DJANGO_SECRET_KEY",
+          "sensitive": true
+        },
+        {
+          "name": "FRONT_ORIGIN",
+          "sensitive": false
+        },
+        {
+          "name": "POSTGRES_DB",
+          "sensitive": false
+        },
+        {
+          "name": "POSTGRES_HOST",
+          "sensitive": false
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "sensitive": true
+        },
+        {
+          "name": "POSTGRES_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "POSTGRES_USER",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_API_BIND",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_API_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_DB_BIND",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_DB_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_FRONT_BIND",
+          "sensitive": false
+        },
+        {
+          "name": "PROD_FRONT_PORT",
+          "sensitive": false
+        },
+        {
+          "name": "TRAEFIK_DOCKER_NETWORK",
+          "sensitive": false
+        },
+        {
+          "name": "VITE_API_BASE",
+          "sensitive": false
+        }
+      ]
+    },
+    "environments": {
+      "items": [
+        {
+          "name": "dev",
+          "compose_file": "docker-compose.dev.yml",
+          "env_files": [
+            ".env.dev",
+            ".env.local"
+          ],
+          "urls": [
+            "http://localhost:${DEV_API_PORT:-8002}/admin/",
+            "http://localhost:${DEV_API_PORT:-8002}/api/",
+            "http://localhost:${DEV_VITE_PORT:-5174}"
+          ],
+          "services": [
+            {
+              "name": "backend",
+              "role": "backend",
+              "image": "${APP_SLUG}-backend:dev",
+              "ports": [
+                "${DEV_API_PORT:-8002}:8000"
+              ],
+              "depends_on": [
+                "db"
+              ],
+              "networks": [
+                "appnet"
+              ],
+              "volumes": [
+                "./backend:/app"
+              ]
+            },
+            {
+              "name": "db",
+              "role": "database",
+              "image": "postgres:16-alpine",
+              "ports": [
+                "${DEV_DB_PORT:-5433}:5432"
+              ],
+              "depends_on": [],
+              "networks": [
+                "appnet"
+              ],
+              "volumes": [
+                "pgdata:/var/lib/postgresql/data"
+              ]
+            },
+            {
+              "name": "frontend",
+              "role": "frontend",
+              "image": "node:20-alpine",
+              "ports": [
+                "${DEV_VITE_PORT:-5174}:5173"
+              ],
+              "depends_on": [
+                "backend"
+              ],
+              "networks": [
+                "appnet"
+              ],
+              "volumes": [
+                "./frontend:/app",
+                "node_modules:/app/node_modules"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "prod",
+          "compose_file": "docker-compose.prod.yml",
+          "env_files": [
+            ".env.local",
+            ".env.prod"
+          ],
+          "urls": [
+            "https://mdp.mon-site.ca",
+            "https://mdp.mon-site.ca/admin/",
+            "https://mdp.mon-site.ca/api/"
+          ],
+          "services": [
+            {
+              "name": "backend",
+              "role": "backend",
+              "image": "${APP_SLUG}-backend:prod",
+              "ports": [
+                "${PROD_API_BIND:-127.0.0.1}:${PROD_API_PORT:-8000}:8000"
+              ],
+              "depends_on": [
+                "db"
+              ],
+              "networks": [
+                "appnet",
+                "edge"
+              ],
+              "volumes": []
+            },
+            {
+              "name": "db",
+              "role": "database",
+              "image": "postgres:16-alpine",
+              "ports": [
+                "${PROD_DB_BIND:-127.0.0.1}:${PROD_DB_PORT:-5432}:5432"
+              ],
+              "depends_on": [],
+              "networks": [
+                "appnet"
+              ],
+              "volumes": [
+                "pgdata:/var/lib/postgresql/data"
+              ]
+            },
+            {
+              "name": "frontend",
+              "role": "frontend",
+              "image": "${APP_SLUG}-frontend:prod",
+              "ports": [
+                "${PROD_FRONT_BIND:-127.0.0.1}:${PROD_FRONT_PORT:-8080}:80"
+              ],
+              "depends_on": [
+                "backend"
+              ],
+              "networks": [
+                "edge"
+              ],
+              "volumes": []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

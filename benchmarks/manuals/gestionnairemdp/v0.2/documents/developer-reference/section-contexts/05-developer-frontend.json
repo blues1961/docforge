@@ -1,0 +1,619 @@
+{
+  "identifier": "developer-frontend",
+  "title": "Frontend",
+  "purpose": "Présenter les pages et capacités frontend démontrées.",
+  "estimated_tokens": 2824,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "react": 1231,
+    "capabilities": 1552
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "react": {
+      "entry_point": "frontend/src/App.jsx",
+      "routes": [
+        "*",
+        "/login",
+        "/vault",
+        "/vault/:id/edit",
+        "/vault/categories",
+        "/vault/key-backup",
+        "/vault/key-check",
+        "/vault/new"
+      ],
+      "pages": [
+        "Aide",
+        "Autofill — aide rapide",
+        "Connexion",
+        "Exporter la clé",
+        "Guide des catégories",
+        "Générateur",
+        "Une erreur est survenue dans l’interface.",
+        "Voûte",
+        "Vérification de la clé de chiffrement"
+      ],
+      "navigation_items": [
+        "Aide",
+        "Catégorie",
+        "Catégories",
+        "Connexion",
+        "Exporter la clé",
+        "Générateur",
+        "Générer",
+        "Rechercher (titre, catégorie, notes)",
+        "Sauvegarde clé",
+        "Vérif clé",
+        "Vérification de la clé de chiffrement",
+        "{/* Catégorie */}",
+        "{/* Générateur */}",
+        "{exportBusy ? \"Export…\" : \"Exporter CSV\"}",
+        "{exportBusy ? \"Export…\" : \"Exporter JSON\"}"
+      ],
+      "forms": [
+        "CategoryGuide",
+        "KeyBackup",
+        "KeyImportForm",
+        "LoginForm",
+        "PasswordEdit",
+        "PasswordForm"
+      ],
+      "user_features": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "AutofillHelp",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/_archive/AutofillHelp.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/login"
+          ],
+          "api_calls": [
+            "POST auth/jwt/create/",
+            "POST auth/jwt/logout/",
+            "POST {id}/auth/jwt/refresh/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Exportation de clé",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/key-backup"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Guide des catégories",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/categories"
+          ],
+          "api_calls": [
+            "DELETE categories/{id}/",
+            "GET categories/",
+            "PATCH categories/{id}/",
+            "POST categories/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Générateur de mots de passe",
+          "status": "detected",
+          "component": "PasswordEdit",
+          "routes": [
+            "/vault/:id/edit",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/PasswordEdit.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Importation de clé",
+          "status": "detected",
+          "component": "KeyCheck",
+          "routes": [
+            "/login",
+            "/vault/key-backup",
+            "/vault/key-check"
+          ],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "CategorySelect",
+          "routes": [
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories",
+            "/vault/key-backup",
+            "/vault/key-check",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/",
+            "GET categories/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH categories/{id}/",
+            "PATCH passwords/{id}/",
+            "POST categories/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/CategorySelect.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "KeyCheck",
+          "routes": [
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories",
+            "/vault/key-backup",
+            "/vault/key-check",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Vérification de clé",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/key-check"
+          ],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "auth_mechanisms": [
+        "JWT Bearer côté frontend",
+        "Session locale dans localStorage",
+        "Déverrouillage local du coffre privé"
+      ],
+      "crypto": {
+        "detected": true,
+        "algorithms": [
+          "AES-GCM",
+          "RSA-OAEP"
+        ],
+        "key_derivation": "PBKDF2",
+        "key_derivation_hash": "SHA-256",
+        "key_derivation_iterations": 200000,
+        "key_derivation_salt_template": "crypto",
+        "key_length_bits": 256,
+        "nonce_bytes": 12,
+        "format_version": "zk-keybundle-v1",
+        "payload_fields": [
+          "version",
+          "iv",
+          "ciphertext",
+          "data",
+          "key",
+          "salt",
+          "payload",
+          "pub"
+        ],
+        "cleartext_fields": [],
+        "key_material_storage": "localStorage",
+        "recovery_supported": true,
+        "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+        "unlock_behavior": null,
+        "source_paths": [
+          "frontend/src/utils/crypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      "api_calls": [
+        "DELETE categories/{id}/",
+        "DELETE passwords/{id}/",
+        "GET categories/",
+        "GET passwords/",
+        "GET passwords/{id}/",
+        "PATCH categories/{id}/",
+        "PATCH passwords/{id}/",
+        "POST auth/jwt/create/",
+        "POST auth/jwt/logout/",
+        "POST categories/",
+        "POST passwords/",
+        "POST {id}/auth/jwt/refresh/",
+        "PUT passwords/{id}/"
+      ],
+      "environment_variables": []
+    },
+    "capabilities": {
+      "capabilities": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "AutofillHelp",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/_archive/AutofillHelp.jsx"
+          ]
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "endpoint": "auth/jwt/create/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/App.jsx",
+            "/login",
+            "POST auth/jwt/create/",
+            "POST auth/jwt/logout/"
+          ]
+        },
+        {
+          "label": "Consulter les catégories",
+          "status": "derived",
+          "component": "CategoryGuide",
+          "endpoint": "/api/categories/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/categories/",
+            "Category",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Consulter les entrées de mots de passe",
+          "status": "derived",
+          "component": "PasswordList",
+          "endpoint": "/api/passwords/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/passwords/",
+            "PasswordEntry",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Consulter les secrets applicatifs",
+          "status": "derived",
+          "component": "KeyBackup",
+          "endpoint": "/api/secrets/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/secrets/",
+            "SecretBundle"
+          ]
+        },
+        {
+          "label": "Créer des catégories",
+          "status": "derived",
+          "component": "CategoryGuide",
+          "endpoint": "/api/categories/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/categories/",
+            "Category",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Créer des entrées de mots de passe",
+          "status": "derived",
+          "component": "PasswordList",
+          "endpoint": "/api/passwords/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/passwords/",
+            "PasswordEntry",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Créer des secrets applicatifs",
+          "status": "derived",
+          "component": "KeyBackup",
+          "endpoint": "/api/secrets/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/secrets/",
+            "SecretBundle"
+          ]
+        },
+        {
+          "label": "Exportation de clé",
+          "status": "detected",
+          "component": "App",
+          "endpoint": "passwords/{id}/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/App.jsx",
+            "/vault/key-backup",
+            "DELETE passwords/{id}/",
+            "GET passwords/"
+          ]
+        },
+        {
+          "label": "Guide des catégories",
+          "status": "detected",
+          "component": "App",
+          "endpoint": "categories/{id}/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/App.jsx",
+            "/vault/categories",
+            "DELETE categories/{id}/",
+            "GET categories/"
+          ]
+        },
+        {
+          "label": "Générateur de mots de passe",
+          "status": "detected",
+          "component": "PasswordEdit",
+          "endpoint": "passwords/{id}/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/components/PasswordEdit.jsx",
+            "/vault/:id/edit",
+            "/vault/new",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Gérer un coffre local chiffré côté client",
+          "status": "detected",
+          "component": "frontend",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/utils/crypto.js",
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Importation de clé",
+          "status": "detected",
+          "component": "KeyCheck",
+          "endpoint": "/login",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx",
+            "/login",
+            "/vault/key-backup",
+            "/vault/key-check"
+          ]
+        },
+        {
+          "label": "Modifier des catégories",
+          "status": "derived",
+          "component": "CategoryGuide",
+          "endpoint": "/api/categories/{id}/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/categories/{id}/",
+            "Category",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Modifier des entrées de mots de passe",
+          "status": "derived",
+          "component": "PasswordList",
+          "endpoint": "/api/passwords/{id}/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/passwords/{id}/",
+            "PasswordEntry",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Modifier des secrets applicatifs",
+          "status": "derived",
+          "component": "KeyBackup",
+          "endpoint": "/api/secrets/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/secrets/",
+            "SecretBundle"
+          ]
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "CategorySelect",
+          "endpoint": "categories/{id}/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/components/CategorySelect.jsx",
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories"
+          ]
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "KeyCheck",
+          "endpoint": "passwords/{id}/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx",
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories"
+          ]
+        },
+        {
+          "label": "Supprimer des catégories",
+          "status": "derived",
+          "component": "CategoryGuide",
+          "endpoint": "/api/categories/{id}/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/categories/{id}/",
+            "Category",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Supprimer des entrées de mots de passe",
+          "status": "derived",
+          "component": "PasswordList",
+          "endpoint": "/api/passwords/{id}/",
+          "permission_condition": "IsOwner",
+          "confidence": "high",
+          "evidence": [
+            "/api/passwords/{id}/",
+            "PasswordEntry",
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/"
+          ]
+        },
+        {
+          "label": "Supprimer des secrets applicatifs",
+          "status": "derived",
+          "component": "KeyBackup",
+          "endpoint": "/api/secrets/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/secrets/",
+            "SecretBundle"
+          ]
+        },
+        {
+          "label": "S’authentifier à l’application",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/auth/jwt/create/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "/api/auth/jwt/create/"
+          ]
+        },
+        {
+          "label": "Vérification de clé",
+          "status": "detected",
+          "component": "App",
+          "endpoint": "/vault/key-check",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/App.jsx",
+            "/vault/key-check"
+          ]
+        }
+      ]
+    }
+  }
+}

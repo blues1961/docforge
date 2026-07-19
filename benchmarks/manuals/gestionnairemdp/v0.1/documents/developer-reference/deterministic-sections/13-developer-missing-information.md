@@ -1,0 +1,8 @@
+- La version applicative n’a pas été trouvée dans les métadonnées détectées.
+- La version minimale de Python n’est pas déterminable statiquement.
+- La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.
+- La version minimale de Docker Compose n’est pas explicitement documentée.
+- Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.
+- Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.
+- La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.
+- La stratégie de rétention des sauvegardes n’est pas démontrée.

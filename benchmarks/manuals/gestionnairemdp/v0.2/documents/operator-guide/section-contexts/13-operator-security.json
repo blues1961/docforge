@@ -1,0 +1,66 @@
+{
+  "identifier": "operator-security",
+  "title": "Sécurité",
+  "purpose": "Fournir les contrôles de sécurité déterministes.",
+  "estimated_tokens": 317,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "security": 281
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "APP-SEC-001",
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend.",
+          "evidence": [
+            "Bearer token",
+            "JWT",
+            "SimpleJWT"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-002",
+          "category": "administration",
+          "description": "Une interface d’administration Django est détectée et doit être réservée aux comptes autorisés.",
+          "evidence": [
+            "backend/gestionnaire_mdp/urls.py"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-003",
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel.",
+          "evidence": [
+            "ADMIN_PASSWORD",
+            "DJANGO_SECRET_KEY",
+            "POSTGRES_PASSWORD"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "identifier": "ADMIN-CREDENTIAL-FALLBACK-DETECTED",
+          "category": "credentials",
+          "severity": "warning",
+          "description": "La procédure de création de l’administrateur contient une valeur de secours codée en dur lorsque la variable de mot de passe est absente.",
+          "sources": [
+            "Makefile"
+          ]
+        }
+      ],
+      "validation_commands": [],
+      "source": {
+        "status": "derived",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}

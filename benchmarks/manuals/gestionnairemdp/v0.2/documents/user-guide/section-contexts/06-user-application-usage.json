@@ -1,0 +1,189 @@
+{
+  "identifier": "user-application-usage",
+  "title": "Utilisation de l’application",
+  "purpose": "Décrire les parcours fonctionnels démontrés.",
+  "estimated_tokens": 927,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "capabilities": 1552,
+    "react": 1143,
+    "django": 2346
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "capabilities": [
+        {
+          "identifier": "aide",
+          "label": "Aide",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "changement-de-th-me",
+          "label": "Changement de thème",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "connexion",
+          "label": "Connexion",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "consulter-les-cat-gories",
+          "label": "Consulter les catégories",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "consulter-les-entr-es-de-mots-de-passe",
+          "label": "Consulter les entrées de mots de passe",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "consulter-les-secrets-applicatifs",
+          "label": "Consulter les secrets applicatifs",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "cr-er-des-cat-gories",
+          "label": "Créer des catégories",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "cr-er-des-entr-es-de-mots-de-passe",
+          "label": "Créer des entrées de mots de passe",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "cr-er-des-secrets-applicatifs",
+          "label": "Créer des secrets applicatifs",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "exportation-de-cl",
+          "label": "Exportation de clé",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "guide-des-cat-gories",
+          "label": "Guide des catégories",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "g-n-rateur-de-mots-de-passe",
+          "label": "Générateur de mots de passe",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "g-rer-un-coffre-local-chiffr-c-t-client",
+          "label": "Gérer un coffre local chiffré côté client",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "importation-de-cl",
+          "label": "Importation de clé",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "modifier-des-cat-gories",
+          "label": "Modifier des catégories",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "modifier-des-entr-es-de-mots-de-passe",
+          "label": "Modifier des entrées de mots de passe",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "modifier-des-secrets-applicatifs",
+          "label": "Modifier des secrets applicatifs",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "recherche",
+          "label": "Recherche",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "r-v-lation-d-une-valeur",
+          "label": "Révélation d’une valeur",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "supprimer-des-cat-gories",
+          "label": "Supprimer des catégories",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "supprimer-des-entr-es-de-mots-de-passe",
+          "label": "Supprimer des entrées de mots de passe",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "supprimer-des-secrets-applicatifs",
+          "label": "Supprimer des secrets applicatifs",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "s-authentifier-l-application",
+          "label": "S’authentifier à l’application",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "v-rification-de-cl",
+          "label": "Vérification de clé",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        }
+      ],
+      "authentication_required": true
+    }
+  }
+}

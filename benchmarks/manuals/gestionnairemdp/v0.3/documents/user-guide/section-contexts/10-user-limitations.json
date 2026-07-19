@@ -1,0 +1,167 @@
+{
+  "identifier": "user-limitations",
+  "title": "Limites des informations disponibles",
+  "purpose": "Signaler les informations fonctionnelles non démontrées.",
+  "estimated_tokens": 932,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "missing_information": 652,
+    "limitations": 655
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "limitations": {
+      "missing_information": [
+        {
+          "identifier": "PROJECT-VERSION-MISSING",
+          "category": "project",
+          "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+          "affected_sections": [
+            "presentation",
+            "installation"
+          ]
+        },
+        {
+          "identifier": "PYTHON-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Python n’est pas déterminable statiquement.",
+          "affected_sections": [
+            "installation",
+            "prerequisites"
+          ]
+        },
+        {
+          "identifier": "NODE-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+          "affected_sections": [
+            "installation",
+            "prerequisites",
+            "frontend"
+          ]
+        },
+        {
+          "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+          "affected_sections": [
+            "installation",
+            "prerequisites",
+            "deployment"
+          ]
+        },
+        {
+          "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+          "category": "tests",
+          "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+          "affected_sections": [
+            "tests",
+            "api"
+          ]
+        },
+        {
+          "identifier": "API-SCHEMA-MISSING",
+          "category": "api",
+          "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+          "affected_sections": [
+            "api"
+          ]
+        },
+        {
+          "identifier": "API-ERROR-CODES-MISSING",
+          "category": "api",
+          "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+          "affected_sections": [
+            "api",
+            "troubleshooting"
+          ]
+        },
+        {
+          "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+          "category": "backup",
+          "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+          "affected_sections": [
+            "backup-restore",
+            "operations"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "identifier": "PROJECT-VERSION-MISSING",
+          "category": "project",
+          "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+          "affected_sections": [
+            "presentation",
+            "installation"
+          ]
+        },
+        {
+          "identifier": "PYTHON-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Python n’est pas déterminable statiquement.",
+          "affected_sections": [
+            "installation",
+            "prerequisites"
+          ]
+        },
+        {
+          "identifier": "NODE-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+          "affected_sections": [
+            "installation",
+            "prerequisites",
+            "frontend"
+          ]
+        },
+        {
+          "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+          "category": "runtime",
+          "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+          "affected_sections": [
+            "installation",
+            "prerequisites",
+            "deployment"
+          ]
+        },
+        {
+          "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+          "category": "tests",
+          "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+          "affected_sections": [
+            "tests",
+            "api"
+          ]
+        },
+        {
+          "identifier": "API-SCHEMA-MISSING",
+          "category": "api",
+          "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+          "affected_sections": [
+            "api"
+          ]
+        },
+        {
+          "identifier": "API-ERROR-CODES-MISSING",
+          "category": "api",
+          "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+          "affected_sections": [
+            "api",
+            "troubleshooting"
+          ]
+        },
+        {
+          "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+          "category": "backup",
+          "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+          "affected_sections": [
+            "backup-restore",
+            "operations"
+          ]
+        }
+      ]
+    }
+  }
+}

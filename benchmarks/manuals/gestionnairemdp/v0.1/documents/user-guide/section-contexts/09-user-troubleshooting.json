@@ -1,0 +1,18 @@
+{
+  "identifier": "user-troubleshooting",
+  "title": "Dépannage",
+  "purpose": "Présenter les problèmes utilisables sans procédures d’exploitation.",
+  "estimated_tokens": 51,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "missing_information": 652,
+    "limitations": 655
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "authentication_required": true
+    }
+  }
+}

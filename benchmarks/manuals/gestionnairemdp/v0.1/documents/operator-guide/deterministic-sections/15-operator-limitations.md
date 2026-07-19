@@ -1,0 +1,5 @@
+- La version minimale de Python n’est pas déterminable statiquement.
+- La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.
+- La version minimale de Docker Compose n’est pas explicitement documentée.
+- Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.
+- La stratégie de rétention des sauvegardes n’est pas démontrée.

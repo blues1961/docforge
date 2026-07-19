@@ -1,0 +1,945 @@
+{
+  "identifier": "developer-authentication",
+  "title": "Authentification",
+  "purpose": "Présenter les mécanismes et permissions démontrés.",
+  "estimated_tokens": 3904,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "django": 2346,
+    "react": 1231,
+    "security": 281
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "django": {
+      "settings_module": "gestionnaire_mdp.settings",
+      "urlconf_module": "gestionnaire_mdp.urls",
+      "installed_apps": [
+        "api",
+        "corsheaders",
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.messages",
+        "django.contrib.sessions",
+        "django.contrib.staticfiles",
+        "rest_framework",
+        "rest_framework_simplejwt.token_blacklist"
+      ],
+      "admin_enabled": true,
+      "routers": [
+        "/categories",
+        "/passwords"
+      ],
+      "auth_mechanisms": [
+        "Bearer token",
+        "JWT",
+        "SimpleJWT"
+      ],
+      "models": [
+        {
+          "name": "Category",
+          "fields": [
+            "owner",
+            "name",
+            "description"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "PasswordEntry",
+          "fields": [
+            "owner",
+            "title",
+            "url",
+            "category",
+            "ciphertext",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "SecretBundle",
+          "fields": [
+            "owner",
+            "app",
+            "environment",
+            "payload",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        }
+      ],
+      "model_schemas": [
+        {
+          "name": "Category",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "name",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "description",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        },
+        {
+          "name": "PasswordEntry",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "title",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "url",
+              "field_type": "URLField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "category",
+              "field_type": "ForeignKey",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": "Category",
+              "unique": false,
+              "on_delete": "models.SET_NULL"
+            },
+            {
+              "name": "ciphertext",
+              "field_type": "JSONField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        },
+        {
+          "name": "SecretBundle",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "app",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "environment",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "payload",
+              "field_type": "JSONField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "dict",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/admin/",
+          "methods": [],
+          "view": "urls",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/create/",
+          "methods": [
+            "POST"
+          ],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/logout/",
+          "methods": [
+            "POST"
+          ],
+          "view": "JWTLogoutView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/verify/",
+          "methods": [],
+          "view": "TokenVerifyView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/csrf/",
+          "methods": [],
+          "view": "csrf",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/login/",
+          "methods": [],
+          "view": "login_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/logout/",
+          "methods": [],
+          "view": "logout_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/session/whoami/",
+          "methods": [],
+          "view": "whoami",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/whoami/",
+          "methods": [],
+          "view": "jwt_whoami",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWTAuthentication"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/categories/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "CategoryViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/categories/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "CategoryViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/csrf/",
+          "methods": [],
+          "view": "csrf",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/healthz/",
+          "methods": [],
+          "view": "healthz",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/login/",
+          "methods": [],
+          "view": "login_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/logout/",
+          "methods": [],
+          "view": "logout_view",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/passwords/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "PasswordViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/passwords/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "PasswordViewSet",
+          "permissions": [
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/secrets/",
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ],
+          "view": "SecretsView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/whoami/",
+          "methods": [],
+          "view": "jwt_whoami",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWTAuthentication"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        }
+      ]
+    },
+    "react": {
+      "entry_point": "frontend/src/App.jsx",
+      "routes": [
+        "*",
+        "/login",
+        "/vault",
+        "/vault/:id/edit",
+        "/vault/categories",
+        "/vault/key-backup",
+        "/vault/key-check",
+        "/vault/new"
+      ],
+      "pages": [
+        "Aide",
+        "Autofill — aide rapide",
+        "Connexion",
+        "Exporter la clé",
+        "Guide des catégories",
+        "Générateur",
+        "Une erreur est survenue dans l’interface.",
+        "Voûte",
+        "Vérification de la clé de chiffrement"
+      ],
+      "navigation_items": [
+        "Aide",
+        "Catégorie",
+        "Catégories",
+        "Connexion",
+        "Exporter la clé",
+        "Générateur",
+        "Générer",
+        "Rechercher (titre, catégorie, notes)",
+        "Sauvegarde clé",
+        "Vérif clé",
+        "Vérification de la clé de chiffrement",
+        "{/* Catégorie */}",
+        "{/* Générateur */}",
+        "{exportBusy ? \"Export…\" : \"Exporter CSV\"}",
+        "{exportBusy ? \"Export…\" : \"Exporter JSON\"}"
+      ],
+      "forms": [
+        "CategoryGuide",
+        "KeyBackup",
+        "KeyImportForm",
+        "LoginForm",
+        "PasswordEdit",
+        "PasswordForm"
+      ],
+      "user_features": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "AutofillHelp",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/_archive/AutofillHelp.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/login"
+          ],
+          "api_calls": [
+            "POST auth/jwt/create/",
+            "POST auth/jwt/logout/",
+            "POST {id}/auth/jwt/refresh/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Exportation de clé",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/key-backup"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Guide des catégories",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/categories"
+          ],
+          "api_calls": [
+            "DELETE categories/{id}/",
+            "GET categories/",
+            "PATCH categories/{id}/",
+            "POST categories/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Générateur de mots de passe",
+          "status": "detected",
+          "component": "PasswordEdit",
+          "routes": [
+            "/vault/:id/edit",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/PasswordEdit.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Importation de clé",
+          "status": "detected",
+          "component": "KeyCheck",
+          "routes": [
+            "/login",
+            "/vault/key-backup",
+            "/vault/key-check"
+          ],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "CategorySelect",
+          "routes": [
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories",
+            "/vault/key-backup",
+            "/vault/key-check",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE categories/{id}/",
+            "DELETE passwords/{id}/",
+            "GET categories/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH categories/{id}/",
+            "PATCH passwords/{id}/",
+            "POST categories/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/CategorySelect.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "KeyCheck",
+          "routes": [
+            "/vault",
+            "/vault/:id/edit",
+            "/vault/categories",
+            "/vault/key-backup",
+            "/vault/key-check",
+            "/vault/new"
+          ],
+          "api_calls": [
+            "DELETE passwords/{id}/",
+            "GET passwords/",
+            "GET passwords/{id}/",
+            "PATCH passwords/{id}/",
+            "POST passwords/",
+            "PUT passwords/{id}/"
+          ],
+          "evidence": [
+            "frontend/src/components/KeyCheck.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Vérification de clé",
+          "status": "detected",
+          "component": "App",
+          "routes": [
+            "/vault/key-check"
+          ],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "auth_mechanisms": [
+        "JWT Bearer côté frontend",
+        "Session locale dans localStorage",
+        "Déverrouillage local du coffre privé"
+      ],
+      "crypto": {
+        "detected": true,
+        "algorithms": [
+          "AES-GCM",
+          "RSA-OAEP"
+        ],
+        "key_derivation": "PBKDF2",
+        "key_derivation_hash": "SHA-256",
+        "key_derivation_iterations": 200000,
+        "key_derivation_salt_template": "crypto",
+        "key_length_bits": 256,
+        "nonce_bytes": 12,
+        "format_version": "zk-keybundle-v1",
+        "payload_fields": [
+          "version",
+          "iv",
+          "ciphertext",
+          "data",
+          "key",
+          "salt",
+          "payload",
+          "pub"
+        ],
+        "cleartext_fields": [],
+        "key_material_storage": "localStorage",
+        "recovery_supported": true,
+        "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+        "unlock_behavior": null,
+        "source_paths": [
+          "frontend/src/utils/crypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      "api_calls": [
+        "DELETE categories/{id}/",
+        "DELETE passwords/{id}/",
+        "GET categories/",
+        "GET passwords/",
+        "GET passwords/{id}/",
+        "PATCH categories/{id}/",
+        "PATCH passwords/{id}/",
+        "POST auth/jwt/create/",
+        "POST auth/jwt/logout/",
+        "POST categories/",
+        "POST passwords/",
+        "POST {id}/auth/jwt/refresh/",
+        "PUT passwords/{id}/"
+      ],
+      "environment_variables": []
+    },
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "APP-SEC-001",
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend.",
+          "evidence": [
+            "Bearer token",
+            "JWT",
+            "SimpleJWT"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-002",
+          "category": "administration",
+          "description": "Une interface d’administration Django est détectée et doit être réservée aux comptes autorisés.",
+          "evidence": [
+            "backend/gestionnaire_mdp/urls.py"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-003",
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel.",
+          "evidence": [
+            "ADMIN_PASSWORD",
+            "DJANGO_SECRET_KEY",
+            "POSTGRES_PASSWORD"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "identifier": "ADMIN-CREDENTIAL-FALLBACK-DETECTED",
+          "category": "credentials",
+          "severity": "warning",
+          "description": "La procédure de création de l’administrateur contient une valeur de secours codée en dur lorsque la variable de mot de passe est absente.",
+          "sources": [
+            "Makefile"
+          ]
+        }
+      ],
+      "validation_commands": [],
+      "source": {
+        "status": "derived",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}

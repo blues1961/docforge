@@ -1,0 +1,22 @@
+{
+  "identifier": "user-authentication",
+  "title": "Authentification",
+  "purpose": "Expliquer les mécanismes d’authentification démontrés sans procédure technique.",
+  "estimated_tokens": 64,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "django": 2346,
+    "react": 1143,
+    "security": 281
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "authentication_required": true,
+      "roles": [
+        "utilisateur connecté"
+      ]
+    }
+  }
+}
