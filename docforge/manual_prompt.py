@@ -500,6 +500,35 @@ class ManualPromptBuilder:
         ]
 
     @staticmethod
+    def _user_view_capabilities(
+        capabilities: list[dict[str, Any]], *, audience: str,
+    ) -> list[dict[str, Any]]:
+        """Keep only user-facing capability fields in public contexts."""
+        selected = (
+            ManualPromptBuilder._filter_admin_capabilities(capabilities)
+            if audience == "administrator"
+            else ManualPromptBuilder._filter_user_capabilities(capabilities)
+        )
+        rendered: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for index, item in enumerate(selected, start=1):
+            label = item.get("label")
+            if not isinstance(label, str) or not label.strip():
+                continue
+            normalized = label.casefold().replace("’", "'").strip()
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            rendered.append({
+                "identifier": item.get("identifier") or f"capability-{index}",
+                "label": label.strip(),
+                "description": item.get("description") if isinstance(item.get("description"), str) else None,
+                "audience": audience,
+                "status": item.get("status") or "unresolved",
+            })
+        return rendered
+
+    @staticmethod
     def _postprocess_section_projection(section_identifier: str, projection: dict[str, Any], payload: dict[str, Any] | None = None) -> None:
         ManualPromptBuilder._keep_only_workflows(projection, section_identifier)
 
@@ -519,6 +548,7 @@ class ManualPromptBuilder:
                 and item.get("validity") == "valid" and item.get("url")
             ]
             user_capabilities = ManualPromptBuilder._filter_user_capabilities(capabilities)
+            admin_capabilities = ManualPromptBuilder._filter_admin_capabilities(capabilities)
             crypto = react.get("crypto", {}) if isinstance(react, dict) else {}
             auth = []
             if isinstance(django, dict):
@@ -530,11 +560,11 @@ class ManualPromptBuilder:
                 if item.get("category") in {"authentification", "secrets"}:
                     controls.append({"category": item.get("category"), "description": item.get("description")})
             canonical = {
-                "application": {"name": application.get("name"), "category": application.get("category")},
+                "application": {"name": application.get("name")},
                 "production_frontend_urls": frontend_urls[:1],
-                "roles": sorted({item.get("permission_condition") for item in user_capabilities if item.get("permission_condition")}),
-                "features": [item.get("label") for item in user_capabilities if item.get("label")][:12],
-                "user_actions": [item.get("label") for item in user_capabilities if item.get("label")][:12],
+                "roles": (["utilisateur connecté"] if auth else []) + (["administrateur fonctionnel"] if admin_capabilities else []),
+                "capabilities": ManualPromptBuilder._user_view_capabilities(capabilities, audience="user"),
+                "administration_capabilities": ManualPromptBuilder._user_view_capabilities(capabilities, audience="administrator"),
                 "authentication_required": bool(auth),
                 "local_encrypted_vault": bool(crypto.get("detected")),
                 "lock_behavior": crypto.get("lock_behavior"),
@@ -547,17 +577,23 @@ class ManualPromptBuilder:
                 "user-roles": ("roles",),
                 "user-access": ("production_frontend_urls", "authentication_required"),
                 "user-authentication": ("authentication_required", "roles"),
-                "user-main-features": ("features",),
-                "user-application-usage": ("user_actions", "authentication_required"),
-                "user-functional-administration": ("roles", "features"),
+                "user-main-features": ("capabilities",),
+                "user-application-usage": ("capabilities", "authentication_required"),
+                "user-functional-administration": ("administration_capabilities",),
                 "user-security": ("local_encrypted_vault", "lock_behavior", "unlock_behavior", "recovery", "security_guidance"),
                 "user-troubleshooting": ("authentication_required",),
             }
             projection.clear()
             if section_identifier == "user-limitations":
                 projection["limitations"] = {
-                    "missing_information": source.get("missing_information", []),
-                    "items": source.get("limitations", {}).get("items", []),
+                    "missing_information": [
+                        {"identifier": item.get("identifier"), "category": item.get("category"), "description": item.get("description"), "affected_sections": item.get("affected_sections", [])}
+                        for item in source.get("missing_information", []) if isinstance(item, dict)
+                    ],
+                    "items": [
+                        {"identifier": item.get("identifier"), "category": item.get("category"), "description": item.get("description"), "affected_sections": item.get("affected_sections", [])}
+                        for item in source.get("limitations", {}).get("items", []) if isinstance(item, dict)
+                    ],
                 }
             else:
                 projection["user_view"] = {key: canonical[key] for key in slices.get(section_identifier, ())}

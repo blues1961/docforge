@@ -108,6 +108,12 @@ class DjangoReactMultiDocumentValidator:
                 if not isinstance(deterministic, str) or not (root / deterministic).is_file():
                     diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL007", "Le fragment déterministe associé à la section est absent.", identifier, entry.get("identifier")))
 
+        knowledge_file = manifest.get("knowledge_file", "manual-knowledge.json")
+        knowledge_path = root / knowledge_file if isinstance(knowledge_file, str) else root / "manual-knowledge.json"
+        knowledge = json.loads(knowledge_path.read_text(encoding="utf-8")) if knowledge_path.is_file() else {}
+        application = knowledge.get("application", {}) if isinstance(knowledge, dict) else {}
+        application_name = application.get("name") if isinstance(application, dict) else None
+
         user_facts = contexts.get("user-guide", {})
         for section, facts in user_facts.items():
             if not isinstance(facts, dict):
@@ -117,6 +123,32 @@ class DjangoReactMultiDocumentValidator:
             django = facts.get("django")
             if isinstance(django, dict) and any(django.get(key) for key in ("resolved_routes", "routers")):
                 diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL009", "Le guide utilisateur ne doit pas contenir une référence détaillée des routes API.", "user-guide", section))
+
+        user_document = by_id.get("user-guide", {})
+        forbidden_user_keys = {
+            "evidence", "sources", "source_paths", "component", "endpoint",
+            "permission_condition", "routes", "api_calls", "django", "react",
+        }
+        for section, facts in user_facts.items():
+            serialized = json.dumps(facts, ensure_ascii=False)
+            if any(re.search(rf'"{re.escape(key)}"\s*:', serialized) for key in forbidden_user_keys):
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL016", "Le guide utilisateur expose une provenance ou un détail technique interdit.", "user-guide", section))
+        user_entries = {entry.get("identifier"): entry for entry in user_document.get("section_contexts", []) if isinstance(entry, dict)}
+        developer_document = by_id.get("developer-reference", {})
+        developer_entries = {entry.get("identifier"): entry for entry in developer_document.get("section_contexts", []) if isinstance(entry, dict)}
+        for document_id, section, entries in (
+            ("user-guide", "user-presentation", user_entries),
+            ("developer-reference", "developer-presentation", developer_entries),
+        ):
+            entry = entries.get(section, {})
+            fragment = root / entry.get("deterministic_file", "")
+            if application_name and fragment.is_file() and application_name.casefold() not in fragment.read_text(encoding="utf-8").casefold():
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL017", "La présentation déterministe ne reprend pas le nom de l’application courante.", document_id, section))
+        for entry in user_entries.values():
+            fragment = root / entry.get("deterministic_file", "")
+            if fragment.is_file() and re.search(r"(?:^|[\s`])(?:frontend|backend|scripts)/", fragment.read_text(encoding="utf-8")):
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL018", "Un fragment utilisateur expose un chemin de provenance technique.", "user-guide", entry.get("identifier")))
+                break
 
         operator = contexts.get("operator-guide", {})
         if not operator.get("operator-make-commands", {}).get("operational_commands"):
@@ -131,8 +163,28 @@ class DjangoReactMultiDocumentValidator:
             expected_count = len(grouped.get("primary_commands", [])) + len(grouped.get("advanced_commands", []))
             if len(headings) != expected_count or len(set(headings)) != expected_count:
                 diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL015", "Chaque commande Make détectée doit avoir un résumé utile et distinct.", "operator-guide", "operator-make-commands"))
+            if "lorsque cette opération est nécessaire" in rendered:
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL020", "Une commande Make conserve un usage générique.", "operator-guide", "operator-make-commands"))
+            if re.search(r"^make\s+\S+\s+\[[A-Z_]+=", rendered, flags=re.M):
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL021", "Une syntaxe optionnelle entre crochets est présentée comme commande copiable.", "operator-guide", "operator-make-commands"))
+            if rendered.count("Effet précis non documenté") > 1:
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL022", "Le message d’effet inconnu est répété de manière excessive.", "operator-guide", "operator-make-commands"))
+            commands_by_name = {item.get("name"): item for item in knowledge.get("commands", []) if isinstance(item, dict)}
+            for name, block in re.findall(r"^#### `([^`]+)`\n(.*?)(?=^#### `|\Z)", rendered, flags=re.M | re.S):
+                effects = commands_by_name.get(name, {}).get("destructive_effects", [])
+                risky = any(any(term in str(effect).casefold() for term in ("arrêt", "reconstruction", "écrasement", "modification", "production")) for effect in effects)
+                if risky and "Avertissement" not in block:
+                    diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL023", "Une commande à effet risqué n’affiche pas de précaution.", "operator-guide", "operator-make-commands"))
+                    break
         developer = contexts.get("developer-reference", {})
         routes = developer.get("developer-routes-api", {}).get("django", {}).get("resolved_routes", [])
+        route_entry = developer_entries.get("developer-routes-api", {})
+        route_fragment = root / route_entry.get("deterministic_file", "")
+        if route_fragment.is_file():
+            published = set(re.findall(r"^\|\s*(/[^|]+?)\s*\|", route_fragment.read_text(encoding="utf-8"), flags=re.M))
+            resolved = {item.get("full_path") for item in routes if isinstance(item, dict) and item.get("resolution_status") == "resolved"}
+            if not published <= resolved:
+                diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL019", "Une route publiée n’existe pas exactement dans les full_path résolus.", "developer-reference", "developer-routes-api"))
         for identifier, section in (("operator-guide", "operator-protected-documents"), ("developer-reference", "developer-invariants")):
             facts = contexts.get(identifier, {}).get(section, {})
             protected = facts.get("security", {}).get("protected_documents", []) if isinstance(facts, dict) else []

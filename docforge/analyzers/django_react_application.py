@@ -472,8 +472,11 @@ class ReactFacts:
 
 @dataclass(slots=True)
 class CapabilityFacts:
-    label: str
-    status: str
+    identifier: str | None = None
+    label: str = ""
+    status: str = "unresolved"
+    description: str | None = None
+    audience: str | None = None
     evidence: list[str] = field(default_factory=list)
     component: str | None = None
     endpoint: str | None = None
@@ -2357,8 +2360,10 @@ class DjangoReactApplicationAnalyzer:
                     existing.status = status
                 return
             capability = CapabilityFacts(
+                identifier=re.sub(r"[^a-z0-9]+", "-", label.casefold()).strip("-") or None,
                 label=label,
                 status=status,
+                audience="administrator" if permission_condition == "IsAdminUser" else "user",
                 evidence=list(dict.fromkeys(evidence)),
                 component=component,
                 endpoint=endpoint,
@@ -2403,6 +2408,8 @@ class DjangoReactApplicationAnalyzer:
             "SecretBundle": "secrets applicatifs",
             "User": "utilisateurs",
             "Contact": "contacts",
+            "Calendar": "calendriers",
+            "Event": "événements",
         }
         action_labels = {
             "GET": "Consulter",
@@ -2425,8 +2432,14 @@ class DjangoReactApplicationAnalyzer:
                 if verb is None:
                     continue
                 component = self._component_for_endpoint(endpoint.path, frontend_components)
+                action_label = {
+                    "Consulter": f"Consulter les {resource_label}",
+                    "Créer": f"Créer des {resource_label}",
+                    "Modifier": f"Modifier des {resource_label}",
+                    "Supprimer": f"Supprimer des {resource_label}",
+                }[verb]
                 add(
-                    f"{verb} {resource_label}",
+                    action_label,
                     endpoint.path,
                     model_name,
                     *(react.api_calls if any(self._endpoint_matches_api_call(endpoint.path, api_call) and api_call.startswith(method) for api_call in react.api_calls) else []),
@@ -3667,6 +3680,13 @@ class DjangoReactApplicationAnalyzer:
         for segment, model_name in explicit.items():
             if model_name and f"/{segment}/" in path:
                 return model_name
+        for model_name in models:
+            stem = model_name.name.casefold()
+            candidates = {stem + "s", stem + "es"}
+            if stem.endswith("y"):
+                candidates.add(stem[:-1] + "ies")
+            if any(f"/{segment}/" in path for segment in candidates):
+                return model_name.name
         return None
 
     @staticmethod

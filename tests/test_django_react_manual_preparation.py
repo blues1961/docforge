@@ -10,6 +10,7 @@ from docforge.detectors import TechnologyDetector
 from docforge.knowledge import ProjectKnowledgeBuilder
 from docforge.manual_blueprint import ManualBlueprintRegistry
 from docforge.manual_django_react import DjangoReactManualKnowledgeBuilder
+from docforge.manual_deterministic import ManualDeterministicContentBuilder
 from docforge.manual_prompt import DjangoReactManualPromptBuilder
 from docforge.manual_service import ManualPreparationService
 from docforge.validators import (
@@ -1892,11 +1893,11 @@ def test_django_react_app_template_prepares_three_separated_documents(tmp_path: 
     }
     assert "| Environnement | Service | Rôle | Dépendances |" in operator_fragments["operator-compose-services"]
     assert "#### `logs`" in operator_fragments["operator-make-commands"]
-    assert "make logs SERVICE=SERVICE" in operator_fragments["operator-make-commands"]
+    assert "make logs SERVICE=backend" in operator_fragments["operator-make-commands"]
     assert "`APP_ENV`" in operator_fragments["operator-environment-variables"]
     assert "supersecret" not in "\n".join(operator_fragments.values())
     assert "super-secret-key" not in "\n".join(developer_fragments.values())
-    assert "| Route | Méthodes | Permissions |" in developer_fragments["developer-routes-api"]
+    assert "| Route | Méthodes |" in developer_fragments["developer-routes-api"]
     assert "INVARIANTS.md" in developer_fragments["developer-invariants"]
 
     paths = manifest["expected_outputs"]
@@ -1954,3 +1955,102 @@ def test_django_react_contact_style_triptych_rejects_full_prompts(tmp_path: Path
         assert "mode sections" in str(error)
     else:
         raise AssertionError("Le triptyque django-react doit refuser les prompts complets.")
+
+
+def test_deterministic_user_view_is_project_scoped_and_hides_provenance(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    project, profile, knowledge = _build_knowledge(tmp_path)
+    manual = DjangoReactManualKnowledgeBuilder().build(
+        project_root=tmp_path, knowledge=knowledge, profile_instance=profile,
+    )
+    manual.application["name"] = "Calendrier"
+    manual.project.name = "Calendrier"
+    manual.capabilities = {"capabilities": [
+        {
+            "identifier": "consulter-calendriers", "label": "Consulter les calendriers",
+            "description": None, "audience": "user", "status": "derived",
+            "evidence": ["backend/calendar_api/views.py"], "endpoint": "/api/calendars/",
+        },
+        {
+            "identifier": "consulter-evenements", "label": "Consulter les événements",
+            "description": None, "audience": "user", "status": "derived",
+            "evidence": ["backend/calendar_api/views.py"], "endpoint": "/api/events/",
+        },
+    ]}
+    deterministic = ManualDeterministicContentBuilder()
+    assert deterministic.render_section(manual, "user-presentation").startswith("Calendrier est")
+    developer = deterministic.render_section(manual, "developer-presentation")
+    assert developer.startswith("Calendrier utilise") and "Contact utilise" not in developer
+    features = deterministic.render_section(manual, "user-main-features")
+    usage = deterministic.render_section(manual, "user-application-usage")
+    assert "Consulter les calendriers" in features
+    assert "Fonctions disponibles démontrées" not in usage
+    assert "Consulter les événements" not in usage
+    assert "Gérez vos contacts" not in usage
+    assert "backend/calendar_api/views.py" not in "\n".join((features, usage))
+
+
+def test_user_projection_keeps_only_public_capability_fields(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    user = next(item for item in manifest["documents"] if item["identifier"] == "user-guide")
+    features = next(item for item in user["section_contexts"] if item["identifier"] == "user-main-features")
+    facts = json.loads((result.output_dir / features["context_file"]).read_text(encoding="utf-8"))["facts"]
+    capabilities = facts["user_view"]["capabilities"]
+    assert capabilities
+    assert all(set(item) <= {"identifier", "label", "description", "audience", "status"} for item in capabilities)
+    assert not any("evidence" in item or "endpoint" in item for item in capabilities)
+
+
+def test_multidocument_validator_rejects_hardcoded_name_and_route_mutation(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    developer = next(item for item in manifest["documents"] if item["identifier"] == "developer-reference")
+    presentation = next(item for item in developer["section_contexts"] if item["identifier"] == "developer-presentation")
+    routes = next(item for item in developer["section_contexts"] if item["identifier"] == "developer-routes-api")
+    (result.output_dir / presentation["deterministic_file"]).write_text("Contact utilise une application.\n", encoding="utf-8")
+    (result.output_dir / routes["deterministic_file"]).write_text("| Route | Méthodes | Permissions |\n|---|---|---|\n| /api/inconnue | GET | — |\n", encoding="utf-8")
+    diagnostics = DjangoReactMultiDocumentValidator().validate(root=result.output_dir, manifest=manifest)
+    assert {item.code for item in diagnostics} >= {"DJANGO_MANUAL017", "DJANGO_MANUAL019"}
+
+
+def test_deterministic_presentations_have_no_hardcoded_application_name(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    project, profile, knowledge = _build_knowledge(tmp_path)
+    manual = DjangoReactManualKnowledgeBuilder().build(
+        project_root=tmp_path, knowledge=knowledge, profile_instance=profile,
+    )
+    deterministic = ManualDeterministicContentBuilder()
+    for name in ("Calendrier", "Application démo"):
+        manual.application["name"] = name
+        manual.project.name = name
+        assert deterministic.render_section(manual, "user-presentation").startswith(name)
+        assert deterministic.render_section(manual, "developer-presentation").startswith(name)
+    blueprint = ManualBlueprintRegistry().blueprint_for_document(
+        "django-react", project_kind="application", document_identifier="user-guide",
+    )
+    assert "Contact" not in blueprint.sections[0].purpose
+
+
+def test_make_render_distinguishes_unknown_effects_and_uses_copyable_examples(tmp_path: Path) -> None:
+    _create_django_react_project(tmp_path)
+    _write_app_template_contract(tmp_path)
+    result = ManualPreparationService().prepare(tmp_path, clean=True, mode="sections")
+    manifest = json.loads(result.manifest_file.read_text(encoding="utf-8"))
+    operator = next(item for item in manifest["documents"] if item["identifier"] == "operator-guide")
+    entry = next(item for item in operator["section_contexts"] if item["identifier"] == "operator-make-commands")
+    rendered = (result.output_dir / entry["deterministic_file"]).read_text(encoding="utf-8")
+    assert "Effet précis non documenté." not in rendered
+    assert "aucun effet de bord démontré" not in rendered
+    assert "lorsque cette opération est nécessaire" not in rendered
+    assert "Avertissement" in rendered
+    assert "make logs SERVICE=backend" in rendered
+    assert "make rebuild SERVICE=backend" in rendered
+    assert "make restore FILE=chemin/vers/sauvegarde.sql.gz" in rendered
+    assert "Provenance :" not in rendered

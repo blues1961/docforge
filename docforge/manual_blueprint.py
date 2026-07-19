@@ -331,7 +331,7 @@ class ManualBlueprintRegistry:
             document_audience="utilisateur et administrateur fonctionnel",
             document_kind="user-guide",
             sections=self._sections(
-                ("user-presentation", "Présentation", "Présenter Contact et son objectif fonctionnel.", ("application", "project", "profile")),
+                ("user-presentation", "Présentation", "Présenter l’application et son objectif fonctionnel démontré.", ("application", "project", "profile")),
                 ("user-roles", "Public visé et rôles", "Distinguer les utilisateurs et l’administration fonctionnelle.", ("capabilities", "django", "react")),
                 ("user-access", "Accès à l’application", "Indiquer uniquement les accès d’interface démontrés.", ("service_endpoints", "react")),
                 ("user-authentication", "Authentification", "Expliquer les mécanismes d’authentification démontrés sans procédure technique.", ("django", "react", "security")),

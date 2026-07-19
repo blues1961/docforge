@@ -29,6 +29,71 @@ class ManualDeterministicContentBuilder:
         "unresolved": "information non résolue",
     }
 
+    @staticmethod
+    def _application_name(knowledge: ManualKnowledge) -> str:
+        application = knowledge.application if isinstance(knowledge.application, dict) else {}
+        name = str(application.get("name") or knowledge.project.name or "L’application")
+        return name[:1].upper() + name[1:]
+
+    @staticmethod
+    def _user_capabilities(knowledge: ManualKnowledge, *, administrator: bool = False) -> list[dict]:
+        capabilities = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
+        items: list[dict] = []
+        seen: set[str] = set()
+        has_connection = any(isinstance(item, dict) and str(item.get("label") or "").casefold() == "connexion" for item in capabilities)
+        for index, capability in enumerate(capabilities, start=1):
+            if not isinstance(capability, dict):
+                continue
+            label = capability.get("label")
+            is_admin = capability.get("permission_condition") == "IsAdminUser" or "administr" in str(label or "").casefold()
+            if is_admin != administrator or not isinstance(label, str) or not label.strip():
+                continue
+            key = label.casefold().replace("’", "'").strip()
+            if has_connection and key in {"s'authentifier à l'application", "s’authentifier à l’application"}:
+                continue
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append({
+                "identifier": capability.get("identifier") or f"capability-{index}", "label": label.strip(),
+                "description": capability.get("description") if isinstance(capability.get("description"), str) else None,
+                "audience": "administrator" if administrator else "user",
+                "status": capability.get("status") or "unresolved",
+            })
+        return items
+
+    @staticmethod
+    def _make_commands(knowledge: ManualKnowledge) -> list:
+        order = ["help", "dev", "prod", "init", "up", "ps", "logs", "migrate", "rebuild", "restart", "down", "update", "backup", "restore", "check"]
+        commands = [command for command in knowledge.commands if command.visibility == "public" and command.documentation_policy != "exclude" and command.invocation.startswith("make ")]
+        return sorted(commands, key=lambda command: (order.index(command.name) if command.name in order else len(order), command.name))
+
+    @staticmethod
+    def _make_syntax(command, services: list[str]) -> list[str]:
+        if command.name == "restore":
+            return ["make restore", "make restore FILE=chemin/vers/sauvegarde.sql.gz"]
+        if command.name in {"logs", "rebuild"}:
+            service = "backend" if "backend" in services else (services[0] if services else "SERVICE")
+            return [f"make {command.name} SERVICE={service}"]
+        return [command.invocation]
+
+    @staticmethod
+    def _make_command(knowledge: ManualKnowledge, name: str):
+        return next((command for command in knowledge.commands if command.name == name and command.invocation.startswith("make ")), None)
+
+    @staticmethod
+    def _precaution(effects: list[str]) -> str | None:
+        lowered = " ".join(effects).casefold()
+        if "écrasement" in lowered or "modification" in lowered:
+            return "Cette opération peut modifier ou écraser des données ; vérifiez la sauvegarde et l’environnement actif."
+        if "interruption" in lowered or "arrêt" in lowered:
+            return "Cette opération interrompt des services ; prévenez les utilisateurs concernés."
+        if "reconstruction" in lowered:
+            return "Cette opération reconstruit des images ou services ; vérifiez le service et l’environnement actifs."
+        if "production" in lowered:
+            return "Vous sélectionnez l’environnement de production ; vérifiez ce choix avant de poursuivre."
+        return None
+
     def render_section(self, knowledge: ManualKnowledge, section_identifier: str) -> str:
         if section_identifier == "installation":
             lines = ["### Commandes d’installation", ""]
@@ -50,25 +115,34 @@ class ManualDeterministicContentBuilder:
             name = knowledge.application.get("name", knowledge.project.name) if isinstance(knowledge.application, dict) else knowledge.project.name
             return f"{str(name).capitalize()} est une application auto-hébergée dont l’exploitation s’appuie sur les services et cibles Make démontrés dans ce guide.\n"
         if section_identifier == "operator-prerequisites":
-            return "Les versions minimales des outils d’exécution ne sont pas toutes démontrées. Consultez les limites de ce guide avant l’installation.\n"
+            return "Outils nécessaires : Docker, Docker Compose et Make. Leurs versions minimales ne sont pas documentées dans les faits disponibles.\n"
         if section_identifier == "operator-environments":
-            lines = ["| Environnement | Endpoint démontré |", "|---|---|"]
+            lines = ["| Environnement | Accès |", "|---|---|"]
             for endpoint in knowledge.service_endpoints.get("endpoints", []):
                 if isinstance(endpoint, dict) and endpoint.get("validity") == "valid":
-                    lines.append(f"| {endpoint.get('environment') or '—'} | {endpoint.get('url') or '—'} |")
+                    url = endpoint.get("url") or "—"
+                    label = f"Modèle d’URL : `{url}`" if "${" in str(url) else f"`{url}`"
+                    lines.append(f"| {endpoint.get('environment') or '—'} | {label} |")
             return "\n".join(lines) + "\n"
         if section_identifier == "operator-installation-configuration":
             return "Utilisez les cibles de préparation documentées dans **Commandes Make**. Les noms des variables de configuration démontrées figurent dans la section dédiée.\n"
-        if section_identifier == "operator-start-stop":
-            return "\n".join(["Les invocations nécessaires sont référencées dans **Commandes Make**.", "", "```bash", "make dev", "make up", "make down", "```"]) + "\n"
-        if section_identifier == "operator-migrations-administration":
-            return "\n".join(["La migration démontrée est référencée dans **Commandes Make**.", "", "```bash", "make migrate", "```"]) + "\n"
-        if section_identifier == "operator-backup-restore":
-            return "\n".join(["Les opérations de sauvegarde et restauration démontrées sont référencées dans **Commandes Make**.", "", "```bash", "make backup", "make restore [FILE=FILE]", "```"]) + "\n"
+        if section_identifier in {"operator-start-stop", "operator-migrations-administration", "operator-backup-restore", "operator-troubleshooting"}:
+            names = {
+                "operator-start-stop": ("dev", "up", "down"),
+                "operator-migrations-administration": ("migrate",),
+                "operator-backup-restore": ("backup", "restore"),
+                "operator-troubleshooting": ("ps", "logs", "check"),
+            }[section_identifier]
+            services = sorted({service.get("name") for environment in knowledge.environments.get("items", []) for service in environment.get("services", []) if isinstance(service, dict) and service.get("name")})
+            lines = ["Les invocations ci-dessous sont détaillées dans **Commandes Make**.", "", "```bash"]
+            for name in names:
+                command = self._make_command(knowledge, name)
+                if command:
+                    lines.extend(self._make_syntax(command, services))
+            lines.append("```")
+            return "\n".join(lines) + "\n"
         if section_identifier == "operator-deployment":
-            return "Les étapes de déploiement détaillées ne sont pas démontrées comme procédure complète. Utilisez les cibles Make documentées pour sélectionner l’environnement et gérer les services.\n"
-        if section_identifier == "operator-troubleshooting":
-            return "\n".join(["Les procédures de diagnostic démontrées sont référencées dans **Commandes Make**.", "", "```bash", "make ps", "make logs SERVICE=SERVICE", "make check", "```"]) + "\n"
+            return "Les étapes de déploiement détaillées ne sont pas documentées comme procédure complète. Utilisez les cibles Make de sélection d’environnement et de gestion des services.\n"
         if section_identifier == "operator-limitations":
             items = [item for item in knowledge.missing_information if getattr(item, "category", None) in {"runtime", "backup", "tests"}]
             lines = [f"- {item.description}" for item in items if getattr(item, "description", None)]
@@ -80,27 +154,31 @@ class ManualDeterministicContentBuilder:
                     lines.append("| " + " | ".join(str(value or "—").replace("|", "\\|") for value in (
                         environment.get("name") or environment.get("environment"), service.get("name"), service.get("role"), ", ".join(service.get("depends_on", [])),
                     )) + " |")
-            return "\n".join([*lines, "", "Statut : fait détecté.", ""])
+            return "\n".join([*lines, ""])
         if section_identifier == "operator-make-commands":
-            lines = ["### Cibles Make démontrées", ""]
-            commands = [command for command in knowledge.commands if command.visibility == "public" and command.documentation_policy != "exclude" and command.invocation.startswith("make ")]
-            for command in commands:
+            services = sorted({service.get("name") for environment in knowledge.environments.get("items", []) for service in environment.get("services", []) if isinstance(service, dict) and service.get("name")})
+            lines = []
+            warnings = {"down", "restart", "rebuild", "migrate", "restore", "update"}
+            for command in self._make_commands(knowledge):
                 description = command.description
-                summary = description.summary if description else command.help or "Résumé non résolu."
-                purpose = description.user_purpose if description else "Usage opérateur non résolu."
-                syntax = command.invocation
+                summary = description.summary if description else command.help or "Description indisponible."
+                purpose = description.user_purpose if description else "Utilisez cette commande lorsque l’opération décrite est nécessaire."
+                lines.extend([f"#### `{command.name}`", "", summary])
+                if purpose:
+                    lines.extend(["", f"Quand l’utiliser : {purpose}"])
+                precaution = self._precaution(command.destructive_effects)
+                if precaution:
+                    lines.extend(["", f"> **Avertissement :** {precaution}"])
+                lines.extend(["", "```bash", *self._make_syntax(command, services), "```"])
                 if command.parameters:
-                    syntax += " " + " ".join(f"{parameter.name}={parameter.name}" if parameter.required else f"[{parameter.name}={parameter.name}]" for parameter in command.parameters)
-                lines.extend([f"#### `{command.name}`", "", f"Résumé : {summary}", f"Usage opérateur : {purpose}", "", "```bash", syntax, "```", "", "Paramètres :"])
-                if command.parameters:
+                    lines.extend(["", "Paramètres :"])
                     for parameter in command.parameters:
-                        detail = parameter.description or parameter.help or "Paramètre démontré."
-                        lines.append(f"- `{parameter.name}` ({'requis' if parameter.required else 'facultatif'}) — {detail}")
-                else:
-                    lines.append("- Aucun paramètre utilisateur démontré.")
-                lines.append(f"Environnements : {', '.join(command.environment) or 'non précisé'}.")
-                lines.append(f"Effet de bord démontré : {', '.join(command.destructive_effects) if command.destructive_effects else 'aucun effet de bord démontré'}.")
-                lines.append(f"Provenance : {command.provenance or 'non précisée'}.")
+                        examples = f" Exemples de services : {', '.join(services)}." if parameter.name == "SERVICE" and services else ""
+                        lines.append(f"- `{parameter.name}` ({'requis' if parameter.required else 'facultatif'}) — {parameter.description or 'valeur attendue par la recette.'}{examples}")
+                if command.environment:
+                    lines.append(f"Environnements : {', '.join(command.environment)}.")
+                if command.destructive_effects:
+                    lines.append(f"Effet de bord : {', '.join(command.destructive_effects)}.")
                 lines.append("")
             return "\n".join(lines).rstrip() + "\n"
         if section_identifier == "developer-commands":
@@ -111,9 +189,9 @@ class ManualDeterministicContentBuilder:
                 name = variable.get("name")
                 if isinstance(name, str) and name:
                     lines.append(f"- `{name}`")
-            return "\n".join([*lines, "", "Statut : fait détecté; noms uniquement.", ""])
+            return "\n".join([*lines, ""])
         if section_identifier == "developer-presentation":
-            return "Contact utilise les technologies détectées pour son application serveur et son interface web. Cette référence décrit uniquement les éléments techniques structurés disponibles.\n"
+            return f"{self._application_name(knowledge)} utilise les technologies détectées pour son application serveur et son interface web. Cette référence décrit uniquement les éléments techniques structurés disponibles.\n"
         if section_identifier == "developer-architecture":
             return "L’architecture démontrée associe une application Django à une interface React. Les routes sont centralisées dans la section **Routes et API**.\n"
         if section_identifier == "developer-services":
@@ -127,16 +205,22 @@ class ManualDeterministicContentBuilder:
             return "\n".join(["Composants Django détectés :", *[f"- {item}" for item in apps]]) + "\n" if apps else "Les composants backend structurés sont décrits par les routes et capacités détectées.\n"
         if section_identifier == "developer-frontend":
             caps = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            labels = [item.get("label") for item in caps if isinstance(item, dict) and item.get("component") and item.get("label")]
+            labels = [item.get("label") for item in caps if isinstance(item, dict) and item.get("label")]
             return "\n".join(["Capacités de l’interface détectées :", *[f"- {item}" for item in labels]]) + "\n" if labels else "Aucune capacité d’interface supplémentaire n’est structurée.\n"
         if section_identifier == "developer-authentication":
             django = knowledge.django if isinstance(knowledge.django, dict) else {}
             react = knowledge.react if isinstance(knowledge.react, dict) else {}
-            mechanisms = list(dict.fromkeys([*django.get("auth_mechanisms", []), *react.get("auth_mechanisms", [])]))
-            return "\n".join(["Mécanismes d’authentification détectés :", *[f"- {item}" for item in mechanisms], "", "Les routes et méthodes démontrées figurent dans **Routes et API**."]) + "\n"
+            mechanisms = {str(item).casefold() for item in [*django.get("auth_mechanisms", []), *react.get("auth_mechanisms", [])]}
+            lines = ["L’authentification utilise les mécanismes détectés :"]
+            if any("jwt" in item or "bearer" in item or "simplejwt" in item for item in mechanisms):
+                lines.append("- Jetons JWT transmis avec le schéma Bearer.")
+            if any("session" in item for item in mechanisms):
+                lines.append("- Session locale côté interface.")
+            lines.extend(["", "Les routes et méthodes démontrées figurent dans **Routes et API**."])
+            return "\n".join(lines) + "\n"
         if section_identifier == "developer-models-capabilities":
             caps = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            lines = ["Capacités structurées démontrées :"]
+            lines = ["Capacités techniques disponibles :"]
             for item in caps:
                 if isinstance(item, dict) and item.get("label"):
                     lines.append(f"- {item['label']}")
@@ -149,7 +233,7 @@ class ManualDeterministicContentBuilder:
                     lines.append(f"- {description}")
             return "\n".join(lines) + ("\n" if lines else "- Aucune information technique manquante supplémentaire n’est structurée.\n")
         if section_identifier == "developer-routes-api":
-            lines = ["### Routes et API démontrées", "", "| Route | Méthodes | Permissions |", "|---|---|---|"]
+            lines = ["| Route | Méthodes |", "|---|---|"]
             routes = [
                 route for route in knowledge.django.get("resolved_routes", [])
                 if route.get("resolution_status") == "resolved"
@@ -157,14 +241,14 @@ class ManualDeterministicContentBuilder:
             if routes:
                 for route in routes:
                     lines.append("| " + " | ".join(str(value or "—").replace("|", "\\|") for value in (
-                        route.get("full_path"), ", ".join(route.get("methods", [])), ", ".join(route.get("permissions", [])),
+                        route.get("full_path"), ", ".join(route.get("methods", [])),
                     )) + " |")
             else:
                 for endpoint in knowledge.django.get("endpoints", []):
                     lines.append("| " + " | ".join(str(value or "—").replace("|", "\\|") for value in (
-                        endpoint.get("path"), ", ".join(endpoint.get("methods", [])), ", ".join(endpoint.get("permissions", [])),
+                        endpoint.get("path"), ", ".join(endpoint.get("methods", [])),
                     )) + " |")
-            return "\n".join([*lines, "", "Statut : fait détecté.", ""])
+            return "\n".join([*lines, ""])
         if section_identifier in {"operator-protected-documents", "developer-invariants"}:
             lines = ["### Documents protégés et contrat démontré", ""]
             for document in knowledge.security.protected_documents:
@@ -172,18 +256,9 @@ class ManualDeterministicContentBuilder:
             template = knowledge.template if isinstance(knowledge.template, dict) else {}
             for evidence in template.get("evidence", []):
                 lines.append(f"- {evidence}")
-            return "\n".join([*lines, "", "Statut : fait détecté.", ""])
+            return "\n".join([*lines, ""])
         if section_identifier == "user-presentation":
-            application = knowledge.application if isinstance(knowledge.application, dict) else {}
-            name = application.get("name") or "L’application"
-            if isinstance(name, str) and name:
-                name = name[:1].upper() + name[1:]
-            capabilities = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            labels = {item.get("label") for item in capabilities if isinstance(item, dict)}
-            lines = [f"{name} est une application web auto-hébergée."]
-            if any(isinstance(label, str) and "contacts" in label.casefold() for label in labels):
-                lines.append("Elle permet la gestion de contacts et propose les fonctions utilisateur détectées dans ce guide.")
-            return "\n".join(lines) + "\n"
+            return f"{self._application_name(knowledge)} est une application web auto-hébergée. Ce guide présente les fonctions disponibles pour ses utilisateurs.\n"
         if section_identifier == "user-roles":
             capabilities = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
             roles = {item.get("permission_condition") for item in capabilities if isinstance(item, dict)}
@@ -200,19 +275,10 @@ class ManualDeterministicContentBuilder:
         if section_identifier == "user-authentication":
             return "Une connexion est requise pour utiliser les fonctions protégées de l’application.\n"
         if section_identifier == "user-main-features":
-            capabilities = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            labels = {item.get("label") for item in capabilities if isinstance(item, dict)}
-            facts = [
-                ("Connexion", "Connexion"), ("Consulter contacts", "Consultation des contacts"),
-                ("Créer contacts", "Création de contacts"), ("Modifier contacts", "Modification de contacts"),
-                ("Supprimer contacts", "Suppression de contacts"), ("Recherche", "Recherche"),
-                ("Aide", "Aide"), ("Changement de thème", "Changement de thème"),
-                ("Gérer un coffre local chiffré côté client", "Coffre local chiffré côté client"),
-                ("Révélation d’une valeur", "Affichage d’une valeur protégée"),
+            lines = [
+                f"- {item['label']}" + (f" — {item['description']}" if item.get("description") else "")
+                for item in self._user_capabilities(knowledge)
             ]
-            lines = [f"- {rendered}" for source, rendered in facts if source in labels]
-            if any(item.get("permission_condition") == "IsAdminUser" for item in capabilities if isinstance(item, dict)):
-                lines.append("- Gestion des utilisateurs pour l’administrateur fonctionnel")
             return "\n".join(lines) + "\n"
         if section_identifier == "user-application-usage":
             endpoints = knowledge.service_endpoints.get("endpoints", []) if isinstance(knowledge.service_endpoints, dict) else []
@@ -220,17 +286,19 @@ class ManualDeterministicContentBuilder:
             lines = []
             if url:
                 lines.append(f"1. Accédez à l’application à l’adresse {url}.")
-            lines.extend(["2. Connectez-vous pour accéder aux fonctions correspondant à votre rôle.", "3. Gérez vos contacts et utilisez la recherche lorsque ces fonctions sont disponibles."])
-            crypto = knowledge.react.get("crypto", {}) if isinstance(knowledge.react, dict) else {}
-            if crypto.get("detected"):
-                lines.append("4. Utilisez le coffre local selon les comportements de verrouillage et de déverrouillage démontrés.")
+            django = knowledge.django if isinstance(knowledge.django, dict) else {}
+            react = knowledge.react if isinstance(knowledge.react, dict) else {}
+            if django.get("auth_mechanisms") or react.get("auth_mechanisms"):
+                lines.append(f"{len(lines) + 1}. Connectez-vous pour accéder aux fonctions correspondant à votre rôle.")
+            capabilities = self._user_capabilities(knowledge)
+            if capabilities:
+                lines.append("Utilisez ensuite les fonctions adaptées à votre besoin et à votre rôle.")
             return "\n".join(lines) + "\n"
         if section_identifier == "user-functional-administration":
-            capabilities = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            admin = [item.get("label") for item in capabilities if isinstance(item, dict) and item.get("permission_condition") == "IsAdminUser" and item.get("label")]
+            admin = self._user_capabilities(knowledge, administrator=True)
             if not admin:
                 return "Aucune capacité d’administration fonctionnelle n’est démontrée.\n"
-            lines = ["Les capacités suivantes sont réservées à l’administrateur fonctionnel :", *[f"- {label}" for label in admin]]
+            lines = ["Les capacités suivantes sont réservées à l’administrateur fonctionnel :", *[f"- {item['label']}" for item in admin]]
             return "\n".join(lines) + "\n"
         if section_identifier == "user-troubleshooting":
             return "Aucune procédure de dépannage destinée à l’utilisateur n’est démontrée dans les faits disponibles.\n"
@@ -269,14 +337,14 @@ class ManualDeterministicContentBuilder:
                     lines.append("| " + " | ".join(str(value or "—").replace("|", "\\|") for value in (control.get("identifier"), control.get("category"), control.get("description"), rendered_evidence)) + " |")
             if audience == "user":
                 return "\n".join([*lines, ""])
-            return "\n".join([*lines, "", self._status(knowledge.security.source.status), ""])
+            return "\n".join([*lines, ""])
         if section_identifier == "security":
             lines = ["### Contrôles de sécurité démontrés", "", "| Identifiant | Catégorie | Règle | Preuve |", "|---|---|---|---|"]
             for control in knowledge.security.controls:
                 evidence = control.get("evidence") or []
                 rendered_evidence = ", ".join(str(item) for item in evidence) if isinstance(evidence, list) else str(evidence)
                 lines.append("| " + " | ".join(str(value or "—").replace("|", "\\|") for value in (control.get("identifier"), control.get("category"), control.get("description"), rendered_evidence)) + " |")
-            return "\n".join([*lines, "", self._status(knowledge.security.source.status), ""])
+            return "\n".join([*lines, ""])
         if section_identifier == "protected-documents":
             lines = ["### Documents protégés et application", ""]
             for document in knowledge.security.protected_documents:
@@ -287,7 +355,7 @@ class ManualDeterministicContentBuilder:
                 for parameter in apply.parameters:
                     if parameter.kind == "option":
                         lines.append(f"- Option `{' / '.join(parameter.flags) or parameter.name}` ({'requis' if parameter.required else 'facultatif'})")
-            return "\n".join([*lines, "", self._status(knowledge.security.source.status), ""])
+            return "\n".join([*lines, ""])
         if section_identifier != "cli-reference":
             return ""
         lines = ["### Entrées de la référence CLI", ""]

@@ -160,10 +160,16 @@ class MultiManualBenchmarkRunner:
                     errors = [item for item in diagnostics if item.severity == "error"]
                     warnings = [item for item in diagnostics if item.severity == "warning"]
                     dstate["validation"]={"diagnostics":len(diagnostics),"errors":len(errors),"warnings":len(warnings),"substantive":True}
-            state["multidocument_validation"]={"deferred":selected != available}
+            multidocument_diagnostics = []
+            state["multidocument_validation"]={"deferred":selected != available, "executed":False, "diagnostics":0}
+            if selected == available and manifest.get("profile_name") == "django-react":
+                multidocument_diagnostics = [asdict(item) for item in DjangoReactMultiDocumentValidator().validate(root=root, manifest=manifest)]
+                state["multidocument_validation"]={"deferred":False, "executed":True, "diagnostics":len(multidocument_diagnostics)}
+                (run_dir/"validation").mkdir(exist_ok=True)
+                (run_dir/"validation"/"multidocument.json").write_text(json.dumps(multidocument_diagnostics, ensure_ascii=False, indent=2), encoding="utf-8")
             state["generation_state"]="completed"
             selected_validations = [d.get("validation", {}) for d in state["documents"].values()]
-            all_diagnostics = []
+            all_diagnostics = list(multidocument_diagnostics)
             for ident, dstate in state["documents"].items():
                 validation_file = run_dir / "validation" / f"{ident}.json"
                 if validation_file.is_file():

@@ -185,3 +185,19 @@ def test_operator_h1_mismatch_is_reported() -> None:
     blueprint = ManualBlueprintRegistry().blueprint_for_document("django-react", project_kind="application", document_identifier="operator-guide")
     diagnostics = ManualMarkdownValidator().validate(markdown="# Guide utilisateur de contact\n", knowledge={"application": {"name": "contact"}}, blueprint=blueprint)
     assert any(item.code == "MANUAL012" for item in diagnostics)
+
+
+def test_runner_executes_multidocument_validation_for_complete_selection(tmp_path: Path):
+    root = make_reference(tmp_path / "vtest")
+    args = parse_args([
+        "--reference-dir", str(root), "--model", "fake", "--run-id", "all",
+        "--all-documents", "--num-ctx", "12288",
+    ])
+    assert MultiManualBenchmarkRunner().run(args) == 1
+    run = root.parent / "runs" / "vtest" / "fake" / "all"
+    state = json.loads((run / "run-manifest.json").read_text())
+    assert state["final_state"] == "validation_failed"
+    assert state["multidocument_validation"]["deferred"] is False
+    assert state["multidocument_validation"]["executed"] is True
+    assert state["multidocument_validation"]["diagnostics"] > 0
+    assert json.loads((run / "validation" / "multidocument.json").read_text())

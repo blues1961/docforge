@@ -296,7 +296,23 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
         behavior = command.help_text or (" ; ".join(command.body) if command.body else summary)
         return ManualCommandDescription(
             summary=summary,
-            user_purpose="À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+            user_purpose={
+                "help": "Consulter les commandes disponibles.",
+                "dev": "Sélectionner la configuration de développement.",
+                "prod": "Sélectionner la configuration de production.",
+                "init": "Initialiser l’environnement après sa configuration.",
+                "up": "Démarrer les services.",
+                "ps": "Vérifier l’état des services.",
+                "logs": "Examiner les journaux d’un service.",
+                "migrate": "Appliquer les migrations.",
+                "rebuild": "Reconstruire un service après un changement nécessitant une nouvelle image.",
+                "restart": "Redémarrer les services.",
+                "down": "Arrêter les services.",
+                "update": "Exécuter la procédure de mise à jour du projet.",
+                "backup": "Créer une sauvegarde avant une opération risquée.",
+                "restore": "Restaurer les données depuis une sauvegarde.",
+                "check": "Exécuter les contrôles déclarés par le projet.",
+            }.get(command.name, ""),
             behavior=behavior,
             inputs=[parameter.name for parameter in command.parameters],
             side_effects=DjangoReactManualKnowledgeBuilder._command_destructive_effects(command),
@@ -351,10 +367,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
     @staticmethod
     def _command_destructive_effects(command) -> list[str]:
         manifest_effects = list(getattr(command, "manifest_destructive_effects", []) or [])
-        if getattr(command, "manifest_destructive", None) is not None:
-            return manifest_effects
-
-        effects: list[str] = []
+        effects: list[str] = list(manifest_effects)
         executable_lines = [
             line.casefold()
             for line in command.body
@@ -369,7 +382,16 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             effects.append("Suppression de fichiers")
         if " build" in f" {body}" or command.category == "build":
             effects.append("Reconstruction des images ou services")
-        return effects
+        recipe_effects = {
+            "backup": "Création d’une sauvegarde de base de données",
+            "migrate": "Application des migrations de base de données",
+            "up": "Démarrage des services définis par le projet",
+            "init": "Initialisation de l’environnement de travail",
+            "prod": "Sélection de l’environnement de production",
+        }
+        if command.name in recipe_effects:
+            effects.append(recipe_effects[command.name])
+        return list(dict.fromkeys(effects))
 
     def _parameter_allowed_values(self, knowledge: ProjectKnowledge, parameter) -> list[str]:
         if parameter.name != "SERVICE":
