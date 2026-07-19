@@ -49,7 +49,7 @@
 ==> Préparation déterministe du manuel
 Préparation du manuel terminée.
 ╭──────────────────────────────────────────────────────────────────────────── Traceback (most recent call last) ─────────────────────────────────────────────────────────────────────────────╮
-│ /home/sylvain/projets/docforge/docforge/cli.py:131 in manual_prepare_command                                                                                                               │
+│ <workspace>/docforge/cli.py:131 in manual_prepare_command                                                                                                               │
 │                                                                                                                                                                                            │
 │    128 │   )                                                                                                                                                                               │
 │    129 │   console.print(                                                                                                                                                                  │
@@ -69,12 +69,12 @@ Préparation du manuel terminée.
 │   387 │   │   │   │   raise ValueError(f"'..' segment in {str(other)!r} cannot be walked")                                                                                                 │
 │   388 │   │   else:                                                                                                                                                                        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-ValueError: '/tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json' is not in the subpath of '/home/sylvain/projets/docforge'
+ValueError: '/tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json' is not in the subpath of '<workspace>'
 [ÉCHEC:1] Préparation déterministe du manuel
 
 ==> Validation DocForge du guide
 {
-  "markdown_file": "/home/sylvain/projets/docforge/benchmarks/manuals/docforge/v0.9/docforge-guide-usager.md",
+  "markdown_file": "<workspace>/benchmarks/manuals/docforge/v0.9/docforge-guide-usager.md",
   "knowledge_file": "/tmp/docforge-manual-reference.jUEC4F/prepared/manual-knowledge.json",
   "errors": [],
   "warnings": [],

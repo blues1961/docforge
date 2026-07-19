@@ -1,6 +1,6 @@
 {
-  "markdown_file": "/home/sylvain/projets/docforge/benchmarks/manuals/docforge/v0.11/docforge-guide-usager.md",
-  "knowledge_file": "/home/sylvain/projets/docforge/benchmarks/manuals/docforge/v0.11/manual-knowledge.json",
+  "markdown_file": "<workspace>/benchmarks/manuals/docforge/v0.11/docforge-guide-usager.md",
+  "knowledge_file": "<workspace>/benchmarks/manuals/docforge/v0.11/manual-knowledge.json",
   "errors": [],
   "warnings": [],
   "valid": true
