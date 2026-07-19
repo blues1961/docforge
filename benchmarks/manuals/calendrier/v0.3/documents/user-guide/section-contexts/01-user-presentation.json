@@ -1,0 +1,21 @@
+{
+  "identifier": "user-presentation",
+  "title": "Présentation",
+  "purpose": "Présenter l’application et son objectif fonctionnel démontré.",
+  "estimated_tokens": 51,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "application": 67,
+    "project": 61,
+    "profile": 131
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "application": {
+        "name": "calendrier"
+      }
+    }
+  }
+}

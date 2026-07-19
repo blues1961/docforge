@@ -1,0 +1,189 @@
+{
+  "identifier": "operator-prerequisites",
+  "title": "Prérequis démontrés",
+  "purpose": "Lister les prérequis détectés pour l’exploitation.",
+  "estimated_tokens": 1009,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "installation": 132,
+    "missing_information": 839
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "installation": {
+      "summary": "Préparation locale de l’application à partir des commandes opérationnelles détectées.",
+      "prerequisites": [
+        "Docker et Docker Compose",
+        "Le dépôt doit être initialisé via les scripts et cibles Make détectés."
+      ],
+      "steps": [
+        {
+          "title": "Sélectionner l’environnement de développement",
+          "command": "make dev"
+        },
+        {
+          "title": "Initialiser les fichiers locaux requis",
+          "command": "make init"
+        },
+        {
+          "title": "Démarrer les services",
+          "command": "make up"
+        },
+        {
+          "title": "Appliquer les migrations détectées",
+          "command": "make migrate"
+        }
+      ]
+    },
+    "missing_information": [
+      {
+        "identifier": "PROJECT-VERSION-MISSING",
+        "category": "project",
+        "severity": "warning",
+        "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+        "affected_sections": [
+          "presentation",
+          "installation"
+        ],
+        "sources": [
+          "ProjectKnowledge.application"
+        ]
+      },
+      {
+        "identifier": "PYTHON-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Python n’est pas déterminable statiquement.",
+        "affected_sections": [
+          "installation",
+          "prerequisites"
+        ],
+        "sources": [
+          "backend/calendar_project/settings.py"
+        ]
+      },
+      {
+        "identifier": "NODE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "frontend"
+        ],
+        "sources": [
+          "frontend/package.json",
+          "frontend/Dockerfile.dev"
+        ]
+      },
+      {
+        "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "deployment"
+        ],
+        "sources": [
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml",
+          "Makefile"
+        ]
+      },
+      {
+        "identifier": "BACKEND-TEST-COMMAND-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Aucune commande opérationnelle de tests backend n’a été démontrée.",
+        "affected_sections": [
+          "tests",
+          "backend"
+        ],
+        "sources": [
+          "Makefile",
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "… (+5 autres sources)"
+        ]
+      },
+      {
+        "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+        "affected_sections": [
+          "tests",
+          "api"
+        ],
+        "sources": [
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "… (+18 autres sources)"
+        ]
+      },
+      {
+        "identifier": "API-SCHEMA-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+        "affected_sections": [
+          "api"
+        ],
+        "sources": [
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "… (+1 autres sources)"
+        ]
+      },
+      {
+        "identifier": "API-ERROR-CODES-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+        "affected_sections": [
+          "api",
+          "troubleshooting"
+        ],
+        "sources": [
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "… (+1 autres sources)"
+        ]
+      },
+      {
+        "identifier": "VAULT-RECOVERY-PROCEDURE-MISSING",
+        "category": "security",
+        "severity": "warning",
+        "description": "La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.",
+        "affected_sections": [
+          "security",
+          "authentication-accounts"
+        ],
+        "sources": [
+          "frontend/src/contactCrypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      {
+        "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+        "category": "backup",
+        "severity": "warning",
+        "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+        "affected_sections": [
+          "backup-restore",
+          "operations"
+        ],
+        "sources": [
+          "Makefile"
+        ]
+      }
+    ]
+  }
+}

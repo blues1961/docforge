@@ -1,0 +1,1035 @@
+{
+  "identifier": "operator-migrations-administration",
+  "title": "Migrations et administration",
+  "purpose": "Présenter les faits démontrés de migrations et d’administration.",
+  "estimated_tokens": 4461,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "operational_commands": 1700,
+    "workflows": 757,
+    "django": 2276
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "operational_commands": {
+      "primary_commands": [
+        {
+          "name": "ps",
+          "category": "diagnostic",
+          "command_path": "make ps",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "dev",
+          "category": "environment",
+          "command_path": "make dev",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "logs",
+          "category": "logs",
+          "command_path": "make logs",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "migrate",
+          "category": "migrations",
+          "command_path": "make migrate",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Application des migrations de base de données"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "help",
+          "category": "other",
+          "command_path": "make help",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "restart",
+          "category": "restart",
+          "command_path": "make restart",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "init",
+          "category": "setup",
+          "command_path": "make init",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Initialisation de l’environnement de travail"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "down",
+          "category": "shutdown",
+          "command_path": "make down",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "up",
+          "category": "startup",
+          "command_path": "make up",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Démarrage des services définis par le projet"
+          ],
+          "parameters": []
+        }
+      ],
+      "advanced_commands": [
+        {
+          "name": "backup",
+          "category": "backup",
+          "command_path": "make backup",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Création d’une sauvegarde de base de données"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "rebuild",
+          "category": "build",
+          "command_path": "make rebuild",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "category": "build",
+          "command_path": "make update",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "check",
+          "category": "diagnostic",
+          "command_path": "make check",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "prod",
+          "category": "environment",
+          "command_path": "make prod",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [
+            "Sélection de l’environnement de production"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "restore",
+          "category": "restore",
+          "command_path": "make restore",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Modification ou écrasement potentiel des données PostgreSQL"
+          ],
+          "parameters": [
+            {
+              "name": "FILE",
+              "required": false,
+              "allowed_values": [],
+              "origin": "user-exposed"
+            }
+          ]
+        }
+      ],
+      "excluded_commands_summary": {
+        "total": 0,
+        "by_provenance": {},
+        "reasons": [],
+        "commands": []
+      }
+    },
+    "workflows": [
+      {
+        "identifier": "prepare-dev-config",
+        "title": "Préparer la configuration de développement",
+        "summary": "Sélectionner le mode dev puis initialiser les fichiers d’environnement.",
+        "commands": [
+          "make dev",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-development",
+        "title": "Démarrer le développement",
+        "summary": "Sélectionner l’environnement dev puis démarrer les services.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "apply-migrations",
+        "title": "Appliquer les migrations",
+        "summary": "Exécuter la procédure de migration détectée.",
+        "commands": [
+          "make migrate"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "create-admin",
+        "title": "Créer un administrateur",
+        "summary": "Créer ou mettre à jour le compte administrateur via la procédure démontrée.",
+        "commands": [
+          "make migrate"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "open-frontend",
+        "title": "Ouvrir le frontend",
+        "summary": "Démarrer les services puis ouvrir le frontend détecté.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_VITE_PORT}"
+        ]
+      },
+      {
+        "identifier": "open-django-admin",
+        "title": "Accéder à l’administration Django",
+        "summary": "Démarrer les services puis ouvrir l’administration détectée.",
+        "commands": [
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_API_PORT}/admin/"
+        ]
+      },
+      {
+        "identifier": "view-logs",
+        "title": "Consulter les journaux",
+        "summary": "Afficher les logs des services actifs.",
+        "commands": [
+          "make logs"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "stop-services",
+        "title": "Arrêter les services",
+        "summary": "Arrêter les services de l’environnement actif.",
+        "commands": [
+          "make down"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "rebuild-images",
+        "title": "Reconstruire les images",
+        "summary": "Reconstruire les images Docker de l’environnement actif.",
+        "commands": [
+          "make rebuild"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "prepare-production",
+        "title": "Préparer la production",
+        "summary": "Sélectionner prod puis initialiser les fichiers requis.",
+        "commands": [
+          "make prod",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-production",
+        "title": "Démarrer la production",
+        "summary": "Sélectionner prod puis démarrer les services.",
+        "commands": [
+          "make prod",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "backup-database",
+        "title": "Sauvegarder la base",
+        "summary": "Créer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make backup"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "restore-database",
+        "title": "Restaurer la base",
+        "summary": "Restaurer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make restore"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "django": {
+      "settings_module": "calendar_project.settings",
+      "urlconf_module": "calendar_project.urls",
+      "installed_apps": [
+        "calendar_api",
+        "corsheaders",
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.messages",
+        "django.contrib.sessions",
+        "django.contrib.staticfiles",
+        "rest_framework"
+      ],
+      "admin_enabled": true,
+      "routers": [
+        "/calendars",
+        "/events"
+      ],
+      "auth_mechanisms": [
+        "Bearer token",
+        "JWT",
+        "SimpleJWT"
+      ],
+      "models": [
+        {
+          "name": "Calendar",
+          "fields": [
+            "owner",
+            "name",
+            "color",
+            "is_default",
+            "kind",
+            "created_at"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "Event",
+          "fields": [
+            "calendar",
+            "title",
+            "description",
+            "start",
+            "end",
+            "all_day",
+            "location",
+            "external_contact_id",
+            "external_contact_snapshot",
+            "external_uid",
+            "recurrence",
+            "recurrence_month",
+            "recurrence_day",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        }
+      ],
+      "model_schemas": [
+        {
+          "name": "Calendar",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "name",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "color",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "#1976d2",
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "is_default",
+              "field_type": "BooleanField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "False",
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "kind",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "Kind.PERSONAL",
+              "choices": [
+                {
+                  "value": "personal",
+                  "label": "Personal"
+                },
+                {
+                  "value": "birthdays",
+                  "label": "Birthdays"
+                }
+              ],
+              "unique": false
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            }
+          ]
+        },
+        {
+          "name": "Event",
+          "fields": [
+            {
+              "name": "calendar",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "relation": "Calendar",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "title",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "description",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "start",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "end",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "all_day",
+              "field_type": "BooleanField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "False",
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "location",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "external_contact_id",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "external_contact_snapshot",
+              "field_type": "JSONField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "dict",
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "external_uid",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "recurrence",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "Recurrence.NONE",
+              "choices": [
+                {
+                  "value": "none",
+                  "label": "None"
+                },
+                {
+                  "value": "yearly",
+                  "label": "Yearly"
+                }
+              ],
+              "unique": false
+            },
+            {
+              "name": "recurrence_month",
+              "field_type": "PositiveSmallIntegerField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "recurrence_day",
+              "field_type": "PositiveSmallIntegerField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "choices": [],
+              "unique": false
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/admin/",
+          "methods": [],
+          "view": "urls",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/create/",
+          "methods": [],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/whoami/",
+          "methods": [
+            "GET"
+          ],
+          "view": "WhoAmIView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/calendars/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "CalendarViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/calendars/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "CalendarViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/contact-integrations/contacts/",
+          "methods": [
+            "GET"
+          ],
+          "view": "ContactProxyView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/events/",
+          "methods": [
+            "GET"
+          ],
+          "view": "EventViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/events/{id}/",
+          "methods": [
+            "GET"
+          ],
+          "view": "EventViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/health/",
+          "methods": [],
+          "view": "health",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/integrations/contact-birthdays/sync/",
+          "methods": [
+            "POST"
+          ],
+          "view": "ContactBirthdaySyncView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/integrations/dashboard/events/",
+          "methods": [
+            "GET"
+          ],
+          "view": "DashboardEventsView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/token/",
+          "methods": [],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/token/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        }
+      ]
+    }
+  }
+}

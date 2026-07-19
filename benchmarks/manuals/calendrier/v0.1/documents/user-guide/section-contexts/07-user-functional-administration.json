@@ -1,0 +1,18 @@
+{
+  "identifier": "user-functional-administration",
+  "title": "Administration fonctionnelle",
+  "purpose": "Présenter la gestion fonctionnelle des comptes lorsque démontrée.",
+  "estimated_tokens": 58,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "capabilities": 511,
+    "django": 2276
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "administration_capabilities": []
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "identifier": "user-main-features",
+  "title": "Fonctionnalités principales",
+  "purpose": "Présenter les capacités fonctionnelles démontrées.",
+  "estimated_tokens": 359,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "capabilities": 511,
+    "react": 330,
+    "django": 2276
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "capabilities": [
+        {
+          "identifier": "changement-de-th-me",
+          "label": "Changement de thème",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "connexion",
+          "label": "Connexion",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "consulter-calendriers",
+          "label": "Consulter calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "consulter-v-nements",
+          "label": "Consulter événements",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "cr-er-calendriers",
+          "label": "Créer calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "g-rer-un-coffre-local-chiffr-c-t-client",
+          "label": "Gérer un coffre local chiffré côté client",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "modifier-calendriers",
+          "label": "Modifier calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "supprimer-calendriers",
+          "label": "Supprimer calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "s-authentifier-l-application",
+          "label": "S’authentifier à l’application",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        }
+      ]
+    }
+  }
+}

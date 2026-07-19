@@ -1,0 +1,209 @@
+{
+  "identifier": "developer-frontend",
+  "title": "Frontend",
+  "purpose": "Présenter les pages et capacités frontend démontrées.",
+  "estimated_tokens": 894,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "react": 342,
+    "capabilities": 511
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "react": {
+      "entry_point": "frontend/src/App.jsx",
+      "routes": [
+        "/"
+      ],
+      "pages": [
+        "Calendriers",
+        "Connexion",
+        "{title}"
+      ],
+      "navigation_items": [
+        "Connexion",
+        "Importer un .ics",
+        "{submitting ? 'Import en cours…' : 'Importer'}"
+      ],
+      "forms": [
+        "CalendarEditor",
+        "EventEditor",
+        "ImportIcs",
+        "Login"
+      ],
+      "user_features": [
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "Login",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/components/Auth/Login.jsx"
+          ],
+          "confidence": "medium"
+        }
+      ],
+      "auth_mechanisms": [
+        "JWT Bearer côté frontend",
+        "Session locale dans localStorage",
+        "Déverrouillage local du coffre privé"
+      ],
+      "crypto": {
+        "detected": true,
+        "algorithms": [
+          "AES-GCM"
+        ],
+        "key_derivation": "PBKDF2",
+        "key_derivation_hash": "SHA-256",
+        "key_derivation_iterations": 250000,
+        "key_derivation_salt_template": "encoder",
+        "key_length_bits": null,
+        "nonce_bytes": null,
+        "format_version": null,
+        "payload_fields": [
+          "iv",
+          "ciphertext",
+          "key",
+          "salt",
+          "payload"
+        ],
+        "cleartext_fields": [],
+        "key_material_storage": "localStorage",
+        "recovery_supported": null,
+        "lock_behavior": null,
+        "unlock_behavior": null,
+        "source_paths": [
+          "frontend/src/contactCrypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      "api_calls": [],
+      "environment_variables": []
+    },
+    "capabilities": {
+      "capabilities": [
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "Login",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/components/Auth/Login.jsx"
+          ]
+        },
+        {
+          "label": "Consulter calendriers",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/calendars/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "medium",
+          "evidence": [
+            "/api/calendars/",
+            "Calendar",
+            "/api/calendars/{id}/"
+          ]
+        },
+        {
+          "label": "Consulter événements",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/events/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "medium",
+          "evidence": [
+            "/api/events/",
+            "Event",
+            "/api/events/{id}/",
+            "/api/integrations/dashboard/events/"
+          ]
+        },
+        {
+          "label": "Créer calendriers",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/calendars/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "medium",
+          "evidence": [
+            "/api/calendars/",
+            "Calendar"
+          ]
+        },
+        {
+          "label": "Gérer un coffre local chiffré côté client",
+          "status": "detected",
+          "component": "frontend",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/contactCrypto.js",
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Modifier calendriers",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/calendars/{id}/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "medium",
+          "evidence": [
+            "/api/calendars/{id}/",
+            "Calendar"
+          ]
+        },
+        {
+          "label": "Supprimer calendriers",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/calendars/{id}/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "medium",
+          "evidence": [
+            "/api/calendars/{id}/",
+            "Calendar"
+          ]
+        },
+        {
+          "label": "S’authentifier à l’application",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/auth/jwt/create/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "/api/auth/jwt/create/"
+          ]
+        }
+      ]
+    }
+  }
+}

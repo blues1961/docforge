@@ -1,0 +1,5732 @@
+{
+  "schema_version": 3,
+  "project": {
+    "name": "calendrier",
+    "version": null,
+    "description": "Application Django/React auto-hébergée.",
+    "profile_type": "django-react",
+    "python_requires": null,
+    "cli_entry_point": null,
+    "source": {
+      "status": "detected",
+      "sources": [
+        "ProjectKnowledge.application",
+        "ProjectKnowledge.profile"
+      ],
+      "notes": []
+    }
+  },
+  "profile": {
+    "name": "django-react",
+    "label": "Application Django/React",
+    "description": "Application auto-hébergée avec backend Django, frontend React/Vite et orchestration Docker Compose.",
+    "confidence": 100,
+    "evidence": [
+      "framework détecté : Django",
+      "framework détecté : React",
+      "framework détecté : Vite",
+      "structure détectée : docker-compose.dev.yml",
+      "structure détectée : docker-compose.prod.yml",
+      "structure détectée : backend",
+      "structure détectée : frontend"
+    ],
+    "source": {
+      "status": "detected",
+      "sources": [
+        "ProfileDetector"
+      ],
+      "notes": []
+    }
+  },
+  "installation": {
+    "summary": "Préparation locale de l’application à partir des commandes opérationnelles détectées.",
+    "prerequisites": [
+      "Docker et Docker Compose",
+      "Le dépôt doit être initialisé via les scripts et cibles Make détectés."
+    ],
+    "steps": [
+      {
+        "title": "Sélectionner l’environnement de développement",
+        "command": "make dev",
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Initialiser les fichiers locaux requis",
+        "command": "make init",
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Démarrer les services",
+        "command": "make up",
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Appliquer les migrations détectées",
+        "command": "make migrate",
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      }
+    ],
+    "source": {
+      "status": "derived",
+      "sources": [
+        "Makefile",
+        "backend/entrypoint.sh",
+        "scripts/backup-db.sh",
+        "scripts/check-invariants.sh",
+        "scripts/env-switch.sh",
+        "scripts/generate-env.sh",
+        "scripts/generate-secrets.sh",
+        "scripts/init.sh",
+        "scripts/migrate.sh",
+        "scripts/restore-db.sh",
+        "scripts/update.sh"
+      ],
+      "notes": []
+    }
+  },
+  "application": {
+    "name": "calendrier",
+    "category": "django-react",
+    "backend_framework": "Django",
+    "frontend_framework": "React/Vite",
+    "prepared_by": "DocForge",
+    "source_paths": [
+      "backend/App/settings.py",
+      "frontend/package.json",
+      "docker-compose.dev.yml",
+      "docker-compose.prod.yml"
+    ]
+  },
+  "environments": {
+    "items": [
+      {
+        "name": "dev",
+        "compose_file": "docker-compose.dev.yml",
+        "env_files": [
+          ".env.dev",
+          ".env.local"
+        ],
+        "services": [
+          {
+            "name": "backend",
+            "environment": "dev",
+            "compose_file": "docker-compose.dev.yml",
+            "role": "backend",
+            "image": null,
+            "build_context": "./backend",
+            "command": "/app/entrypoint.sh python manage.py runserver 0.0.0.0:8000",
+            "ports": [
+              "${DEV_API_PORT}:8000"
+            ],
+            "exposed_ports": [
+              "8000"
+            ],
+            "depends_on": [
+              "db"
+            ],
+            "volumes": [
+              "./backend:/app"
+            ],
+            "networks": [],
+            "env_files": [
+              ".env.dev",
+              ".env.local"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [],
+            "traefik_labels": [],
+            "detected_hosts": [],
+            "source": "docker-compose.dev.yml"
+          },
+          {
+            "name": "db",
+            "environment": "dev",
+            "compose_file": "docker-compose.dev.yml",
+            "role": "database",
+            "image": "postgres:16-alpine",
+            "build_context": null,
+            "command": null,
+            "ports": [
+              "${DEV_DB_PORT}:5432"
+            ],
+            "exposed_ports": [
+              "5432"
+            ],
+            "depends_on": [],
+            "volumes": [
+              "postgres_data:/var/lib/postgresql/data"
+            ],
+            "networks": [],
+            "env_files": [
+              ".env.dev",
+              ".env.local"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [
+              "CMD-SHELL",
+              "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h 127.0.0.1"
+            ],
+            "traefik_labels": [],
+            "detected_hosts": [],
+            "source": "docker-compose.dev.yml"
+          },
+          {
+            "name": "frontend",
+            "environment": "dev",
+            "compose_file": "docker-compose.dev.yml",
+            "role": "frontend",
+            "image": null,
+            "build_context": "./frontend",
+            "command": "npm run dev -- --host 0.0.0.0 --port 5173",
+            "ports": [
+              "${DEV_VITE_PORT}:5173"
+            ],
+            "exposed_ports": [
+              "5173"
+            ],
+            "depends_on": [
+              "backend"
+            ],
+            "volumes": [
+              "./frontend:/app",
+              "frontend_node_modules:/app/node_modules"
+            ],
+            "networks": [],
+            "env_files": [
+              ".env.dev",
+              ".env.local"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [],
+            "traefik_labels": [],
+            "detected_hosts": [],
+            "source": "docker-compose.dev.yml"
+          }
+        ],
+        "urls": [
+          "http://localhost:${DEV_API_PORT}/admin/",
+          "http://localhost:${DEV_API_PORT}/api/",
+          "http://localhost:${DEV_VITE_PORT}"
+        ],
+        "available_commands": [
+          "make backup",
+          "make check",
+          "make dev",
+          "make down",
+          "make help",
+          "make init",
+          "make logs",
+          "make migrate",
+          "make ps",
+          "make rebuild",
+          "make restart",
+          "make restore",
+          "make up",
+          "make update"
+        ],
+        "source_paths": [
+          "docker-compose.dev.yml",
+          ".env.dev",
+          ".env.local"
+        ]
+      },
+      {
+        "name": "prod",
+        "compose_file": "docker-compose.prod.yml",
+        "env_files": [
+          ".env",
+          ".env.local",
+          ".env.prod"
+        ],
+        "services": [
+          {
+            "name": "backend",
+            "environment": "prod",
+            "compose_file": "docker-compose.prod.yml",
+            "role": "backend",
+            "image": null,
+            "build_context": "./backend",
+            "command": null,
+            "ports": [],
+            "exposed_ports": [],
+            "depends_on": [
+              "db"
+            ],
+            "volumes": [],
+            "networks": [
+              "internal",
+              "edge"
+            ],
+            "env_files": [
+              ".env",
+              ".env.local",
+              ".env.prod"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_HOST",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [],
+            "traefik_labels": [
+              "traefik.enable=true",
+              "traefik.docker.network=edge",
+              "traefik.http.routers.${APP_SLUG}-api.rule=Host(`${APP_HOST}`) && PathPrefix(`/api/`)",
+              "traefik.http.routers.${APP_SLUG}-api.entrypoints=websecure",
+              "traefik.http.routers.${APP_SLUG}-api.tls=true",
+              "traefik.http.routers.${APP_SLUG}-api.tls.certresolver=le",
+              "traefik.http.routers.${APP_SLUG}-api.priority=100",
+              "traefik.http.routers.${APP_SLUG}-api.service=${APP_SLUG}-api",
+              "traefik.http.services.${APP_SLUG}-api.loadbalancer.server.port=8000",
+              "traefik.http.routers.${APP_SLUG}-admin.rule=Host(`${APP_HOST}`) && PathPrefix(`/admin/`)",
+              "traefik.http.routers.${APP_SLUG}-admin.entrypoints=websecure",
+              "traefik.http.routers.${APP_SLUG}-admin.tls=true",
+              "traefik.http.routers.${APP_SLUG}-admin.tls.certresolver=le",
+              "traefik.http.routers.${APP_SLUG}-admin.priority=100",
+              "traefik.http.routers.${APP_SLUG}-admin.service=${APP_SLUG}-admin",
+              "traefik.http.services.${APP_SLUG}-admin.loadbalancer.server.port=8000",
+              "traefik.http.routers.${APP_SLUG}-static.rule=Host(`${APP_HOST}`) && PathPrefix(`/static/`)",
+              "traefik.http.routers.${APP_SLUG}-static.entrypoints=websecure",
+              "traefik.http.routers.${APP_SLUG}-static.tls=true",
+              "traefik.http.routers.${APP_SLUG}-static.tls.certresolver=le",
+              "traefik.http.routers.${APP_SLUG}-static.priority=100",
+              "traefik.http.routers.${APP_SLUG}-static.service=${APP_SLUG}-static",
+              "traefik.http.services.${APP_SLUG}-static.loadbalancer.server.port=8000"
+            ],
+            "detected_hosts": [
+              "cal.mon-site.ca"
+            ],
+            "source": "docker-compose.prod.yml"
+          },
+          {
+            "name": "db",
+            "environment": "prod",
+            "compose_file": "docker-compose.prod.yml",
+            "role": "database",
+            "image": "postgres:16-alpine",
+            "build_context": null,
+            "command": null,
+            "ports": [],
+            "exposed_ports": [],
+            "depends_on": [],
+            "volumes": [
+              "postgres_data:/var/lib/postgresql/data"
+            ],
+            "networks": [
+              "internal"
+            ],
+            "env_files": [
+              ".env",
+              ".env.local",
+              ".env.prod"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_HOST",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [],
+            "traefik_labels": [],
+            "detected_hosts": [],
+            "source": "docker-compose.prod.yml"
+          },
+          {
+            "name": "frontend",
+            "environment": "prod",
+            "compose_file": "docker-compose.prod.yml",
+            "role": "frontend",
+            "image": null,
+            "build_context": "./frontend",
+            "command": null,
+            "ports": [],
+            "exposed_ports": [],
+            "depends_on": [
+              "backend"
+            ],
+            "volumes": [],
+            "networks": [
+              "internal",
+              "edge"
+            ],
+            "env_files": [
+              ".env",
+              ".env.local",
+              ".env.prod"
+            ],
+            "env_variables": [
+              "ACCESS_TOKEN_LIFETIME_MIN",
+              "APP_DEPOT",
+              "APP_ENV",
+              "APP_HOST",
+              "APP_NAME",
+              "APP_NO",
+              "APP_SLUG",
+              "CONTACT_API_BASE",
+              "CONTACT_API_TIMEOUT",
+              "CORS_ALLOWED_ORIGINS",
+              "DEV_API_PORT",
+              "DEV_DB_PORT",
+              "DEV_VITE_PORT",
+              "DJANGO_ALLOWED_HOSTS",
+              "DJANGO_CSRF_TRUSTED_ORIGINS",
+              "DJANGO_DEBUG",
+              "POSTGRES_DB",
+              "POSTGRES_USER",
+              "REFRESH_TOKEN_LIFETIME_DAYS",
+              "VITE_ADMIN_URL",
+              "VITE_API_BASE",
+              "VITE_SHOW_ADMIN_LINK"
+            ],
+            "healthchecks": [],
+            "traefik_labels": [
+              "traefik.enable=true",
+              "traefik.docker.network=edge",
+              "traefik.http.routers.${APP_SLUG}-frontend.rule=Host(`${APP_HOST}`) && !PathPrefix(`/api/`) && !PathPrefix(`/admin/`) && !PathPrefix(`/static/`)",
+              "traefik.http.routers.${APP_SLUG}-frontend.entrypoints=websecure",
+              "traefik.http.routers.${APP_SLUG}-frontend.tls=true",
+              "traefik.http.routers.${APP_SLUG}-frontend.tls.certresolver=le",
+              "traefik.http.routers.${APP_SLUG}-frontend.priority=1",
+              "traefik.http.routers.${APP_SLUG}-frontend.service=${APP_SLUG}-frontend",
+              "traefik.http.services.${APP_SLUG}-frontend.loadbalancer.server.port=80"
+            ],
+            "detected_hosts": [
+              "cal.mon-site.ca"
+            ],
+            "source": "docker-compose.prod.yml"
+          }
+        ],
+        "urls": [
+          "https://cal.mon-site.ca",
+          "https://cal.mon-site.ca/admin/",
+          "https://cal.mon-site.ca/api/",
+          "https://cal.mon-site.ca/static/"
+        ],
+        "available_commands": [
+          "make backup",
+          "make check",
+          "make down",
+          "make help",
+          "make init",
+          "make logs",
+          "make migrate",
+          "make prod",
+          "make ps",
+          "make rebuild",
+          "make restart",
+          "make restore",
+          "make up",
+          "make update"
+        ],
+        "source_paths": [
+          "docker-compose.prod.yml",
+          ".env",
+          ".env.local",
+          ".env.prod"
+        ]
+      }
+    ]
+  },
+  "operational_commands": {
+    "commands": [
+      {
+        "name": "backup",
+        "category": "backup",
+        "command_path": "make backup",
+        "invocation": "make backup",
+        "target": "backup",
+        "body": [
+          "$(SCRIPTS_DIR)/backup-db.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "rebuild",
+        "category": "build",
+        "command_path": "make rebuild",
+        "invocation": "make rebuild",
+        "target": "rebuild",
+        "body": [
+          "$(SCRIPTS_DIR)/rebuild.sh $(SERVICE)"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": true,
+        "destructive_effects": [
+          "Reconstruction des images ou services"
+        ],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [
+          {
+            "name": "SERVICE",
+            "required": true,
+            "example": null,
+            "description": null,
+            "allowed_values": [
+              "backend",
+              "db",
+              "frontend"
+            ],
+            "origin": "user-exposed",
+            "source": "Makefile"
+          }
+        ],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "update",
+        "category": "build",
+        "command_path": "make update",
+        "invocation": "make update",
+        "target": "update",
+        "body": [
+          "$(SCRIPTS_DIR)/update.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "application-public",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": true,
+        "destructive_effects": [
+          "Reconstruction des images ou services"
+        ],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "check",
+        "category": "diagnostic",
+        "command_path": "make check",
+        "invocation": "make check",
+        "target": "check",
+        "body": [
+          "$(SCRIPTS_DIR)/check-invariants.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "ps",
+        "category": "diagnostic",
+        "command_path": "make ps",
+        "invocation": "make ps",
+        "target": "ps",
+        "body": [
+          "$(SCRIPTS_DIR)/ps.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "dev",
+        "category": "environment",
+        "command_path": "make dev",
+        "invocation": "make dev",
+        "target": "dev",
+        "body": [
+          "$(SCRIPTS_DIR)/env-switch.sh dev"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "quick-start",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "prod",
+        "category": "environment",
+        "command_path": "make prod",
+        "invocation": "make prod",
+        "target": "prod",
+        "body": [
+          "$(SCRIPTS_DIR)/env-switch.sh prod"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "logs",
+        "category": "logs",
+        "command_path": "make logs",
+        "invocation": "make logs",
+        "target": "logs",
+        "body": [
+          "$(SCRIPTS_DIR)/logs.sh $(SERVICE)"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [
+          {
+            "name": "SERVICE",
+            "required": true,
+            "example": null,
+            "description": null,
+            "allowed_values": [
+              "backend",
+              "db",
+              "frontend"
+            ],
+            "origin": "user-exposed",
+            "source": "Makefile"
+          }
+        ],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "migrate",
+        "category": "migrations",
+        "command_path": "make migrate",
+        "invocation": "make migrate",
+        "target": "migrate",
+        "body": [
+          "$(SCRIPTS_DIR)/migrate.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "help",
+        "category": "other",
+        "command_path": "make help",
+        "invocation": "make help",
+        "target": "help",
+        "body": [
+          "@printf '%s\\n' \\",
+          "'Usage: make <target>' \\",
+          "'' \\",
+          "'Cibles disponibles :' \\",
+          "'  help      Affiche cette aide' \\",
+          "'  init      Initialise le projet dans l’environnement pointé par .env (scripts/init.sh)' \\",
+          "'  dev       Bascule l’environnement actif vers .env.dev' \\",
+          "'  prod      Bascule l’environnement actif vers .env.prod' \\",
+          "'  up        Démarre les services de l’environnement actif' \\",
+          "'  down      Arrête les services de l’environnement actif' \\",
+          "'  restart   Redémarre les services de l’environnement actif' \\",
+          "'  rebuild   Reconstruit les images (optionnel : make rebuild SERVICE=backend)' \\",
+          "'  logs      Affiche les logs (optionnel : make logs SERVICE=backend)' \\",
+          "'  ps        Affiche l’état des services de l’environnement actif' \\",
+          "'  check     Vérifie les invariants du template' \\",
+          "'  migrate   Applique les migrations Django dans l’environnement actif' \\",
+          "'  update    Met à jour l’application dans l’environnement actif' \\",
+          "'  backup    Crée un backup PostgreSQL dans ./backup' \\",
+          "'  restore   Restaure un backup PostgreSQL' \\",
+          "'' \\",
+          "'Options pour restore :' \\",
+          "'  make restore' \\",
+          "'            Restaure automatiquement le backup le plus récent trouvé dans ./backup' \\",
+          "'  make restore FILE=./backup/__APP_SLUG___db-YYYYMMDD_HHMMSS.sql.gz' \\",
+          "'            Restaure le fichier de backup spécifié'"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "application-public",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "restart",
+        "category": "restart",
+        "command_path": "make restart",
+        "invocation": "make restart",
+        "target": "restart",
+        "body": [
+          "$(SCRIPTS_DIR)/restart.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": true,
+        "destructive_effects": [
+          "Arrêt des services actifs"
+        ],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "restore",
+        "category": "restore",
+        "command_path": "make restore",
+        "invocation": "make restore",
+        "target": "restore",
+        "body": [
+          "@if [ -n \"$(FILE)\" ]; then \\",
+          "$(SCRIPTS_DIR)/restore-db.sh \"$(FILE)\"; \\",
+          "else \\",
+          "$(SCRIPTS_DIR)/restore-db.sh; \\",
+          "fi"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "advanced-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "advanced",
+        "destructive": true,
+        "destructive_effects": [
+          "Modification ou écrasement potentiel des données PostgreSQL"
+        ],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [
+          {
+            "name": "FILE",
+            "required": false,
+            "example": null,
+            "description": null,
+            "allowed_values": [],
+            "origin": "user-exposed",
+            "source": "Makefile"
+          }
+        ],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "init",
+        "category": "setup",
+        "command_path": "make init",
+        "invocation": "make init",
+        "target": "init",
+        "body": [
+          "$(SCRIPTS_DIR)/init.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "quick-start",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "down",
+        "category": "shutdown",
+        "command_path": "make down",
+        "invocation": "make down",
+        "target": "down",
+        "body": [
+          "$(SCRIPTS_DIR)/down.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "main-reference",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": true,
+        "destructive_effects": [
+          "Arrêt des services actifs"
+        ],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "name": "up",
+        "category": "startup",
+        "command_path": "make up",
+        "invocation": "make up",
+        "target": "up",
+        "body": [
+          "$(SCRIPTS_DIR)/up.sh"
+        ],
+        "prerequisites": [],
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "help": null,
+        "phony": true,
+        "documented": false,
+        "visibility": "public",
+        "provenance": "template-standard",
+        "documentation_policy": "quick-start",
+        "exclusion_reason": null,
+        "provenance_evidence": [
+          "signature matches data/django_react_app_template_make_targets.json",
+          "declared in data/django_react_app_template_make_targets.json",
+          "origin=app-template"
+        ],
+        "manifest_source": "data/django_react_app_template_make_targets.json",
+        "audience": "operator",
+        "reference_level": "primary",
+        "destructive": false,
+        "destructive_effects": [],
+        "environment": [
+          "dev",
+          "prod"
+        ],
+        "parameters": [],
+        "source": {
+          "status": "detected",
+          "sources": [
+            "Makefile"
+          ],
+          "notes": []
+        }
+      }
+    ]
+  },
+  "environment_variables": {
+    "variables": [
+      {
+        "name": "ACCESS_TOKEN_LIFETIME_MIN",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": true,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": null,
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": null,
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": null,
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "ADMIN_EMAIL",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": true,
+        "required_by_environment": {
+          "dev": true,
+          "prod": true
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env.template.example",
+          "scripts/generate-env.sh"
+        ]
+      },
+      {
+        "name": "ADMIN_PASSWORD",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": true,
+        "required_by_environment": {
+          "dev": true,
+          "prod": true
+        },
+        "sensitive": true,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": null,
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": null,
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env.template.example",
+          "scripts/generate-env.sh"
+        ]
+      },
+      {
+        "name": "ADMIN_USERNAME",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": true,
+        "required_by_environment": {
+          "dev": true,
+          "prod": true
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env.template.example",
+          "scripts/generate-env.sh"
+        ]
+      },
+      {
+        "name": "APP_DEPOT",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "calendrier",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "calendrier",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "calendrier",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "calendrier",
+            "source": ".env.prod",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          ".env.template.example",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "APP_ENV",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": "Sélectionne l’environnement actif.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "dev",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "dev",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "prod",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "APP_HOST",
+        "scope": "shared",
+        "environments": [
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "cal.mon-site.ca",
+        "description": "Nom d’hôte public utilisé en production.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "prod",
+            "value": "cal.mon-site.ca",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env.prod",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "APP_NAME",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "Calendrier",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "Calendrier",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "Calendrier",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "Calendrier",
+            "source": ".env.prod",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          ".env.template.example",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "APP_NO",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "2",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "2",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "2",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "2",
+            "source": ".env.prod",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          ".env.template.example",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "APP_SLUG",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "cal",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "cal",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "cal",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "cal",
+            "source": ".env.prod",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "",
+            "source": ".env.template.example",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          ".env.template.example",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "CONTACT_API_BASE",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "http://host.docker.internal:8005/api",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "http://host.docker.internal:8005/api",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "https://con.mon-site.ca/api",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "CONTACT_API_TIMEOUT",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "5",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "5",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "5",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "5",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "CORS_ALLOWED_ORIGINS",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "http://localhost:5175,http://127.0.0.1:5175",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "http://localhost:5175,http://127.0.0.1:5175",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "https://cal.mon-site.ca",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DEV_API_PORT",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "8003",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "8003",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "8003",
+            "source": ".env.dev",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DEV_DB_PORT",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "5434",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "5434",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "5434",
+            "source": ".env.dev",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DEV_VITE_PORT",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "5175",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "5175",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "5175",
+            "source": ".env.dev",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DJANGO_ALLOWED_HOSTS",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": "Hôtes autorisés par Django.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "localhost,127.0.0.1,backend,frontend,0.0.0.0,host.docker.internal",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "localhost,127.0.0.1,backend,frontend,0.0.0.0,host.docker.internal",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "cal.mon-site.ca,backend",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": "Origines de confiance CSRF pour Django.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "http://localhost:5175,http://127.0.0.1:5175",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "http://localhost:5175,http://127.0.0.1:5175",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "https://cal.mon-site.ca",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DJANGO_DEBUG",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "true",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "true",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "false",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "DJANGO_SECRET_KEY",
+        "scope": "ops",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": true,
+        "required_by_environment": {
+          "dev": true,
+          "prod": true
+        },
+        "sensitive": true,
+        "default_value": null,
+        "description": "Clé secrète Django.",
+        "comment": null,
+        "values": [],
+        "sources": [
+          "scripts/generate-env.sh"
+        ]
+      },
+      {
+        "name": "POSTGRES_DB",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "cal_pg_db",
+        "description": "Nom de la base PostgreSQL.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "cal_pg_db",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "cal_pg_db",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "cal_pg_db",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "POSTGRES_PASSWORD",
+        "scope": "ops",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": true,
+        "required_by_environment": {
+          "dev": true,
+          "prod": true
+        },
+        "sensitive": true,
+        "default_value": null,
+        "description": "Mot de passe PostgreSQL.",
+        "comment": null,
+        "values": [],
+        "sources": [
+          "scripts/generate-env.sh"
+        ]
+      },
+      {
+        "name": "POSTGRES_USER",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "cal_pg_user",
+        "description": "Compte PostgreSQL utilisé par l’application.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "cal_pg_user",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "cal_pg_user",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "cal_pg_user",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "REFRESH_TOKEN_LIFETIME_DAYS",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": true,
+        "default_value": null,
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": null,
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": null,
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": null,
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "VITE_ADMIN_URL",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "/admin/",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "/admin/",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "/admin/",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "/admin/",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "VITE_API_BASE",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "/api",
+        "description": "Base des appels API côté frontend.",
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "/api",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "/api",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "/api",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      },
+      {
+        "name": "VITE_SHOW_ADMIN_LINK",
+        "scope": "shared",
+        "environments": [
+          "dev",
+          "prod"
+        ],
+        "required": false,
+        "required_by_environment": {
+          "dev": false,
+          "prod": false
+        },
+        "sensitive": false,
+        "default_value": "false",
+        "description": null,
+        "comment": null,
+        "values": [
+          {
+            "environment": "dev",
+            "value": "false",
+            "source": ".env",
+            "comment": null
+          },
+          {
+            "environment": "dev",
+            "value": "false",
+            "source": ".env.dev",
+            "comment": null
+          },
+          {
+            "environment": "prod",
+            "value": "false",
+            "source": ".env.prod",
+            "comment": null
+          }
+        ],
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ]
+      }
+    ]
+  },
+  "service_endpoints": {
+    "endpoints": [
+      {
+        "environment": "dev",
+        "service": "backend",
+        "url": "http://localhost:${DEV_API_PORT}/api/",
+        "source": "docker-compose.dev.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "dev",
+        "service": "backend",
+        "url": "http://localhost:${DEV_API_PORT}/admin/",
+        "source": "docker-compose.dev.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "dev",
+        "service": "frontend",
+        "url": "http://localhost:${DEV_VITE_PORT}",
+        "source": "docker-compose.dev.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "prod",
+        "service": "backend",
+        "url": "https://cal.mon-site.ca/api/",
+        "source": "docker-compose.prod.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "prod",
+        "service": "backend",
+        "url": "https://cal.mon-site.ca/admin/",
+        "source": "docker-compose.prod.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "prod",
+        "service": "backend",
+        "url": "https://cal.mon-site.ca/static/",
+        "source": "docker-compose.prod.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      },
+      {
+        "environment": "prod",
+        "service": "frontend",
+        "url": "https://cal.mon-site.ca",
+        "source": "docker-compose.prod.yml",
+        "validity": "valid",
+        "resolution_status": "resolved",
+        "notes": []
+      }
+    ]
+  },
+  "django": {
+    "project_module": "calendar_project",
+    "settings_module": "calendar_project.settings",
+    "urlconf_module": "calendar_project.urls",
+    "settings_files": [
+      "backend/calendar_project/settings.py"
+    ],
+    "installed_apps": [
+      "calendar_api",
+      "corsheaders",
+      "django.contrib.admin",
+      "django.contrib.auth",
+      "django.contrib.contenttypes",
+      "django.contrib.messages",
+      "django.contrib.sessions",
+      "django.contrib.staticfiles",
+      "rest_framework"
+    ],
+    "local_apps": [
+      "calendar_api"
+    ],
+    "models": [
+      {
+        "name": "Calendar",
+        "fields": [
+          "owner",
+          "name",
+          "color",
+          "is_default",
+          "kind",
+          "created_at"
+        ],
+        "source": "backend/api/models.py"
+      },
+      {
+        "name": "Event",
+        "fields": [
+          "calendar",
+          "title",
+          "description",
+          "start",
+          "end",
+          "all_day",
+          "location",
+          "external_contact_id",
+          "external_contact_snapshot",
+          "external_uid",
+          "recurrence",
+          "recurrence_month",
+          "recurrence_day",
+          "created_at",
+          "updated_at"
+        ],
+        "source": "backend/api/models.py"
+      }
+    ],
+    "model_schemas": [
+      {
+        "name": "Calendar",
+        "fields": [
+          {
+            "name": "owner",
+            "field_type": "ForeignKey",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": "settings.AUTH_USER_MODEL",
+            "unique": false,
+            "on_delete": "models.CASCADE",
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "name",
+            "field_type": "CharField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "color",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": false,
+            "blank": false,
+            "default": "#1976d2",
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "is_default",
+            "field_type": "BooleanField",
+            "required": false,
+            "nullable": false,
+            "blank": false,
+            "default": "False",
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "kind",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": false,
+            "blank": false,
+            "default": "Kind.PERSONAL",
+            "choices": [
+              {
+                "value": "personal",
+                "label": "Personal"
+              },
+              {
+                "value": "birthdays",
+                "label": "Birthdays"
+              }
+            ],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "created_at",
+            "field_type": "DateTimeField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          }
+        ],
+        "source": "backend/api/models.py"
+      },
+      {
+        "name": "Event",
+        "fields": [
+          {
+            "name": "calendar",
+            "field_type": "ForeignKey",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": "Calendar",
+            "unique": false,
+            "on_delete": "models.CASCADE",
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "title",
+            "field_type": "CharField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "description",
+            "field_type": "TextField",
+            "required": false,
+            "nullable": false,
+            "blank": true,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "start",
+            "field_type": "DateTimeField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "end",
+            "field_type": "DateTimeField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "all_day",
+            "field_type": "BooleanField",
+            "required": false,
+            "nullable": false,
+            "blank": false,
+            "default": "False",
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "location",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": false,
+            "blank": true,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "external_contact_id",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": false,
+            "blank": true,
+            "default": "",
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "external_contact_snapshot",
+            "field_type": "JSONField",
+            "required": false,
+            "nullable": false,
+            "blank": true,
+            "default": "dict",
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "external_uid",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": true,
+            "blank": true,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "recurrence",
+            "field_type": "CharField",
+            "required": false,
+            "nullable": false,
+            "blank": false,
+            "default": "Recurrence.NONE",
+            "choices": [
+              {
+                "value": "none",
+                "label": "None"
+              },
+              {
+                "value": "yearly",
+                "label": "Yearly"
+              }
+            ],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "recurrence_month",
+            "field_type": "PositiveSmallIntegerField",
+            "required": false,
+            "nullable": true,
+            "blank": true,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "recurrence_day",
+            "field_type": "PositiveSmallIntegerField",
+            "required": false,
+            "nullable": true,
+            "blank": true,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "created_at",
+            "field_type": "DateTimeField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          },
+          {
+            "name": "updated_at",
+            "field_type": "DateTimeField",
+            "required": true,
+            "nullable": false,
+            "blank": false,
+            "default": null,
+            "choices": [],
+            "relation": null,
+            "unique": false,
+            "on_delete": null,
+            "help_text": null,
+            "source": "backend/api/models.py"
+          }
+        ],
+        "source": "backend/api/models.py"
+      }
+    ],
+    "routes": [
+      "/",
+      "/admin/",
+      "/api/",
+      "/api/token/",
+      "/api/token/refresh/",
+      "/auth/jwt/create/",
+      "/auth/jwt/refresh/",
+      "/auth/whoami/",
+      "/calendars/",
+      "/calendars/{id}/",
+      "/contact-integrations/contacts/",
+      "/events/",
+      "/events/{id}/",
+      "/health/",
+      "/integrations/contact-birthdays/sync/",
+      "/integrations/dashboard/events/"
+    ],
+    "resolved_routes": [
+      {
+        "relative_path": "admin/",
+        "mount_path": null,
+        "full_path": "/admin/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": null,
+        "view": "admin.site.urls",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "relative_path": "auth/jwt/create/",
+        "mount_path": "/api/",
+        "full_path": "/api/auth/jwt/create/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "jwt-create",
+        "view": "TokenObtainPairView.as_view()",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "auth/jwt/refresh/",
+        "mount_path": "/api/",
+        "full_path": "/api/auth/jwt/refresh/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "jwt-refresh",
+        "view": "TokenRefreshView.as_view()",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "auth/whoami/",
+        "mount_path": "/api/",
+        "full_path": "/api/auth/whoami/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "auth-whoami",
+        "view": "WhoAmIView.as_view()",
+        "methods": [
+          "GET"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "calendars/",
+        "mount_path": "/api/",
+        "full_path": "/api/calendars/",
+        "route_type": "router-list",
+        "resolution_status": "resolved",
+        "name": "calendar",
+        "view": "CalendarViewSet",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "calendars/{id}/",
+        "mount_path": "/api/",
+        "full_path": "/api/calendars/{id}/",
+        "route_type": "router-detail",
+        "resolution_status": "resolved",
+        "name": "calendar",
+        "view": "CalendarViewSet",
+        "methods": [
+          "GET",
+          "PUT",
+          "PATCH",
+          "DELETE"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "contact-integrations/contacts/",
+        "mount_path": "/api/",
+        "full_path": "/api/contact-integrations/contacts/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "contact-proxy",
+        "view": "ContactProxyView.as_view()",
+        "methods": [
+          "GET"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "events/",
+        "mount_path": "/api/",
+        "full_path": "/api/events/",
+        "route_type": "router-list",
+        "resolution_status": "resolved",
+        "name": "event",
+        "view": "EventViewSet",
+        "methods": [
+          "GET"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "events/{id}/",
+        "mount_path": "/api/",
+        "full_path": "/api/events/{id}/",
+        "route_type": "router-detail",
+        "resolution_status": "resolved",
+        "name": "event",
+        "view": "EventViewSet",
+        "methods": [
+          "GET"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "health/",
+        "mount_path": "/api/",
+        "full_path": "/api/health/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": null,
+        "view": "health",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "integrations/contact-birthdays/sync/",
+        "mount_path": "/api/",
+        "full_path": "/api/integrations/contact-birthdays/sync/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "contact-birthday-sync",
+        "view": "ContactBirthdaySyncView.as_view()",
+        "methods": [
+          "POST"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "integrations/dashboard/events/",
+        "mount_path": "/api/",
+        "full_path": "/api/integrations/dashboard/events/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "dashboard-events",
+        "view": "DashboardEventsView.as_view()",
+        "methods": [
+          "GET"
+        ],
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "relative_path": "api/token/",
+        "mount_path": null,
+        "full_path": "/api/token/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "token_obtain_pair",
+        "view": "TokenObtainPairView.as_view()",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "relative_path": "api/token/refresh/",
+        "mount_path": null,
+        "full_path": "/api/token/refresh/",
+        "route_type": "path",
+        "resolution_status": "resolved",
+        "name": "token_refresh",
+        "view": "TokenRefreshView.as_view()",
+        "methods": [],
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      }
+    ],
+    "endpoints": [
+      {
+        "path": "/admin/",
+        "relative_path": "admin/",
+        "mount_path": null,
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "urls",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "path": "/api/auth/jwt/create/",
+        "relative_path": "auth/jwt/create/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "TokenObtainPairView",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "path": "/api/auth/jwt/refresh/",
+        "relative_path": "auth/jwt/refresh/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "TokenRefreshView",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py"
+        ]
+      },
+      {
+        "path": "/api/auth/whoami/",
+        "relative_path": "auth/whoami/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET"
+        ],
+        "view": "WhoAmIView",
+        "permissions": [
+          "IsAuthenticated"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/calendars/",
+        "relative_path": "calendars/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "view": "CalendarViewSet",
+        "permissions": [
+          "IsAuthenticated",
+          "IsOwner"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [
+          "owner scoped to request.user",
+          "owner assigned server-side"
+        ],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/calendars/{id}/",
+        "relative_path": "calendars/{id}/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET",
+          "PUT",
+          "PATCH",
+          "DELETE"
+        ],
+        "view": "CalendarViewSet",
+        "permissions": [
+          "IsAuthenticated",
+          "IsOwner"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [
+          "id"
+        ],
+        "ownership_controls": [
+          "owner scoped to request.user",
+          "owner assigned server-side"
+        ],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/contact-integrations/contacts/",
+        "relative_path": "contact-integrations/contacts/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET"
+        ],
+        "view": "ContactProxyView",
+        "permissions": [
+          "IsAuthenticated"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/events/",
+        "relative_path": "events/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET"
+        ],
+        "view": "EventViewSet",
+        "permissions": [
+          "IsAuthenticated",
+          "IsOwner"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [
+          "owner scoped to request.user"
+        ],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/events/{id}/",
+        "relative_path": "events/{id}/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET"
+        ],
+        "view": "EventViewSet",
+        "permissions": [
+          "IsAuthenticated",
+          "IsOwner"
+        ],
+        "authentication": [
+          "JWT",
+          "Bearer token"
+        ],
+        "actions": [],
+        "route_parameters": [
+          "id"
+        ],
+        "ownership_controls": [
+          "owner scoped to request.user"
+        ],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/health/",
+        "relative_path": "health/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "health",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views_health.py"
+        ]
+      },
+      {
+        "path": "/api/integrations/contact-birthdays/sync/",
+        "relative_path": "integrations/contact-birthdays/sync/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "POST"
+        ],
+        "view": "ContactBirthdaySyncView",
+        "permissions": [
+          "AllowAny"
+        ],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": true,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/integrations/dashboard/events/",
+        "relative_path": "integrations/dashboard/events/",
+        "mount_path": "/api/",
+        "resolution_status": "resolved",
+        "methods": [
+          "GET"
+        ],
+        "view": "DashboardEventsView",
+        "permissions": [
+          "AllowAny"
+        ],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": true,
+        "sources": [
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py"
+        ]
+      },
+      {
+        "path": "/api/token/",
+        "relative_path": "api/token/",
+        "mount_path": null,
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "TokenObtainPairView",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "path": "/api/token/refresh/",
+        "relative_path": "api/token/refresh/",
+        "mount_path": null,
+        "resolution_status": "resolved",
+        "methods": [],
+        "view": "TokenRefreshView",
+        "permissions": [],
+        "authentication": [],
+        "actions": [],
+        "route_parameters": [],
+        "ownership_controls": [],
+        "data_controls": [],
+        "custom_authentication": false,
+        "sources": [
+          "backend/calendar_project/urls.py"
+        ]
+      }
+    ],
+    "routers": [
+      "/calendars",
+      "/events"
+    ],
+    "auth_mechanisms": [
+      "Bearer token",
+      "JWT",
+      "SimpleJWT"
+    ],
+    "permissions": [
+      "AllowAny",
+      "IsAuthenticated"
+    ],
+    "admin_enabled": true,
+    "migration_commands": [
+      "make migrate"
+    ],
+    "create_admin_commands": [
+      "python manage.py ensure_admin"
+    ],
+    "database_engine": "django.db.backends.postgresql",
+    "database_engines": [
+      {
+        "engine": "django.db.backends.postgresql",
+        "context": "default",
+        "source": "backend/App/settings.py"
+      }
+    ],
+    "database_configuration": [
+      "POSTGRES_DB",
+      "POSTGRES_USER",
+      "POSTGRES_PASSWORD",
+      "POSTGRES_HOST",
+      "POSTGRES_PORT"
+    ],
+    "source_paths": [
+      "backend/calendar_project/settings.py",
+      "backend/calendar_project/urls.py",
+      "backend/calendar_api/urls.py",
+      "backend/calendar_api/models.py",
+      "backend/calendar_api/views.py",
+      "backend/calendar_api/views_health.py",
+      "backend/calendar_api/management/commands/ensure_admin.py"
+    ]
+  },
+  "react": {
+    "entry_point": "frontend/src/App.jsx",
+    "routes": [
+      "/"
+    ],
+    "pages": [
+      "Calendriers",
+      "Connexion",
+      "{title}"
+    ],
+    "navigation_items": [
+      "Connexion",
+      "Importer un .ics",
+      "{submitting ? 'Import en cours…' : 'Importer'}"
+    ],
+    "forms": [
+      "CalendarEditor",
+      "EventEditor",
+      "ImportIcs",
+      "Login"
+    ],
+    "user_features": [
+      {
+        "label": "Changement de thème",
+        "status": "detected",
+        "component": "App",
+        "routes": [],
+        "api_calls": [],
+        "evidence": [
+          "frontend/src/App.jsx"
+        ],
+        "confidence": "medium"
+      },
+      {
+        "label": "Connexion",
+        "status": "detected",
+        "component": "Login",
+        "routes": [],
+        "api_calls": [],
+        "evidence": [
+          "frontend/src/components/Auth/Login.jsx"
+        ],
+        "confidence": "medium"
+      }
+    ],
+    "api_calls": [],
+    "environment_variables": [],
+    "auth_mechanisms": [
+      "JWT Bearer côté frontend",
+      "Session locale dans localStorage",
+      "Déverrouillage local du coffre privé"
+    ],
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview --host"
+    },
+    "dev_command": "npm run dev",
+    "build_command": "npm run build",
+    "crypto": {
+      "detected": true,
+      "algorithms": [
+        "AES-GCM"
+      ],
+      "key_derivation": "PBKDF2",
+      "key_derivation_hash": "SHA-256",
+      "key_derivation_iterations": 250000,
+      "key_derivation_salt_template": "encoder",
+      "key_length_bits": null,
+      "nonce_bytes": null,
+      "format_version": null,
+      "payload_fields": [
+        "iv",
+        "ciphertext",
+        "key",
+        "salt",
+        "payload"
+      ],
+      "cleartext_fields": [],
+      "key_material_storage": "localStorage",
+      "recovery_supported": null,
+      "lock_behavior": null,
+      "unlock_behavior": null,
+      "source_paths": [
+        "frontend/src/contactCrypto.js",
+        "frontend/src/App.jsx"
+      ]
+    },
+    "source_paths": [
+      "frontend/package.json",
+      "frontend/src/App.jsx",
+      "frontend/src/api.js",
+      "frontend/src/auth/AuthContext.jsx",
+      "frontend/src/components/AdminLink.jsx",
+      "frontend/src/components/Auth/Login.jsx",
+      "frontend/src/components/CalendarBoard.jsx",
+      "frontend/src/components/CalendarEditor.jsx",
+      "frontend/src/components/EventEditor.jsx",
+      "frontend/src/components/ImportIcs.jsx",
+      "frontend/src/components/ThemeToggle.jsx",
+      "frontend/src/contactCrypto.js",
+      "frontend/src/main.jsx",
+      "frontend/vite.config.js"
+    ]
+  },
+  "capabilities": {
+    "capabilities": [
+      {
+        "identifier": "changement-de-th-me",
+        "label": "Changement de thème",
+        "status": "detected",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "frontend/src/App.jsx"
+        ],
+        "component": "App",
+        "endpoint": null,
+        "permission_condition": null,
+        "confidence": "medium"
+      },
+      {
+        "identifier": "connexion",
+        "label": "Connexion",
+        "status": "detected",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "frontend/src/components/Auth/Login.jsx"
+        ],
+        "component": "Login",
+        "endpoint": null,
+        "permission_condition": null,
+        "confidence": "medium"
+      },
+      {
+        "identifier": "consulter-calendriers",
+        "label": "Consulter calendriers",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/calendars/",
+          "Calendar",
+          "/api/calendars/{id}/"
+        ],
+        "component": null,
+        "endpoint": "/api/calendars/",
+        "permission_condition": "IsAuthenticated",
+        "confidence": "medium"
+      },
+      {
+        "identifier": "consulter-v-nements",
+        "label": "Consulter événements",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/events/",
+          "Event",
+          "/api/events/{id}/",
+          "/api/integrations/dashboard/events/"
+        ],
+        "component": null,
+        "endpoint": "/api/events/",
+        "permission_condition": "IsAuthenticated",
+        "confidence": "medium"
+      },
+      {
+        "identifier": "cr-er-calendriers",
+        "label": "Créer calendriers",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/calendars/",
+          "Calendar"
+        ],
+        "component": null,
+        "endpoint": "/api/calendars/",
+        "permission_condition": "IsAuthenticated",
+        "confidence": "medium"
+      },
+      {
+        "identifier": "g-rer-un-coffre-local-chiffr-c-t-client",
+        "label": "Gérer un coffre local chiffré côté client",
+        "status": "detected",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "frontend/src/contactCrypto.js",
+          "frontend/src/App.jsx"
+        ],
+        "component": "frontend",
+        "endpoint": null,
+        "permission_condition": null,
+        "confidence": "medium"
+      },
+      {
+        "identifier": "modifier-calendriers",
+        "label": "Modifier calendriers",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/calendars/{id}/",
+          "Calendar"
+        ],
+        "component": null,
+        "endpoint": "/api/calendars/{id}/",
+        "permission_condition": "IsAuthenticated",
+        "confidence": "medium"
+      },
+      {
+        "identifier": "supprimer-calendriers",
+        "label": "Supprimer calendriers",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/calendars/{id}/",
+          "Calendar"
+        ],
+        "component": null,
+        "endpoint": "/api/calendars/{id}/",
+        "permission_condition": "IsAuthenticated",
+        "confidence": "medium"
+      },
+      {
+        "identifier": "s-authentifier-l-application",
+        "label": "S’authentifier à l’application",
+        "status": "derived",
+        "description": null,
+        "audience": "user",
+        "evidence": [
+          "/api/auth/jwt/create/"
+        ],
+        "component": null,
+        "endpoint": "/api/auth/jwt/create/",
+        "permission_condition": null,
+        "confidence": "high"
+      }
+    ]
+  },
+  "template": {
+    "detected": true,
+    "project_kind": "application",
+    "template_id": null,
+    "origin_template_id": "app-template",
+    "template_version": null,
+    "origin_template_version": null,
+    "base_profile": "django-react",
+    "manifest_source": "heuristic: INVARIANTS.md + Makefile + Docker Compose",
+    "manifest_fallback_used": true,
+    "manifest_declared_targets": [
+      "backup",
+      "check",
+      "dev",
+      "down",
+      "init",
+      "logs",
+      "migrate",
+      "prod",
+      "ps",
+      "rebuild",
+      "restart",
+      "restore",
+      "up"
+    ],
+    "manifest_verified_targets": [
+      "backup",
+      "check",
+      "dev",
+      "down",
+      "init",
+      "logs",
+      "migrate",
+      "prod",
+      "ps",
+      "rebuild",
+      "restart",
+      "restore",
+      "up"
+    ],
+    "manifest_missing_targets": [],
+    "evidence": [
+      "contrat app-template détecté dans INVARIANTS.md: contrat technique, APP_DEPOT, docker-compose.dev.yml, docker-compose.prod.yml",
+      "cibles Make app-template vérifiées: 13",
+      "docker-compose.dev.yml et docker-compose.prod.yml détectés",
+      "services app-template détectés: db, backend, frontend"
+    ],
+    "placeholders": [],
+    "current_state": null,
+    "target_state": null,
+    "materialization": null,
+    "creator_workflows": [],
+    "maintainer_workflows": [],
+    "missing_steps": [],
+    "risks": [],
+    "source_paths": [
+      "INVARIANTS.md",
+      "Makefile",
+      "docker-compose.dev.yml",
+      "docker-compose.prod.yml"
+    ]
+  },
+  "missing_information": [
+    {
+      "identifier": "PROJECT-VERSION-MISSING",
+      "category": "project",
+      "severity": "warning",
+      "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+      "affected_sections": [
+        "presentation",
+        "installation"
+      ],
+      "sources": [
+        "pyproject.toml",
+        "ProjectKnowledge.application"
+      ]
+    },
+    {
+      "identifier": "PYTHON-VERSION-MISSING",
+      "category": "runtime",
+      "severity": "warning",
+      "description": "La version minimale de Python n’est pas déterminable statiquement.",
+      "affected_sections": [
+        "installation",
+        "prerequisites"
+      ],
+      "sources": [
+        "pyproject.toml",
+        "backend/calendar_project/settings.py"
+      ]
+    },
+    {
+      "identifier": "NODE-VERSION-MISSING",
+      "category": "runtime",
+      "severity": "warning",
+      "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+      "affected_sections": [
+        "installation",
+        "prerequisites",
+        "frontend"
+      ],
+      "sources": [
+        "frontend/package.json",
+        "frontend/Dockerfile.dev"
+      ]
+    },
+    {
+      "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+      "category": "runtime",
+      "severity": "warning",
+      "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+      "affected_sections": [
+        "installation",
+        "prerequisites",
+        "deployment"
+      ],
+      "sources": [
+        "docker-compose.dev.yml",
+        "docker-compose.prod.yml",
+        "Makefile"
+      ]
+    },
+    {
+      "identifier": "BACKEND-TEST-COMMAND-MISSING",
+      "category": "tests",
+      "severity": "warning",
+      "description": "Aucune commande opérationnelle de tests backend n’a été démontrée.",
+      "affected_sections": [
+        "tests",
+        "backend"
+      ],
+      "sources": [
+        "Makefile",
+        "backend/calendar_project/settings.py",
+        "backend/calendar_project/urls.py",
+        "backend/calendar_api/urls.py",
+        "backend/calendar_api/models.py",
+        "backend/calendar_api/views.py",
+        "backend/calendar_api/views_health.py",
+        "backend/calendar_api/management/commands/ensure_admin.py"
+      ]
+    },
+    {
+      "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+      "category": "tests",
+      "severity": "warning",
+      "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+      "affected_sections": [
+        "tests",
+        "api"
+      ],
+      "sources": [
+        "backend/calendar_project/settings.py",
+        "backend/calendar_project/urls.py",
+        "backend/calendar_api/urls.py",
+        "backend/calendar_api/models.py",
+        "backend/calendar_api/views.py",
+        "backend/calendar_api/views_health.py",
+        "backend/calendar_api/management/commands/ensure_admin.py",
+        "frontend/package.json",
+        "frontend/src/App.jsx",
+        "frontend/src/api.js",
+        "frontend/src/auth/AuthContext.jsx",
+        "frontend/src/components/AdminLink.jsx",
+        "frontend/src/components/Auth/Login.jsx",
+        "frontend/src/components/CalendarBoard.jsx",
+        "frontend/src/components/CalendarEditor.jsx",
+        "frontend/src/components/EventEditor.jsx",
+        "frontend/src/components/ImportIcs.jsx",
+        "frontend/src/components/ThemeToggle.jsx",
+        "frontend/src/contactCrypto.js",
+        "frontend/src/main.jsx",
+        "frontend/vite.config.js"
+      ]
+    },
+    {
+      "identifier": "API-SCHEMA-MISSING",
+      "category": "api",
+      "severity": "warning",
+      "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+      "affected_sections": [
+        "api"
+      ],
+      "sources": [
+        "backend/calendar_api/urls.py",
+        "backend/calendar_api/views.py",
+        "backend/calendar_api/views_health.py",
+        "backend/calendar_project/urls.py"
+      ]
+    },
+    {
+      "identifier": "API-ERROR-CODES-MISSING",
+      "category": "api",
+      "severity": "warning",
+      "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+      "affected_sections": [
+        "api",
+        "troubleshooting"
+      ],
+      "sources": [
+        "backend/calendar_api/urls.py",
+        "backend/calendar_api/views.py",
+        "backend/calendar_api/views_health.py",
+        "backend/calendar_project/urls.py"
+      ]
+    },
+    {
+      "identifier": "VAULT-RECOVERY-PROCEDURE-MISSING",
+      "category": "security",
+      "severity": "warning",
+      "description": "La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.",
+      "affected_sections": [
+        "security",
+        "authentication-accounts"
+      ],
+      "sources": [
+        "frontend/src/contactCrypto.js",
+        "frontend/src/App.jsx"
+      ]
+    },
+    {
+      "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+      "category": "backup",
+      "severity": "warning",
+      "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+      "affected_sections": [
+        "backup-restore",
+        "operations"
+      ],
+      "sources": [
+        "Makefile"
+      ]
+    }
+  ],
+  "conflicts": [],
+  "commands": [
+    {
+      "name": "backup",
+      "command_path": "make backup",
+      "invocation": "make backup",
+      "group": "backup",
+      "help": "Commande opérationnelle catégorie backup.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "template-standard",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Lance la sauvegarde de base de données démontrée.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/backup-db.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make backup"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "rebuild",
+      "command_path": "make rebuild",
+      "invocation": "make rebuild",
+      "group": "build",
+      "help": "Commande opérationnelle catégorie build.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "template-standard",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Reconstruction des images ou services"
+      ],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "SERVICE",
+          "kind": "make-variable",
+          "required": true,
+          "flags": [],
+          "help": null,
+          "type_annotation": null,
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [
+            "backend",
+            "db",
+            "frontend"
+          ],
+          "origin": "user-exposed",
+          "source": "Makefile"
+        }
+      ],
+      "description": {
+        "summary": "Reconstruit le ou les services demandés.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/rebuild.sh $(SERVICE)",
+        "inputs": [
+          "SERVICE"
+        ],
+        "outputs": [],
+        "side_effects": [
+          "Reconstruction des images ou services"
+        ],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make rebuild"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "update",
+      "command_path": "make update",
+      "invocation": "make update",
+      "group": "build",
+      "help": "Commande opérationnelle catégorie build.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "application-public",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Reconstruction des images ou services"
+      ],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Exécute la recette de mise à jour déclarée par le projet.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/update.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [
+          "Reconstruction des images ou services"
+        ],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make update"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "check",
+      "command_path": "make check",
+      "invocation": "make check",
+      "group": "diagnostic",
+      "help": "Commande opérationnelle catégorie diagnostic.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "template-standard",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Exécute le contrôle ou diagnostic déclaré par le projet.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/check-invariants.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make check"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "ps",
+      "command_path": "make ps",
+      "invocation": "make ps",
+      "group": "diagnostic",
+      "help": "Commande opérationnelle catégorie diagnostic.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Affiche l’état des services.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/ps.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make ps"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "dev",
+      "command_path": "make dev",
+      "invocation": "make dev",
+      "group": "environment",
+      "help": "Commande opérationnelle catégorie environment.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "quick-start",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Sélectionne la configuration de développement.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/env-switch.sh dev",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make dev"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "prod",
+      "command_path": "make prod",
+      "invocation": "make prod",
+      "group": "environment",
+      "help": "Commande opérationnelle catégorie environment.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "template-standard",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Sélectionne la configuration de production.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/env-switch.sh prod",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make prod"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "logs",
+      "command_path": "make logs",
+      "invocation": "make logs",
+      "group": "logs",
+      "help": "Commande opérationnelle catégorie logs.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "SERVICE",
+          "kind": "make-variable",
+          "required": true,
+          "flags": [],
+          "help": null,
+          "type_annotation": null,
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [
+            "backend",
+            "db",
+            "frontend"
+          ],
+          "origin": "user-exposed",
+          "source": "Makefile"
+        }
+      ],
+      "description": {
+        "summary": "Affiche les journaux du service demandé.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/logs.sh $(SERVICE)",
+        "inputs": [
+          "SERVICE"
+        ],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make logs"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "migrate",
+      "command_path": "make migrate",
+      "invocation": "make migrate",
+      "group": "migrations",
+      "help": "Commande opérationnelle catégorie migrations.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Applique les migrations définies par la recette du projet.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/migrate.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make migrate"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "help",
+      "command_path": "make help",
+      "invocation": "make help",
+      "group": "other",
+      "help": "Commande opérationnelle catégorie other.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "application-public",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Affiche les cibles Make rendues disponibles par le projet.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "@printf '%s\\n' \\ ; 'Usage: make <target>' \\ ; '' \\ ; 'Cibles disponibles :' \\ ; '  help      Affiche cette aide' \\ ; '  init      Initialise le projet dans l’environnement pointé par .env (scripts/init.sh)' \\ ; '  dev       Bascule l’environnement actif vers .env.dev' \\ ; '  prod      Bascule l’environnement actif vers .env.prod' \\ ; '  up        Démarre les services de l’environnement actif' \\ ; '  down      Arrête les services de l’environnement actif' \\ ; '  restart   Redémarre les services de l’environnement actif' \\ ; '  rebuild   Reconstruit les images (optionnel : make rebuild SERVICE=backend)' \\ ; '  logs      Affiche les logs (optionnel : make logs SERVICE=backend)' \\ ; '  ps        Affiche l’état des services de l’environnement actif' \\ ; '  check     Vérifie les invariants du template' \\ ; '  migrate   Applique les migrations Django dans l’environnement actif' \\ ; '  update    Met à jour l’application dans l’environnement actif' \\ ; '  backup    Crée un backup PostgreSQL dans ./backup' \\ ; '  restore   Restaure un backup PostgreSQL' \\ ; '' \\ ; 'Options pour restore :' \\ ; '  make restore' \\ ; '            Restaure automatiquement le backup le plus récent trouvé dans ./backup' \\ ; '  make restore FILE=./backup/__APP_SLUG___db-YYYYMMDD_HHMMSS.sql.gz' \\ ; '            Restaure le fichier de backup spécifié'",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make help"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "restart",
+      "command_path": "make restart",
+      "invocation": "make restart",
+      "group": "restart",
+      "help": "Commande opérationnelle catégorie restart.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Arrêt des services actifs"
+      ],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Redémarre les services en exécutant la recette de redémarrage.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/restart.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [
+          "Arrêt des services actifs"
+        ],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make restart"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "restore",
+      "command_path": "make restore",
+      "invocation": "make restore",
+      "group": "restore",
+      "help": "Commande opérationnelle catégorie restore.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "advanced",
+      "provenance": "template-standard",
+      "documentation_policy": "advanced-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Modification ou écrasement potentiel des données PostgreSQL"
+      ],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "FILE",
+          "kind": "make-variable",
+          "required": false,
+          "flags": [],
+          "help": null,
+          "type_annotation": null,
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "user-exposed",
+          "source": "Makefile"
+        }
+      ],
+      "description": {
+        "summary": "Lance la restauration de base de données depuis le fichier fourni.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "@if [ -n \"$(FILE)\" ]; then \\ ; $(SCRIPTS_DIR)/restore-db.sh \"$(FILE)\"; \\ ; else \\ ; $(SCRIPTS_DIR)/restore-db.sh; \\ ; fi",
+        "inputs": [
+          "FILE"
+        ],
+        "outputs": [],
+        "side_effects": [
+          "Modification ou écrasement potentiel des données PostgreSQL"
+        ],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make restore"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "init",
+      "command_path": "make init",
+      "invocation": "make init",
+      "group": "setup",
+      "help": "Commande opérationnelle catégorie setup.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "quick-start",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Initialise l’environnement de travail avec la recette détectée.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/init.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make init"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "down",
+      "command_path": "make down",
+      "invocation": "make down",
+      "group": "shutdown",
+      "help": "Commande opérationnelle catégorie shutdown.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "main-reference",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": true,
+      "destructive_effects": [
+        "Arrêt des services actifs"
+      ],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Arrête les services actifs.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/down.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [
+          "Arrêt des services actifs"
+        ],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make down"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "up",
+      "command_path": "make up",
+      "invocation": "make up",
+      "group": "startup",
+      "help": "Commande opérationnelle catégorie startup.",
+      "visibility": "public",
+      "documented": false,
+      "audience": "operator",
+      "reference_level": "primary",
+      "provenance": "template-standard",
+      "documentation_policy": "quick-start",
+      "exclusion_reason": null,
+      "provenance_evidence": [
+        "signature matches data/django_react_app_template_make_targets.json",
+        "declared in data/django_react_app_template_make_targets.json",
+        "origin=app-template"
+      ],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [
+        "dev",
+        "prod"
+      ],
+      "prerequisites": [],
+      "parameters": [],
+      "description": {
+        "summary": "Démarre les services définis par le projet.",
+        "user_purpose": "À utiliser par l’exploitant lorsque cette opération est nécessaire.",
+        "behavior": "$(SCRIPTS_DIR)/up.sh",
+        "inputs": [],
+        "outputs": [],
+        "side_effects": [],
+        "next_step": null,
+        "provenance": {
+          "summary": {
+            "status": "derived",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          },
+          "behavior": {
+            "status": "detected",
+            "sources": [
+              "Makefile"
+            ],
+            "notes": []
+          }
+        }
+      },
+      "examples": [
+        "make up"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "identifier": "prepare-dev-config",
+      "title": "Préparer la configuration de développement",
+      "summary": "Sélectionner le mode dev puis initialiser les fichiers d’environnement.",
+      "commands": [
+        "make dev",
+        "make init"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "start-development",
+      "title": "Démarrer le développement",
+      "summary": "Sélectionner l’environnement dev puis démarrer les services.",
+      "commands": [
+        "make dev",
+        "make up"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "apply-migrations",
+      "title": "Appliquer les migrations",
+      "summary": "Exécuter la procédure de migration détectée.",
+      "commands": [
+        "make migrate"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "create-admin",
+      "title": "Créer un administrateur",
+      "summary": "Créer ou mettre à jour le compte administrateur via la procédure démontrée.",
+      "commands": [
+        "make migrate"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "open-frontend",
+      "title": "Ouvrir le frontend",
+      "summary": "Démarrer les services puis ouvrir le frontend détecté.",
+      "commands": [
+        "make dev",
+        "make up"
+      ],
+      "operational_status": "operational",
+      "notes": [
+        "URL détectée : http://localhost:${DEV_VITE_PORT}"
+      ],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile",
+          "docker-compose.dev.yml"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "open-django-admin",
+      "title": "Accéder à l’administration Django",
+      "summary": "Démarrer les services puis ouvrir l’administration détectée.",
+      "commands": [
+        "make up"
+      ],
+      "operational_status": "operational",
+      "notes": [
+        "URL détectée : http://localhost:${DEV_API_PORT}/admin/"
+      ],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile",
+          "docker-compose.dev.yml"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "view-logs",
+      "title": "Consulter les journaux",
+      "summary": "Afficher les logs des services actifs.",
+      "commands": [
+        "make logs"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "stop-services",
+      "title": "Arrêter les services",
+      "summary": "Arrêter les services de l’environnement actif.",
+      "commands": [
+        "make down"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "rebuild-images",
+      "title": "Reconstruire les images",
+      "summary": "Reconstruire les images Docker de l’environnement actif.",
+      "commands": [
+        "make rebuild"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "prepare-production",
+      "title": "Préparer la production",
+      "summary": "Sélectionner prod puis initialiser les fichiers requis.",
+      "commands": [
+        "make prod",
+        "make init"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "start-production",
+      "title": "Démarrer la production",
+      "summary": "Sélectionner prod puis démarrer les services.",
+      "commands": [
+        "make prod",
+        "make up"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "backup-database",
+      "title": "Sauvegarder la base",
+      "summary": "Créer une sauvegarde PostgreSQL via la commande détectée.",
+      "commands": [
+        "make backup"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "restore-database",
+      "title": "Restaurer la base",
+      "summary": "Restaurer une sauvegarde PostgreSQL via la commande détectée.",
+      "commands": [
+        "make restore"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "Makefile"
+        ],
+        "notes": []
+      }
+    }
+  ],
+  "configuration": {
+    "user_config_root": ".",
+    "project_state_root": ".docforge",
+    "project_config_file": ".env",
+    "report_root": ".docforge/manual/generated",
+    "files": [
+      {
+        "path": ".env",
+        "scope": "project",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Fichier de configuration détecté pour l’application."
+      },
+      {
+        "path": ".env.dev",
+        "scope": "project",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Fichier de configuration détecté pour l’application."
+      },
+      {
+        "path": ".env.prod",
+        "scope": "project",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Fichier de configuration détecté pour l’application."
+      },
+      {
+        "path": "backend/calendar_project/settings.py",
+        "scope": "project",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Fichier de configuration détecté pour l’application."
+      }
+    ],
+    "environment_variables": [
+      "ACCESS_TOKEN_LIFETIME_MIN",
+      "ADMIN_EMAIL",
+      "ADMIN_PASSWORD",
+      "ADMIN_USERNAME",
+      "APP_DEPOT",
+      "APP_ENV",
+      "APP_HOST",
+      "APP_NAME",
+      "APP_NO",
+      "APP_SLUG",
+      "CONTACT_API_BASE",
+      "CONTACT_API_TIMEOUT",
+      "CORS_ALLOWED_ORIGINS",
+      "DEV_API_PORT",
+      "DEV_DB_PORT",
+      "DEV_VITE_PORT",
+      "DJANGO_ALLOWED_HOSTS",
+      "DJANGO_CSRF_TRUSTED_ORIGINS",
+      "DJANGO_DEBUG",
+      "DJANGO_SECRET_KEY",
+      "POSTGRES_DB",
+      "POSTGRES_PASSWORD",
+      "POSTGRES_USER",
+      "REFRESH_TOKEN_LIFETIME_DAYS",
+      "VITE_ADMIN_URL",
+      "VITE_API_BASE",
+      "VITE_SHOW_ADMIN_LINK"
+    ],
+    "ignored_paths": [
+      ".env.local"
+    ],
+    "source": {
+      "status": "derived",
+      "sources": [
+        ".env",
+        ".env.dev",
+        ".env.prod",
+        "backend/calendar_project/settings.py",
+        "docker-compose.dev.yml",
+        "docker-compose.prod.yml"
+      ],
+      "notes": []
+    }
+  },
+  "security": {
+    "protected_documents": [
+      "INVARIANTS.md"
+    ],
+    "controls": [
+      {
+        "identifier": "APP-SEC-001",
+        "category": "authentification",
+        "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend.",
+        "evidence": [
+          "Bearer token",
+          "JWT",
+          "SimpleJWT"
+        ]
+      },
+      {
+        "identifier": "APP-SEC-002",
+        "category": "administration",
+        "description": "Une interface d’administration Django est détectée et doit être réservée aux comptes autorisés.",
+        "evidence": [
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "identifier": "APP-SEC-003",
+        "category": "secrets",
+        "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel.",
+        "evidence": [
+          "ACCESS_TOKEN_LIFETIME_MIN",
+          "ADMIN_PASSWORD",
+          "DJANGO_SECRET_KEY",
+          "POSTGRES_PASSWORD",
+          "REFRESH_TOKEN_LIFETIME_DAYS"
+        ]
+      }
+    ],
+    "risks": [
+      {
+        "identifier": "WRITE-ENDPOINT-ALLOWANY-CUSTOM-AUTH",
+        "category": "api",
+        "severity": "warning",
+        "description": "L’endpoint /api/integrations/contact-birthdays/sync/ accepte des écritures avec AllowAny et s’appuie sur une authentification personnalisée qui doit être vérifiée manuellement.",
+        "sources": [
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_project/urls.py"
+        ]
+      }
+    ],
+    "validation_commands": [],
+    "source": {
+      "status": "derived",
+      "sources": [
+        ".env",
+        ".env.dev",
+        ".env.prod",
+        ".env.template.example",
+        "backend/calendar_api/management/commands/ensure_admin.py",
+        "backend/calendar_api/models.py",
+        "backend/calendar_api/urls.py",
+        "backend/calendar_api/views.py",
+        "backend/calendar_api/views_health.py",
+        "backend/calendar_project/settings.py",
+        "backend/calendar_project/urls.py",
+        "docker-compose.dev.yml",
+        "docker-compose.prod.yml",
+        "frontend/package.json",
+        "frontend/src/App.jsx",
+        "frontend/src/api.js",
+        "frontend/src/auth/AuthContext.jsx",
+        "frontend/src/components/AdminLink.jsx",
+        "frontend/src/components/Auth/Login.jsx",
+        "frontend/src/components/CalendarBoard.jsx",
+        "frontend/src/components/CalendarEditor.jsx",
+        "frontend/src/components/EventEditor.jsx",
+        "frontend/src/components/ImportIcs.jsx",
+        "frontend/src/components/ThemeToggle.jsx",
+        "frontend/src/contactCrypto.js",
+        "frontend/src/main.jsx",
+        "frontend/vite.config.js",
+        "scripts/generate-env.sh"
+      ],
+      "notes": []
+    }
+  },
+  "limitations": {
+    "items": [
+      {
+        "identifier": "PROJECT-VERSION-MISSING",
+        "category": "project",
+        "severity": "warning",
+        "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+        "affected_sections": [
+          "presentation",
+          "installation"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "ProjectKnowledge.application"
+        ]
+      },
+      {
+        "identifier": "PYTHON-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Python n’est pas déterminable statiquement.",
+        "affected_sections": [
+          "installation",
+          "prerequisites"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "backend/calendar_project/settings.py"
+        ]
+      },
+      {
+        "identifier": "NODE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "frontend"
+        ],
+        "sources": [
+          "frontend/package.json",
+          "frontend/Dockerfile.dev"
+        ]
+      },
+      {
+        "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "deployment"
+        ],
+        "sources": [
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml",
+          "Makefile"
+        ]
+      },
+      {
+        "identifier": "BACKEND-TEST-COMMAND-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Aucune commande opérationnelle de tests backend n’a été démontrée.",
+        "affected_sections": [
+          "tests",
+          "backend"
+        ],
+        "sources": [
+          "Makefile",
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/models.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_api/management/commands/ensure_admin.py"
+        ]
+      },
+      {
+        "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+        "affected_sections": [
+          "tests",
+          "api"
+        ],
+        "sources": [
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/models.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_api/management/commands/ensure_admin.py",
+          "frontend/package.json",
+          "frontend/src/App.jsx",
+          "frontend/src/api.js",
+          "frontend/src/auth/AuthContext.jsx",
+          "frontend/src/components/AdminLink.jsx",
+          "frontend/src/components/Auth/Login.jsx",
+          "frontend/src/components/CalendarBoard.jsx",
+          "frontend/src/components/CalendarEditor.jsx",
+          "frontend/src/components/EventEditor.jsx",
+          "frontend/src/components/ImportIcs.jsx",
+          "frontend/src/components/ThemeToggle.jsx",
+          "frontend/src/contactCrypto.js",
+          "frontend/src/main.jsx",
+          "frontend/vite.config.js"
+        ]
+      },
+      {
+        "identifier": "API-SCHEMA-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+        "affected_sections": [
+          "api"
+        ],
+        "sources": [
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "identifier": "API-ERROR-CODES-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+        "affected_sections": [
+          "api",
+          "troubleshooting"
+        ],
+        "sources": [
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_project/urls.py"
+        ]
+      },
+      {
+        "identifier": "VAULT-RECOVERY-PROCEDURE-MISSING",
+        "category": "security",
+        "severity": "warning",
+        "description": "La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.",
+        "affected_sections": [
+          "security",
+          "authentication-accounts"
+        ],
+        "sources": [
+          "frontend/src/contactCrypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      {
+        "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+        "category": "backup",
+        "severity": "warning",
+        "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+        "affected_sections": [
+          "backup-restore",
+          "operations"
+        ],
+        "sources": [
+          "Makefile"
+        ]
+      }
+    ],
+    "source": {
+      "status": "derived",
+      "sources": [
+        "ProjectKnowledge",
+        "django-react"
+      ],
+      "notes": []
+    }
+  },
+  "documentation_policy": {
+    "required_documents": [
+      "AGENTS.md",
+      "CODEX_START.md",
+      "INVARIANTS.md",
+      "README.md",
+      "README_DEV.md",
+      "docs/api.md",
+      "docs/architecture.md",
+      "docs/deployment.md",
+      "docs/specification.md"
+    ],
+    "optional_documents": [],
+    "deterministic_documents": [
+      "AGENTS.md",
+      "CODEX_START.md",
+      "INVARIANTS.md",
+      "README.md",
+      "README_DEV.md",
+      "docs/api.md",
+      "docs/architecture.md",
+      "docs/deployment.md",
+      "docs/specification.md"
+    ],
+    "protected_documents": [
+      "INVARIANTS.md"
+    ],
+    "source": {
+      "status": "configured",
+      "sources": [
+        "profile:django-react",
+        "INVARIANTS.md",
+        "Makefile",
+        "docker-compose.dev.yml",
+        "docker-compose.prod.yml"
+      ],
+      "notes": [
+        "Contrat app-template détecté."
+      ]
+    }
+  },
+  "source_traceability": {
+    "items": {
+      "application": {
+        "status": "detected",
+        "sources": [
+          "backend/App/settings.py",
+          "frontend/package.json",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ],
+        "notes": []
+      },
+      "environments": {
+        "status": "detected",
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.local",
+          ".env.prod",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml"
+        ],
+        "notes": []
+      },
+      "operational_commands": {
+        "status": "detected",
+        "sources": [
+          "Makefile",
+          "backend/entrypoint.sh",
+          "scripts/backup-db.sh",
+          "scripts/check-invariants.sh",
+          "scripts/env-switch.sh",
+          "scripts/generate-env.sh",
+          "scripts/generate-secrets.sh",
+          "scripts/init.sh",
+          "scripts/migrate.sh",
+          "scripts/restore-db.sh",
+          "scripts/update.sh"
+        ],
+        "notes": []
+      },
+      "environment_variables": {
+        "status": "detected",
+        "sources": [
+          ".env",
+          ".env.dev",
+          ".env.prod",
+          ".env.template.example",
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml",
+          "scripts/generate-env.sh"
+        ],
+        "notes": []
+      },
+      "django": {
+        "status": "detected",
+        "sources": [
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/models.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_api/management/commands/ensure_admin.py"
+        ],
+        "notes": []
+      },
+      "react": {
+        "status": "detected",
+        "sources": [
+          "frontend/package.json",
+          "frontend/src/App.jsx",
+          "frontend/src/api.js",
+          "frontend/src/auth/AuthContext.jsx",
+          "frontend/src/components/AdminLink.jsx",
+          "frontend/src/components/Auth/Login.jsx",
+          "frontend/src/components/CalendarBoard.jsx",
+          "frontend/src/components/CalendarEditor.jsx",
+          "frontend/src/components/EventEditor.jsx",
+          "frontend/src/components/ImportIcs.jsx",
+          "frontend/src/components/ThemeToggle.jsx",
+          "frontend/src/contactCrypto.js",
+          "frontend/src/main.jsx",
+          "frontend/vite.config.js"
+        ],
+        "notes": []
+      },
+      "capabilities": {
+        "status": "derived",
+        "sources": [
+          "backend/calendar_api/management/commands/ensure_admin.py",
+          "backend/calendar_api/models.py",
+          "backend/calendar_api/urls.py",
+          "backend/calendar_api/views.py",
+          "backend/calendar_api/views_health.py",
+          "backend/calendar_project/settings.py",
+          "backend/calendar_project/urls.py",
+          "frontend/package.json",
+          "frontend/src/App.jsx",
+          "frontend/src/api.js",
+          "frontend/src/auth/AuthContext.jsx",
+          "frontend/src/components/AdminLink.jsx",
+          "frontend/src/components/Auth/Login.jsx",
+          "frontend/src/components/CalendarBoard.jsx",
+          "frontend/src/components/CalendarEditor.jsx",
+          "frontend/src/components/EventEditor.jsx",
+          "frontend/src/components/ImportIcs.jsx",
+          "frontend/src/components/ThemeToggle.jsx",
+          "frontend/src/contactCrypto.js",
+          "frontend/src/main.jsx",
+          "frontend/vite.config.js"
+        ],
+        "notes": []
+      },
+      "prepared_by": {
+        "status": "configured",
+        "sources": [
+          "DocForge manual pipeline"
+        ],
+        "notes": []
+      }
+    }
+  }
+}

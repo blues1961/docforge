@@ -1,0 +1,31 @@
+{
+  "identifier": "user-security",
+  "title": "Sécurité pour l’utilisateur",
+  "purpose": "Présenter les protections pertinentes pour l’utilisateur.",
+  "estimated_tokens": 153,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "security": 326,
+    "react": 330
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "local_encrypted_vault": true,
+      "lock_behavior": null,
+      "unlock_behavior": null,
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": [
+        {
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend."
+        },
+        {
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel."
+        }
+      ]
+    }
+  }
+}

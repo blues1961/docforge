@@ -1,0 +1,720 @@
+{
+  "identifier": "developer-routes-api",
+  "title": "Routes et API",
+  "purpose": "Fournir le tableau déterministe des routes et API résolues.",
+  "estimated_tokens": 2792,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "django": 2751
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "django": {
+      "settings_module": "calendar_project.settings",
+      "urlconf_module": "calendar_project.urls",
+      "installed_apps": [
+        "calendar_api",
+        "corsheaders",
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.messages",
+        "django.contrib.sessions",
+        "django.contrib.staticfiles",
+        "rest_framework"
+      ],
+      "admin_enabled": true,
+      "routers": [
+        "/calendars",
+        "/events"
+      ],
+      "auth_mechanisms": [
+        "Bearer token",
+        "JWT",
+        "SimpleJWT"
+      ],
+      "models": [
+        {
+          "name": "Calendar",
+          "fields": [
+            "owner",
+            "name",
+            "color",
+            "is_default",
+            "kind",
+            "created_at"
+          ],
+          "source": "backend/api/models.py"
+        },
+        {
+          "name": "Event",
+          "fields": [
+            "calendar",
+            "title",
+            "description",
+            "start",
+            "end",
+            "all_day",
+            "location",
+            "external_contact_id",
+            "external_contact_snapshot",
+            "external_uid",
+            "recurrence",
+            "recurrence_month",
+            "recurrence_day",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        }
+      ],
+      "model_schemas": [
+        {
+          "name": "Calendar",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "name",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "color",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "#1976d2",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "is_default",
+              "field_type": "BooleanField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "False",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "kind",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "Kind.PERSONAL",
+              "choices": [
+                {
+                  "value": "personal",
+                  "label": "Personal"
+                },
+                {
+                  "value": "birthdays",
+                  "label": "Birthdays"
+                }
+              ],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        },
+        {
+          "name": "Event",
+          "fields": [
+            {
+              "name": "calendar",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "Calendar",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "title",
+              "field_type": "CharField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "description",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "start",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "end",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "all_day",
+              "field_type": "BooleanField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "False",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "location",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "external_contact_id",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "external_contact_snapshot",
+              "field_type": "JSONField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "dict",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "external_uid",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "recurrence",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "Recurrence.NONE",
+              "choices": [
+                {
+                  "value": "none",
+                  "label": "None"
+                },
+                {
+                  "value": "yearly",
+                  "label": "Yearly"
+                }
+              ],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "recurrence_month",
+              "field_type": "PositiveSmallIntegerField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "recurrence_day",
+              "field_type": "PositiveSmallIntegerField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/admin/",
+          "methods": [],
+          "view": "urls",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/create/",
+          "methods": [],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/whoami/",
+          "methods": [
+            "GET"
+          ],
+          "view": "WhoAmIView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/calendars/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "CalendarViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/calendars/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "CalendarViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/contact-integrations/contacts/",
+          "methods": [
+            "GET"
+          ],
+          "view": "ContactProxyView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/events/",
+          "methods": [
+            "GET"
+          ],
+          "view": "EventViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/events/{id}/",
+          "methods": [
+            "GET"
+          ],
+          "view": "EventViewSet",
+          "permissions": [
+            "IsAuthenticated",
+            "IsOwner"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user"
+          ],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/health/",
+          "methods": [],
+          "view": "health",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/integrations/contact-birthdays/sync/",
+          "methods": [
+            "POST"
+          ],
+          "view": "ContactBirthdaySyncView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/integrations/dashboard/events/",
+          "methods": [
+            "GET"
+          ],
+          "view": "DashboardEventsView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/token/",
+          "methods": [],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/token/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        }
+      ],
+      "unresolved_routes": [],
+      "resolved_routes": [
+        {
+          "full_path": "/admin/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/create/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/jwt/refresh/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/auth/whoami/",
+          "methods": [
+            "GET"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/calendars/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/calendars/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/contact-integrations/contacts/",
+          "methods": [
+            "GET"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/events/",
+          "methods": [
+            "GET"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/events/{id}/",
+          "methods": [
+            "GET"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/health/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/integrations/contact-birthdays/sync/",
+          "methods": [
+            "POST"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/integrations/dashboard/events/",
+          "methods": [
+            "GET"
+          ],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/token/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "full_path": "/api/token/refresh/",
+          "methods": [],
+          "permissions": [],
+          "resolution_status": "resolved"
+        }
+      ],
+      "database_engine": "django.db.backends.postgresql",
+      "database_engines": [
+        {
+          "engine": "django.db.backends.postgresql",
+          "context": "default",
+          "source": "backend/App/settings.py"
+        }
+      ],
+      "database_configuration": [
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_HOST",
+        "POSTGRES_PORT"
+      ]
+    }
+  }
+}

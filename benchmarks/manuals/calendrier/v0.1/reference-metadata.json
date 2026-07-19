@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "frozen_source": "docforge-calendrier-manual-audit-v2/preparation",
+  "source_expected_outputs": 117,
+  "reference_expected_outputs": 120,
+  "full_prompts_supported": false
+}

@@ -1,0 +1,1 @@
+- Utilisateur connecté : accès aux fonctionnalités réservées aux utilisateurs authentifiés.

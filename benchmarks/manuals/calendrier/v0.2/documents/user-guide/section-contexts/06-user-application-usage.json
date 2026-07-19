@@ -1,0 +1,84 @@
+{
+  "identifier": "user-application-usage",
+  "title": "Utilisation de l’application",
+  "purpose": "Décrire les parcours fonctionnels démontrés.",
+  "estimated_tokens": 377,
+  "context_budget": 12288,
+  "fact_breakdown": {
+    "capabilities": 516,
+    "react": 330,
+    "django": 2276
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "capabilities": [
+        {
+          "identifier": "changement-de-th-me",
+          "label": "Changement de thème",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "connexion",
+          "label": "Connexion",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "consulter-les-calendriers",
+          "label": "Consulter les calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "consulter-les-v-nements",
+          "label": "Consulter les événements",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "cr-er-des-calendriers",
+          "label": "Créer des calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "g-rer-un-coffre-local-chiffr-c-t-client",
+          "label": "Gérer un coffre local chiffré côté client",
+          "description": null,
+          "audience": "user",
+          "status": "detected"
+        },
+        {
+          "identifier": "modifier-des-calendriers",
+          "label": "Modifier des calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "supprimer-des-calendriers",
+          "label": "Supprimer des calendriers",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        },
+        {
+          "identifier": "s-authentifier-l-application",
+          "label": "S’authentifier à l’application",
+          "description": null,
+          "audience": "user",
+          "status": "derived"
+        }
+      ],
+      "authentication_required": true
+    }
+  }
+}
