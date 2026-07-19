@@ -1,0 +1,7 @@
+Commandes détectées : 23
+Couverture command_path : 23/23
+Couverture invocation exécutable : 23/23
+
+Commandes totalement absentes : aucune
+Commandes présentes seulement par command_path : aucune
+Invocations complètes manquantes : aucune

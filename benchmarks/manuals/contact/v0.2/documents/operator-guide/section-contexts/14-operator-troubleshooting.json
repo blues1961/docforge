@@ -1,0 +1,515 @@
+{
+  "identifier": "operator-troubleshooting",
+  "title": "Dépannage",
+  "purpose": "Présenter les diagnostics opérationnels démontrés.",
+  "estimated_tokens": 2479,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "missing_information": 789,
+    "limitations": 792,
+    "operational_commands": 1636
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "missing_information": [
+      {
+        "identifier": "PROJECT-VERSION-MISSING",
+        "category": "project",
+        "severity": "warning",
+        "description": "La version applicative n’a pas été trouvée dans les métadonnées détectées.",
+        "affected_sections": [
+          "presentation",
+          "installation"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "ProjectKnowledge.application"
+        ]
+      },
+      {
+        "identifier": "PYTHON-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Python n’est pas déterminable statiquement.",
+        "affected_sections": [
+          "installation",
+          "prerequisites"
+        ],
+        "sources": [
+          "pyproject.toml",
+          "backend/App/settings.py"
+        ]
+      },
+      {
+        "identifier": "NODE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Node.js n’est pas documentée de manière fiable dans les faits structurés disponibles.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "frontend"
+        ],
+        "sources": [
+          "frontend/package.json",
+          "frontend/Dockerfile.dev"
+        ]
+      },
+      {
+        "identifier": "DOCKER-COMPOSE-VERSION-MISSING",
+        "category": "runtime",
+        "severity": "warning",
+        "description": "La version minimale de Docker Compose n’est pas explicitement documentée.",
+        "affected_sections": [
+          "installation",
+          "prerequisites",
+          "deployment"
+        ],
+        "sources": [
+          "docker-compose.dev.yml",
+          "docker-compose.prod.yml",
+          "Makefile"
+        ]
+      },
+      {
+        "identifier": "BACKEND-TEST-COMMAND-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Aucune commande opérationnelle de tests backend n’a été démontrée.",
+        "affected_sections": [
+          "tests",
+          "backend"
+        ],
+        "sources": [
+          "Makefile",
+          "backend/App/settings.py",
+          "backend/App/urls.py",
+          "… (+4 autres sources)"
+        ]
+      },
+      {
+        "identifier": "INTEGRATION-TEST-DETAILS-MISSING",
+        "category": "tests",
+        "severity": "warning",
+        "description": "Les détails des tests d’intégration ne sont pas disponibles dans les faits structurés générés.",
+        "affected_sections": [
+          "tests",
+          "api"
+        ],
+        "sources": [
+          "backend/App/settings.py",
+          "backend/App/urls.py",
+          "backend/api/urls.py",
+          "… (+12 autres sources)"
+        ]
+      },
+      {
+        "identifier": "API-SCHEMA-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "Les schémas détaillés de requête et de réponse des endpoints ne sont pas disponibles.",
+        "affected_sections": [
+          "api"
+        ],
+        "sources": [
+          "backend/App/urls.py",
+          "backend/api/urls.py",
+          "backend/api/views.py"
+        ]
+      },
+      {
+        "identifier": "API-ERROR-CODES-MISSING",
+        "category": "api",
+        "severity": "warning",
+        "description": "La matrice complète des codes d’erreur API n’est pas structurée de manière exhaustive.",
+        "affected_sections": [
+          "api",
+          "troubleshooting"
+        ],
+        "sources": [
+          "backend/App/urls.py",
+          "backend/api/urls.py",
+          "backend/api/views.py"
+        ]
+      },
+      {
+        "identifier": "VAULT-RECOVERY-PROCEDURE-MISSING",
+        "category": "security",
+        "severity": "warning",
+        "description": "La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.",
+        "affected_sections": [
+          "security",
+          "authentication-accounts"
+        ],
+        "sources": [
+          "frontend/src/crypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      {
+        "identifier": "BACKUP-RETENTION-POLICY-MISSING",
+        "category": "backup",
+        "severity": "warning",
+        "description": "La stratégie de rétention des sauvegardes n’est pas démontrée.",
+        "affected_sections": [
+          "backup-restore",
+          "operations"
+        ],
+        "sources": [
+          "Makefile"
+        ]
+      }
+    ],
+    "limitations": {
+      "items": []
+    },
+    "operational_commands": {
+      "commands": [
+        {
+          "name": "backup",
+          "category": "backup",
+          "command_path": "make backup",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "rebuild",
+          "category": "build",
+          "command_path": "make rebuild",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "description": null,
+              "example": null,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "category": "build",
+          "command_path": "make update",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "check",
+          "category": "diagnostic",
+          "command_path": "make check",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "ps",
+          "category": "diagnostic",
+          "command_path": "make ps",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "dev",
+          "category": "environment",
+          "command_path": "make dev",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "prod",
+          "category": "environment",
+          "command_path": "make prod",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "logs",
+          "category": "logs",
+          "command_path": "make logs",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "description": null,
+              "example": null,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "migrate",
+          "category": "migrations",
+          "command_path": "make migrate",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "help",
+          "category": "other",
+          "command_path": "make help",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "restart",
+          "category": "restart",
+          "command_path": "make restart",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "restore",
+          "category": "restore",
+          "command_path": "make restore",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Modification ou écrasement potentiel des données PostgreSQL"
+          ],
+          "parameters": [
+            {
+              "name": "FILE",
+              "required": false,
+              "description": null,
+              "example": null,
+              "allowed_values": [],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "init",
+          "category": "setup",
+          "command_path": "make init",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "down",
+          "category": "shutdown",
+          "command_path": "make down",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "up",
+          "category": "startup",
+          "command_path": "make up",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "exclusion_reason": null,
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        }
+      ]
+    }
+  }
+}

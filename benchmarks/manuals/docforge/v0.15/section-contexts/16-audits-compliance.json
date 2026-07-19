@@ -1,0 +1,106 @@
+{
+  "identifier": "audits-compliance",
+  "title": "Audits et conformité",
+  "purpose": "Présenter les commandes d’audit et les validations de conformité.",
+  "estimated_tokens": 670,
+  "context_budget": null,
+  "fact_breakdown": {
+    "commands": 3832,
+    "workflows": 649,
+    "security": 551
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "commands": [],
+    "workflows": [
+      {
+        "identifier": "produce-audit",
+        "title": "Produire un audit",
+        "summary": "Comparer les projets enregistrés et produire un rapport de conformité.",
+        "commands": [
+          "docforge audit-all --show-findings",
+          "docforge audit-report"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "SEC-001",
+          "category": "secrets",
+          "description": "Le manuel ne doit contenir aucun secret ni reproduire de valeur sensible.",
+          "evidence": null
+        },
+        {
+          "identifier": "SEC-002",
+          "category": "aperçu",
+          "description": "La génération documentaire doit écrire dans .docforge/preview avant toute application.",
+          "evidence": ".docforge/preview/"
+        },
+        {
+          "identifier": "SEC-003",
+          "category": "application",
+          "description": "Un document généré ne doit être appliqué qu’après une commande explicite.",
+          "evidence": "docforge apply"
+        },
+        {
+          "identifier": "SEC-004",
+          "category": "invariants",
+          "description": "Les documents protégés doivent exiger une autorisation explicite du propriétaire.",
+          "evidence": "--owner-approved"
+        },
+        {
+          "identifier": "SEC-005",
+          "category": "intégrité",
+          "description": "Les invariants approuvés doivent pouvoir être vérifiés par empreinte.",
+          "evidence": "invariant-baseline.json"
+        },
+        {
+          "identifier": "SEC-006",
+          "category": "portabilité",
+          "description": "Les documents générés ne doivent pas contenir de chemin absolu propre à une machine.",
+          "evidence": null
+        },
+        {
+          "identifier": "SEC-007",
+          "category": "Git",
+          "description": "Les caches, aperçus, environnements virtuels et secrets ne doivent pas être suivis par Git.",
+          "evidence": ".gitignore"
+        },
+        {
+          "identifier": "SEC-008",
+          "category": "analyse statique",
+          "description": "Les analyseurs doivent éviter d’importer ou d’exécuter le code des projets inspectés.",
+          "evidence": "analyse AST du CLI"
+        }
+      ],
+      "risks": [
+        "Divulgation involontaire d’un secret dans un document, un rapport ou un journal.",
+        "Application automatique d’un aperçu non validé.",
+        "Modification non autorisée d’un document d’invariants.",
+        "Exécution de code lors de l’analyse d’un dépôt.",
+        "Introduction d’un chemin local non portable dans la documentation.",
+        "Suivi Git accidentel des caches ou des aperçus.",
+        "Affaiblissement d’un test afin de masquer une régression de sécurité."
+      ],
+      "validation_commands": [
+        "pytest -q",
+        "docforge --help",
+        "docforge verify-invariants /chemin/vers/app-template",
+        "docforge document /chemin/du/projet --refresh --clean",
+        "git status --short"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}

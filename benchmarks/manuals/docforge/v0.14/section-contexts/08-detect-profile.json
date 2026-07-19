@@ -1,0 +1,46 @@
+{
+  "identifier": "detect-profile",
+  "title": "Détection du profil",
+  "purpose": "Expliquer comment le profil est déterminé et présenté.",
+  "estimated_tokens": 206,
+  "context_budget": null,
+  "fact_breakdown": {
+    "profile": 105,
+    "workflows": 649,
+    "commands": 3832
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "profile": {
+      "name": "python-cli",
+      "label": "Outil Python CLI",
+      "description": "Application Python en ligne de commande, installable depuis pyproject.toml et testée avec pytest.",
+      "confidence": 95,
+      "evidence": [
+        "configuration détectée : pyproject.toml",
+        "point d’entrée CLI détecté dans pyproject.toml",
+        "langage détecté : Python",
+        "suite de tests détectée : tests/"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [],
+        "notes": []
+      }
+    },
+    "workflows": [
+      {
+        "identifier": "detect-profile",
+        "title": "Détecter son profil",
+        "summary": "Identifier le profil documentaire concret du dépôt.",
+        "commands": [
+          "docforge profile"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "commands": []
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "reference_version": "v0.11",
+  "generation_mode": "hybrid-deterministic-narrative",
+  "ollama_called": false,
+  "deterministic_sections": [
+    "installation",
+    "quick-start",
+    "configuration",
+    "cli-reference"
+  ]
+}

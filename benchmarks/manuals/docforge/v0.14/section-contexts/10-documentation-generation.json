@@ -1,0 +1,165 @@
+{
+  "identifier": "documentation-generation",
+  "title": "Génération documentaire",
+  "purpose": "Présenter la génération déterministe en aperçu.",
+  "estimated_tokens": 976,
+  "context_budget": null,
+  "fact_breakdown": {
+    "workflows": 649,
+    "documentation_policy": 150,
+    "security": 568,
+    "commands": 3832
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "workflows": [
+      {
+        "identifier": "generate-preview",
+        "title": "Générer un aperçu documentaire",
+        "summary": "Créer des aperçus déterministes sans modifier les documents réels.",
+        "commands": [
+          "docforge document . --refresh --clean"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "review-preview",
+        "title": "Réviser les aperçus",
+        "summary": "Contrôler les fichiers générés avant toute application.",
+        "commands": [
+          "docforge document . --refresh --clean",
+          "git diff -- . ':(exclude).docforge'"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "generate-with-ollama",
+        "title": "Utiliser Ollama avec docforge generate",
+        "summary": "Compléter les documents manquants via le flux LLM dédié.",
+        "commands": [
+          "docforge generate . --refresh --clean"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "documentation_policy": {
+      "required_documents": [
+        "README.md",
+        "README_DEV.md",
+        "CODEX_START.md",
+        "AGENTS.md",
+        "INVARIANTS.md",
+        "docs/architecture.md",
+        "docs/cli.md",
+        "docs/specification.md",
+        "docs/configuration.md",
+        "docs/security.md"
+      ],
+      "optional_documents": [
+        "docs/roadmap.md",
+        "docs/workflows.md"
+      ],
+      "deterministic_documents": [
+        "README.md",
+        "README_DEV.md",
+        "CODEX_START.md",
+        "AGENTS.md",
+        "INVARIANTS.md",
+        "docs/architecture.md",
+        "docs/cli.md",
+        "docs/configuration.md",
+        "docs/specification.md",
+        "docs/security.md"
+      ],
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "source": {
+        "status": "configured",
+        "sources": [],
+        "notes": []
+      }
+    },
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "SEC-001",
+          "category": "secrets",
+          "description": "Le contenu des fichiers de secrets ne doit jamais être lu, reproduit ou sérialisé.",
+          "evidence": "Les fichiers de secrets sont exclus des analyses documentaires."
+        },
+        {
+          "identifier": "SEC-002",
+          "category": "aperçu",
+          "description": "La génération documentaire doit écrire dans .docforge/preview avant toute application.",
+          "evidence": ".docforge/preview/"
+        },
+        {
+          "identifier": "SEC-003",
+          "category": "application",
+          "description": "Un document généré ne doit être appliqué qu’après une commande explicite.",
+          "evidence": "docforge apply"
+        },
+        {
+          "identifier": "SEC-004",
+          "category": "invariants",
+          "description": "Les documents protégés doivent exiger une autorisation explicite du propriétaire.",
+          "evidence": "--owner-approved"
+        },
+        {
+          "identifier": "SEC-005",
+          "category": "intégrité",
+          "description": "Les invariants approuvés doivent pouvoir être vérifiés par empreinte.",
+          "evidence": "invariant-baseline.json"
+        },
+        {
+          "identifier": "SEC-006",
+          "category": "portabilité",
+          "description": "Les documents générés ne doivent pas contenir de chemin absolu propre à une machine.",
+          "evidence": null
+        },
+        {
+          "identifier": "SEC-007",
+          "category": "Git",
+          "description": "Les caches, aperçus, environnements virtuels et secrets ne doivent pas être suivis par Git.",
+          "evidence": ".gitignore"
+        },
+        {
+          "identifier": "SEC-008",
+          "category": "analyse statique",
+          "description": "Les analyseurs doivent éviter d’importer ou d’exécuter le code des projets inspectés.",
+          "evidence": "analyse AST du CLI"
+        }
+      ],
+      "risks": [
+        "Divulgation involontaire d’un secret dans un document, un rapport ou un journal.",
+        "Application automatique d’un aperçu non validé.",
+        "Modification non autorisée d’un document d’invariants.",
+        "Exécution de code lors de l’analyse d’un dépôt.",
+        "Introduction d’un chemin local non portable dans la documentation.",
+        "Suivi Git accidentel des caches ou des aperçus.",
+        "Affaiblissement d’un test afin de masquer une régression de sécurité."
+      ],
+      "validation_commands": [
+        "pytest -q",
+        "docforge --help",
+        "docforge verify-invariants /chemin/vers/app-template",
+        "docforge document /chemin/du/projet --refresh --clean",
+        "git status --short"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [],
+        "notes": []
+      }
+    },
+    "commands": []
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "reference_version": "v0.17",
+  "supersedes": "v0.16",
+  "cli_reference_generation_mode": "deterministic",
+  "cli_reference_description_schema": 3,
+  "deterministic_sections": [
+    "configuration",
+    "security",
+    "protected-documents",
+    "cli-reference"
+  ],
+  "ollama_called": false
+}

@@ -1,0 +1,56 @@
+{
+  "identifier": "user-roles",
+  "title": "Public visé et rôles",
+  "purpose": "Distinguer les utilisateurs et l’administration fonctionnelle.",
+  "estimated_tokens": 271,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "capabilities": 810,
+    "django": 2152,
+    "react": 503
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "application": {
+        "name": null,
+        "category": null
+      },
+      "production_frontend_urls": [],
+      "roles": [
+        "IsAuthenticated"
+      ],
+      "features": [
+        "Aide",
+        "Changement de thème",
+        "Connexion",
+        "Consulter contacts",
+        "Créer contacts",
+        "Gérer un coffre local chiffré côté client",
+        "Modifier contacts",
+        "Recherche",
+        "Révélation d’une valeur",
+        "Supprimer contacts"
+      ],
+      "user_actions": [
+        "Aide",
+        "Changement de thème",
+        "Connexion",
+        "Consulter contacts",
+        "Créer contacts",
+        "Gérer un coffre local chiffré côté client",
+        "Modifier contacts",
+        "Recherche",
+        "Révélation d’une valeur",
+        "Supprimer contacts"
+      ],
+      "authentication_required": true,
+      "local_encrypted_vault": true,
+      "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+      "unlock_behavior": "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale.",
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": []
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "identifier": "operator-security",
+  "title": "Sécurité",
+  "purpose": "Fournir les contrôles de sécurité déterministes.",
+  "estimated_tokens": 339,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "security": 303
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "APP-SEC-001",
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend.",
+          "evidence": [
+            "Bearer token",
+            "JWT",
+            "SimpleJWT"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-002",
+          "category": "administration",
+          "description": "Une interface d’administration Django est détectée et doit être réservée aux comptes autorisés.",
+          "evidence": [
+            "backend/App/urls.py"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-003",
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel.",
+          "evidence": [
+            "ADMIN_PASSWORD",
+            "CALENDRIER_API_TOKEN",
+            "DJANGO_SECRET_KEY",
+            "POSTGRES_PASSWORD"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "identifier": "WRITE-ENDPOINT-ALLOWANY-CUSTOM-AUTH",
+          "category": "api",
+          "severity": "warning",
+          "description": "L’endpoint /api/integrations/contacts/ accepte des écritures avec AllowAny et s’appuie sur une authentification personnalisée qui doit être vérifiée manuellement.",
+          "sources": [
+            "backend/App/urls.py",
+            "backend/api/urls.py",
+            "backend/api/views.py"
+          ]
+        }
+      ],
+      "validation_commands": [],
+      "source": {
+        "status": "derived",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}

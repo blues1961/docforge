@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "reference_version": "v0.9",
+  "historical_notes": [
+    "manual-manifest.json conserve command_provenance_summary.total_detected = 0 dans la référence v0.9.",
+    "La couverture CLI de référence 23/23 provient de command-coverage.txt et de l’analyse des commandes top-level de manual-knowledge.json.",
+    "validation.json et verification-initiale.txt sont des artefacts historiques et peuvent encore mentionner l’ancien répertoire .docforge/benchmark-check/v0.9."
+  ]
+}

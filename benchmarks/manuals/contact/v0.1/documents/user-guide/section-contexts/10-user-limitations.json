@@ -1,0 +1,31 @@
+{
+  "identifier": "user-limitations",
+  "title": "Limites des informations disponibles",
+  "purpose": "Signaler les informations fonctionnelles non démontrées.",
+  "estimated_tokens": 129,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "missing_information": 789,
+    "limitations": 792
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "application": {
+        "name": null,
+        "category": null
+      },
+      "production_frontend_urls": [],
+      "roles": [],
+      "features": [],
+      "user_actions": [],
+      "authentication_required": false,
+      "local_encrypted_vault": false,
+      "lock_behavior": null,
+      "unlock_behavior": null,
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": []
+    }
+  }
+}

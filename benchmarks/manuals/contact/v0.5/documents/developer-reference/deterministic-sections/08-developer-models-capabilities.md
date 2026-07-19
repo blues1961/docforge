@@ -1,0 +1,15 @@
+Capacités structurées démontrées :
+- Aide
+- Changement de thème
+- Connexion
+- Consulter contacts
+- Consulter utilisateurs
+- Créer contacts
+- Créer utilisateurs
+- Gérer un coffre local chiffré côté client
+- Modifier contacts
+- Modifier utilisateurs
+- Recherche
+- Révélation d’une valeur
+- Supprimer contacts
+- Supprimer utilisateurs

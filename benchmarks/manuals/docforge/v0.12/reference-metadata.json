@@ -1,0 +1,6 @@
+{
+  "reference_version": "v0.12",
+  "supersedes": "v0.11",
+  "cli_reference_generation_mode": "deterministic",
+  "ollama_called": false
+}

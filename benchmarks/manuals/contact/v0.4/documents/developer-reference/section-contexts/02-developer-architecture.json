@@ -1,0 +1,726 @@
+{
+  "identifier": "developer-architecture",
+  "title": "Architecture Django et React",
+  "purpose": "Présenter les composants Django et React.",
+  "estimated_tokens": 2848,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "application": 66,
+    "django": 2152,
+    "react": 584
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "application": {
+      "name": "contact",
+      "category": "django-react",
+      "backend_framework": "Django",
+      "frontend_framework": "React/Vite",
+      "prepared_by": "DocForge",
+      "source_paths": [
+        "backend/App/settings.py",
+        "frontend/package.json",
+        "docker-compose.dev.yml",
+        "… (+1 autres sources)"
+      ]
+    },
+    "django": {
+      "settings_module": "App.settings",
+      "urlconf_module": "App.urls",
+      "installed_apps": [
+        "api",
+        "django.contrib.admin",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.messages",
+        "django.contrib.sessions",
+        "django.contrib.staticfiles",
+        "rest_framework",
+        "rest_framework_simplejwt.token_blacklist"
+      ],
+      "admin_enabled": true,
+      "routers": [
+        "/contacts",
+        "/users"
+      ],
+      "auth_mechanisms": [
+        "Bearer token",
+        "JWT",
+        "SimpleJWT"
+      ],
+      "models": [
+        {
+          "name": "Contact",
+          "fields": [
+            "owner",
+            "visibility",
+            "name",
+            "organization",
+            "address",
+            "email",
+            "phone",
+            "birthday",
+            "notes",
+            "encrypted_payload",
+            "encryption_version",
+            "external_contact_id",
+            "linked_contact_id",
+            "source_app",
+            "source_domain",
+            "created_at",
+            "updated_at"
+          ],
+          "source": "backend/api/models.py"
+        }
+      ],
+      "model_schemas": [
+        {
+          "name": "Contact",
+          "fields": [
+            {
+              "name": "owner",
+              "field_type": "ForeignKey",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": "settings.AUTH_USER_MODEL",
+              "unique": false,
+              "on_delete": "models.CASCADE"
+            },
+            {
+              "name": "visibility",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": false,
+              "default": "Visibility.PUBLIC",
+              "choices": [
+                {
+                  "value": "public",
+                  "label": "Public"
+                },
+                {
+                  "value": "private",
+                  "label": "Privé"
+                }
+              ],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "name",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "organization",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "address",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "email",
+              "field_type": "EmailField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "phone",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "birthday",
+              "field_type": "DateField",
+              "required": false,
+              "nullable": true,
+              "blank": true,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "notes",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "encrypted_payload",
+              "field_type": "TextField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "encryption_version",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "external_contact_id",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "linked_contact_id",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "source_app",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "source_domain",
+              "field_type": "CharField",
+              "required": false,
+              "nullable": false,
+              "blank": true,
+              "default": "",
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "created_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            },
+            {
+              "name": "updated_at",
+              "field_type": "DateTimeField",
+              "required": true,
+              "nullable": false,
+              "blank": false,
+              "default": null,
+              "choices": [],
+              "relation": null,
+              "unique": false,
+              "on_delete": null
+            }
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "path": "/admin/",
+          "methods": [],
+          "view": "urls",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/login/",
+          "methods": [
+            "POST"
+          ],
+          "view": "TokenObtainPairView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/logout/",
+          "methods": [
+            "POST"
+          ],
+          "view": "LogoutView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/refresh/",
+          "methods": [],
+          "view": "TokenRefreshView",
+          "permissions": [],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/auth/whoami/",
+          "methods": [
+            "GET"
+          ],
+          "view": "WhoAmIView",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/contacts/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "ContactViewSet",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [
+            "visibility filtering detected",
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/contacts/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "ContactViewSet",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [
+            "visibility filtering detected",
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/contacts/{id}/sync_birthday/",
+          "methods": [
+            "POST"
+          ],
+          "view": "ContactViewSet",
+          "permissions": [
+            "IsAuthenticated"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [
+            "sync_birthday"
+          ],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to request.user",
+            "owner assigned server-side"
+          ],
+          "data_controls": [
+            "visibility filtering detected",
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/health/",
+          "methods": [],
+          "view": "health",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/integrations/contacts/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "ContactIntegrationListCreateView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [
+            "owner scoped to authenticated owner value",
+            "owner assigned server-side"
+          ],
+          "data_controls": [
+            "visibility filtering detected",
+            "search filtering detected",
+            "payload normalization before persistence"
+          ],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/integrations/contacts/{id}/",
+          "methods": [
+            "GET"
+          ],
+          "view": "ContactIntegrationDetailView",
+          "permissions": [
+            "AllowAny"
+          ],
+          "authentication": [],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [
+            "owner scoped to authenticated owner value"
+          ],
+          "data_controls": [],
+          "custom_authentication": true
+        },
+        {
+          "path": "/api/users/",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "view": "UserViewSet",
+          "permissions": [
+            "IsAdminUser"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [],
+          "ownership_controls": [],
+          "data_controls": [
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/users/{id}/",
+          "methods": [
+            "GET",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "view": "UserViewSet",
+          "permissions": [
+            "IsAdminUser"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [],
+          "data_controls": [
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        },
+        {
+          "path": "/api/users/{id}/reset_password/",
+          "methods": [
+            "POST"
+          ],
+          "view": "UserViewSet",
+          "permissions": [
+            "IsAdminUser"
+          ],
+          "authentication": [
+            "JWT",
+            "Bearer token"
+          ],
+          "actions": [
+            "reset_password"
+          ],
+          "route_parameters": [
+            "id"
+          ],
+          "ownership_controls": [],
+          "data_controls": [
+            "search filtering detected"
+          ],
+          "custom_authentication": false
+        }
+      ]
+    },
+    "react": {
+      "entry_point": "frontend/src/App.jsx",
+      "routes": [
+        "/"
+      ],
+      "pages": [
+        "Connexion",
+        "Contacts",
+        "Répertoire personnel",
+        "Utilisateurs",
+        "{form.id ? \"Modifier le contact\" : \"Nouveau contact\"}"
+      ],
+      "navigation_items": [
+        "Coffre privé",
+        "Connexion",
+        "Recherche",
+        "Utilisateurs"
+      ],
+      "forms": [
+        "App"
+      ],
+      "user_features": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [
+            "GET /auth/whoami/",
+            "POST /auth/login/",
+            "POST /auth/logout/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        }
+      ],
+      "auth_mechanisms": [
+        "JWT Bearer côté frontend",
+        "Session locale dans localStorage",
+        "Déverrouillage local du coffre privé"
+      ],
+      "crypto": {
+        "detected": true,
+        "algorithms": [
+          "AES-GCM"
+        ],
+        "key_derivation": "PBKDF2",
+        "key_derivation_hash": "SHA-256",
+        "key_derivation_iterations": 250000,
+        "key_derivation_salt_template": "encoder",
+        "key_length_bits": null,
+        "nonce_bytes": 12,
+        "format_version": "v1",
+        "payload_fields": [
+          "version",
+          "iv",
+          "ciphertext",
+          "key",
+          "salt",
+          "payload"
+        ],
+        "cleartext_fields": [],
+        "key_material_storage": "localStorage",
+        "recovery_supported": null,
+        "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+        "unlock_behavior": "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale.",
+        "source_paths": [
+          "frontend/src/crypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      "api_calls": [
+        "DELETE /contacts/{id}/",
+        "GET /auth/whoami/",
+        "GET /contacts/",
+        "GET /users/",
+        "PATCH /contacts/{id}/",
+        "PATCH /users/{id}/",
+        "POST /auth/login/",
+        "POST /auth/logout/",
+        "POST /contacts/",
+        "POST /contacts/{id}/sync_birthday/",
+        "POST /users/",
+        "POST /users/{id}/reset_password/"
+      ],
+      "environment_variables": []
+    }
+  }
+}

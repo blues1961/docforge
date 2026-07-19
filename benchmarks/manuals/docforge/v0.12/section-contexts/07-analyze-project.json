@@ -1,0 +1,28 @@
+{
+  "identifier": "analyze-project",
+  "title": "Analyse d’un projet",
+  "purpose": "Décrire le flux d’analyse d’un projet local.",
+  "estimated_tokens": 95,
+  "context_budget": null,
+  "fact_breakdown": {
+    "workflows": 649,
+    "commands": 3832
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "workflows": [
+      {
+        "identifier": "analyze-project",
+        "title": "Analyser un projet",
+        "summary": "Inspecter un dépôt sans modifier ses fichiers.",
+        "commands": [
+          "docforge analyze"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "commands": []
+  }
+}

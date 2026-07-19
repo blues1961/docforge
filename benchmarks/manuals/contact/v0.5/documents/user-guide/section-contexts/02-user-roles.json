@@ -1,0 +1,21 @@
+{
+  "identifier": "user-roles",
+  "title": "Public visé et rôles",
+  "purpose": "Distinguer les utilisateurs et l’administration fonctionnelle.",
+  "estimated_tokens": 49,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "capabilities": 810,
+    "django": 2152,
+    "react": 503
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "roles": [
+        "IsAuthenticated"
+      ]
+    }
+  }
+}

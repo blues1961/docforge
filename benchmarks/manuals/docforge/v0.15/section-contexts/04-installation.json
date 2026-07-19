@@ -1,0 +1,48 @@
+{
+  "identifier": "installation",
+  "title": "Installation",
+  "purpose": "Décrire l’installation locale depuis une copie du dépôt.",
+  "estimated_tokens": 196,
+  "context_budget": null,
+  "fact_breakdown": {
+    "installation": 157
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "installation": {
+      "summary": "Installation locale à partir d’une copie du dépôt.",
+      "prerequisites": [
+        "Python >=3.11",
+        "Git",
+        "Un shell compatible POSIX"
+      ],
+      "steps": [
+        {
+          "title": "Créer un environnement virtuel",
+          "command": "python -m venv .venv"
+        },
+        {
+          "title": "Activer l’environnement",
+          "command": "source .venv/bin/activate"
+        },
+        {
+          "title": "Installer le paquet localement",
+          "command": "python -m pip install -e ."
+        },
+        {
+          "title": "Installer les dépendances de développement",
+          "command": "python -m pip install -e \".[dev]\""
+        },
+        {
+          "title": "Vérifier l’installation CLI",
+          "command": "docforge --help"
+        },
+        {
+          "title": "Exécuter les tests",
+          "command": "pytest -q"
+        }
+      ]
+    }
+  }
+}

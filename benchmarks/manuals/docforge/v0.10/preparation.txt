@@ -1,0 +1,11 @@
+Commande de préparation exécutée :
+docforge manual prepare . --clean --mode both --output-dir .docforge/benchmark-check/v0.10
+
+Validation du guide historique copié :
+scripts/verify_docforge_manual_reference.sh --prepared-dir .docforge/benchmark-check/v0.10 --fast --results-dir .tmp-docforge-v010-validation docforge-guide-usager.v0.10-copy.md
+
+Résumé :
+- manual-knowledge.json inchangé par rapport à v0.9
+- manual-manifest.json diffère seulement par generated_at et full_prompt_estimated_tokens
+- manual-prompt.md et les 21 section-prompts intègrent les nouvelles règles command_path/invocation
+- les 21 section-contexts sont identiques à v0.9

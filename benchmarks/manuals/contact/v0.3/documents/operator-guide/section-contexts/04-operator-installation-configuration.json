@@ -1,0 +1,229 @@
+{
+  "identifier": "operator-installation-configuration",
+  "title": "Installation et configuration",
+  "purpose": "Présenter la configuration et les séquences démontrées.",
+  "estimated_tokens": 1251,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "installation": 132,
+    "workflows": 911,
+    "template": 153
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "installation": {
+      "summary": "Préparation locale de l’application à partir des commandes opérationnelles détectées.",
+      "prerequisites": [
+        "Docker et Docker Compose",
+        "Le dépôt doit être initialisé via les scripts et cibles Make détectés."
+      ],
+      "steps": [
+        {
+          "title": "Sélectionner l’environnement de développement",
+          "command": "make dev"
+        },
+        {
+          "title": "Initialiser les fichiers locaux requis",
+          "command": "make init"
+        },
+        {
+          "title": "Démarrer les services",
+          "command": "make up"
+        },
+        {
+          "title": "Appliquer les migrations détectées",
+          "command": "make migrate"
+        }
+      ]
+    },
+    "workflows": [
+      {
+        "identifier": "prepare-dev-config",
+        "title": "Préparer la configuration de développement",
+        "summary": "Sélectionner le mode dev puis initialiser les fichiers d’environnement.",
+        "commands": [
+          "make dev",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-development",
+        "title": "Démarrer le développement",
+        "summary": "Sélectionner l’environnement dev puis démarrer les services.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "apply-migrations",
+        "title": "Appliquer les migrations",
+        "summary": "Exécuter la procédure de migration détectée.",
+        "commands": [
+          "make migrate"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "create-admin",
+        "title": "Créer un administrateur",
+        "summary": "Créer ou mettre à jour le compte administrateur via la procédure démontrée.",
+        "commands": [
+          "make migrate"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "open-frontend",
+        "title": "Ouvrir le frontend",
+        "summary": "Démarrer les services puis ouvrir le frontend détecté.",
+        "commands": [
+          "make dev",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_VITE_PORT}"
+        ]
+      },
+      {
+        "identifier": "open-django-admin",
+        "title": "Accéder à l’administration Django",
+        "summary": "Démarrer les services puis ouvrir l’administration détectée.",
+        "commands": [
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": [
+          "URL détectée : http://localhost:${DEV_API_PORT}/admin/"
+        ]
+      },
+      {
+        "identifier": "view-logs",
+        "title": "Consulter les journaux",
+        "summary": "Afficher les logs des services actifs.",
+        "commands": [
+          "make logs"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "run-tests",
+        "title": "Lancer les tests",
+        "summary": "Le frontend expose un script de test, mais aucun workflow opérationnel complet n’a été démontré pour l’ensemble de l’application.",
+        "commands": [
+          "node --test src/*.test.mjs"
+        ],
+        "operational_status": "requires-context",
+        "notes": [
+          "Le script frontend a été détecté, mais son contexte d’exécution complet n’est pas démontré par une commande opérationnelle du dépôt.",
+          "`make check` reste une vérification d’invariants ou de diagnostic et n’est pas utilisé comme workflow de tests.",
+          "Aucune commande opérationnelle de tests backend n’a été prouvée."
+        ]
+      },
+      {
+        "identifier": "stop-services",
+        "title": "Arrêter les services",
+        "summary": "Arrêter les services de l’environnement actif.",
+        "commands": [
+          "make down"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "rebuild-images",
+        "title": "Reconstruire les images",
+        "summary": "Reconstruire les images Docker de l’environnement actif.",
+        "commands": [
+          "make rebuild"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "prepare-production",
+        "title": "Préparer la production",
+        "summary": "Sélectionner prod puis initialiser les fichiers requis.",
+        "commands": [
+          "make prod",
+          "make init"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "start-production",
+        "title": "Démarrer la production",
+        "summary": "Sélectionner prod puis démarrer les services.",
+        "commands": [
+          "make prod",
+          "make up"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "backup-database",
+        "title": "Sauvegarder la base",
+        "summary": "Créer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make backup"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      },
+      {
+        "identifier": "restore-database",
+        "title": "Restaurer la base",
+        "summary": "Restaurer une sauvegarde PostgreSQL via la commande détectée.",
+        "commands": [
+          "make restore"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "template": {
+      "project_kind": "application",
+      "template_id": null,
+      "origin_template_id": "app-template",
+      "template_version": null,
+      "origin_template_version": null,
+      "base_profile": "django-react",
+      "manifest_source": "heuristic: INVARIANTS.md + Makefile + Docker Compose",
+      "current_state": null,
+      "target_state": null,
+      "materialization": null,
+      "manifest_verified_targets": [
+        "backup",
+        "check",
+        "dev",
+        "down",
+        "init",
+        "logs",
+        "migrate",
+        "prod",
+        "ps",
+        "rebuild",
+        "restart",
+        "restore",
+        "up"
+      ],
+      "manifest_missing_targets": [],
+      "missing_steps": [],
+      "risks": [],
+      "placeholders": [],
+      "creator_workflows": [],
+      "maintainer_workflows": []
+    }
+  }
+}

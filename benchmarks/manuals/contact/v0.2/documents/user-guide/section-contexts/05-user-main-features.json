@@ -1,0 +1,30 @@
+{
+  "identifier": "user-main-features",
+  "title": "Fonctionnalités principales",
+  "purpose": "Présenter les capacités fonctionnelles démontrées.",
+  "estimated_tokens": 99,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "capabilities": 810,
+    "react": 503,
+    "django": 2152
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "features": [
+        "Aide",
+        "Changement de thème",
+        "Connexion",
+        "Consulter contacts",
+        "Créer contacts",
+        "Gérer un coffre local chiffré côté client",
+        "Modifier contacts",
+        "Recherche",
+        "Révélation d’une valeur",
+        "Supprimer contacts"
+      ]
+    }
+  }
+}

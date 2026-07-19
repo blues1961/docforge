@@ -1,0 +1,127 @@
+{
+  "identifier": "operator-compose-services",
+  "title": "Services Docker Compose",
+  "purpose": "Fournir le tableau déterministe des services Compose.",
+  "estimated_tokens": 396,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "environments": 374
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "environments": {
+      "items": [
+        {
+          "name": "dev",
+          "compose_file": "docker-compose.dev.yml",
+          "env_files": [
+            ".env.dev"
+          ],
+          "urls": [
+            "http://localhost:${DEV_API_PORT}/admin/",
+            "http://localhost:${DEV_API_PORT}/api/",
+            "http://localhost:${DEV_VITE_PORT}"
+          ],
+          "services": [
+            {
+              "name": "backend",
+              "role": "backend",
+              "ports": [
+                "${DEV_API_PORT}:8000"
+              ],
+              "depends_on": [
+                "db"
+              ],
+              "networks": [],
+              "volumes": [
+                "./backend:/app"
+              ]
+            },
+            {
+              "name": "db",
+              "role": "database",
+              "image": "postgres:16",
+              "ports": [
+                "${DEV_DB_PORT}:5432"
+              ],
+              "depends_on": [],
+              "networks": [],
+              "volumes": []
+            },
+            {
+              "name": "frontend",
+              "role": "frontend",
+              "ports": [
+                "${DEV_VITE_PORT}:5173"
+              ],
+              "depends_on": [
+                "backend"
+              ],
+              "networks": [],
+              "volumes": [
+                "./frontend:/app",
+                "frontend_node_modules:/app/node_modules"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "prod",
+          "compose_file": "docker-compose.prod.yml",
+          "env_files": [
+            ".env",
+            ".env.prod"
+          ],
+          "urls": [
+            "https://con.mon-site.ca",
+            "https://con.mon-site.ca/admin/",
+            "https://con.mon-site.ca/api/",
+            "https://con.mon-site.ca/static/"
+          ],
+          "services": [
+            {
+              "name": "backend",
+              "role": "backend",
+              "ports": [],
+              "depends_on": [
+                "db"
+              ],
+              "networks": [
+                "internal",
+                "edge"
+              ],
+              "volumes": []
+            },
+            {
+              "name": "db",
+              "role": "database",
+              "image": "postgres:16-alpine",
+              "ports": [],
+              "depends_on": [],
+              "networks": [
+                "internal"
+              ],
+              "volumes": [
+                "postgres_data:/var/lib/postgresql/data"
+              ]
+            },
+            {
+              "name": "frontend",
+              "role": "frontend",
+              "ports": [],
+              "depends_on": [
+                "backend"
+              ],
+              "networks": [
+                "internal",
+                "edge"
+              ],
+              "volumes": []
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "identifier": "operator-protected-documents",
+  "title": "Documents protégés et contrat app-template",
+  "purpose": "Présenter le contrat et les documents protégés démontrés.",
+  "estimated_tokens": 651,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "template": 153,
+    "security": 303,
+    "documentation_policy": 136
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "template": {
+      "project_kind": "application",
+      "template_id": null,
+      "origin_template_id": "app-template",
+      "template_version": null,
+      "origin_template_version": null,
+      "base_profile": "django-react",
+      "manifest_source": "heuristic: INVARIANTS.md + Makefile + Docker Compose",
+      "current_state": null,
+      "target_state": null,
+      "materialization": null,
+      "manifest_verified_targets": [
+        "backup",
+        "check",
+        "dev",
+        "down",
+        "init",
+        "logs",
+        "migrate",
+        "prod",
+        "ps",
+        "rebuild",
+        "restart",
+        "restore",
+        "up"
+      ],
+      "manifest_missing_targets": [],
+      "missing_steps": [],
+      "risks": [],
+      "placeholders": [],
+      "creator_workflows": [],
+      "maintainer_workflows": []
+    },
+    "security": {
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "controls": [
+        {
+          "identifier": "APP-SEC-001",
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend.",
+          "evidence": [
+            "Bearer token",
+            "JWT",
+            "SimpleJWT"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-002",
+          "category": "administration",
+          "description": "Une interface d’administration Django est détectée et doit être réservée aux comptes autorisés.",
+          "evidence": [
+            "backend/App/urls.py"
+          ]
+        },
+        {
+          "identifier": "APP-SEC-003",
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel.",
+          "evidence": [
+            "ADMIN_PASSWORD",
+            "CALENDRIER_API_TOKEN",
+            "DJANGO_SECRET_KEY",
+            "POSTGRES_PASSWORD"
+          ]
+        }
+      ],
+      "risks": [
+        {
+          "identifier": "WRITE-ENDPOINT-ALLOWANY-CUSTOM-AUTH",
+          "category": "api",
+          "severity": "warning",
+          "description": "L’endpoint /api/integrations/contacts/ accepte des écritures avec AllowAny et s’appuie sur une authentification personnalisée qui doit être vérifiée manuellement.",
+          "sources": [
+            "backend/App/urls.py",
+            "backend/api/urls.py",
+            "backend/api/views.py"
+          ]
+        }
+      ],
+      "validation_commands": [],
+      "source": {
+        "status": "derived",
+        "sources": [],
+        "notes": []
+      }
+    },
+    "documentation_policy": {
+      "required_documents": [
+        "AGENTS.md",
+        "CODEX_START.md",
+        "INVARIANTS.md",
+        "README.md",
+        "README_DEV.md",
+        "docs/api.md",
+        "docs/architecture.md",
+        "docs/deployment.md",
+        "docs/specification.md"
+      ],
+      "optional_documents": [],
+      "deterministic_documents": [
+        "AGENTS.md",
+        "CODEX_START.md",
+        "INVARIANTS.md",
+        "README.md",
+        "README_DEV.md",
+        "docs/api.md",
+        "docs/architecture.md",
+        "docs/deployment.md",
+        "docs/specification.md"
+      ],
+      "protected_documents": [
+        "INVARIANTS.md"
+      ],
+      "source": {
+        "status": "configured",
+        "sources": [],
+        "notes": [
+          "Contrat app-template détecté."
+        ]
+      }
+    }
+  }
+}

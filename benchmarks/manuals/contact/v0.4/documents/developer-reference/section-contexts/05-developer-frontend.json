@@ -1,0 +1,332 @@
+{
+  "identifier": "developer-frontend",
+  "title": "Frontend",
+  "purpose": "Présenter les pages et capacités frontend démontrées.",
+  "estimated_tokens": 1435,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "react": 584,
+    "capabilities": 810
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "react": {
+      "entry_point": "frontend/src/App.jsx",
+      "routes": [
+        "/"
+      ],
+      "pages": [
+        "Connexion",
+        "Contacts",
+        "Répertoire personnel",
+        "Utilisateurs",
+        "{form.id ? \"Modifier le contact\" : \"Nouveau contact\"}"
+      ],
+      "navigation_items": [
+        "Coffre privé",
+        "Connexion",
+        "Recherche",
+        "Utilisateurs"
+      ],
+      "forms": [
+        "App"
+      ],
+      "user_features": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [
+            "GET /auth/whoami/",
+            "POST /auth/login/",
+            "POST /auth/logout/"
+          ],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "high"
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "App",
+          "routes": [],
+          "api_calls": [],
+          "evidence": [
+            "frontend/src/App.jsx"
+          ],
+          "confidence": "medium"
+        }
+      ],
+      "auth_mechanisms": [
+        "JWT Bearer côté frontend",
+        "Session locale dans localStorage",
+        "Déverrouillage local du coffre privé"
+      ],
+      "crypto": {
+        "detected": true,
+        "algorithms": [
+          "AES-GCM"
+        ],
+        "key_derivation": "PBKDF2",
+        "key_derivation_hash": "SHA-256",
+        "key_derivation_iterations": 250000,
+        "key_derivation_salt_template": "encoder",
+        "key_length_bits": null,
+        "nonce_bytes": 12,
+        "format_version": "v1",
+        "payload_fields": [
+          "version",
+          "iv",
+          "ciphertext",
+          "key",
+          "salt",
+          "payload"
+        ],
+        "cleartext_fields": [],
+        "key_material_storage": "localStorage",
+        "recovery_supported": null,
+        "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+        "unlock_behavior": "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale.",
+        "source_paths": [
+          "frontend/src/crypto.js",
+          "frontend/src/App.jsx"
+        ]
+      },
+      "api_calls": [
+        "DELETE /contacts/{id}/",
+        "GET /auth/whoami/",
+        "GET /contacts/",
+        "GET /users/",
+        "PATCH /contacts/{id}/",
+        "PATCH /users/{id}/",
+        "POST /auth/login/",
+        "POST /auth/logout/",
+        "POST /contacts/",
+        "POST /contacts/{id}/sync_birthday/",
+        "POST /users/",
+        "POST /users/{id}/reset_password/"
+      ],
+      "environment_variables": []
+    },
+    "capabilities": {
+      "capabilities": [
+        {
+          "label": "Aide",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Changement de thème",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Connexion",
+          "status": "detected",
+          "component": "App",
+          "endpoint": "/auth/whoami/",
+          "permission_condition": null,
+          "confidence": "high",
+          "evidence": [
+            "frontend/src/App.jsx",
+            "GET /auth/whoami/",
+            "POST /auth/login/",
+            "POST /auth/logout/"
+          ]
+        },
+        {
+          "label": "Consulter contacts",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/contacts/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/contacts/",
+            "Contact",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Consulter utilisateurs",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/users/",
+          "permission_condition": "IsAdminUser",
+          "confidence": "high",
+          "evidence": [
+            "/api/users/",
+            "User",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Créer contacts",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/contacts/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/contacts/",
+            "Contact",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Créer utilisateurs",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/users/",
+          "permission_condition": "IsAdminUser",
+          "confidence": "high",
+          "evidence": [
+            "/api/users/",
+            "User",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Gérer un coffre local chiffré côté client",
+          "status": "detected",
+          "component": "frontend",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/crypto.js",
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Modifier contacts",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/contacts/{id}/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/contacts/{id}/",
+            "Contact",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Modifier utilisateurs",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/users/{id}/",
+          "permission_condition": "IsAdminUser",
+          "confidence": "high",
+          "evidence": [
+            "/api/users/{id}/",
+            "User",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Recherche",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Révélation d’une valeur",
+          "status": "detected",
+          "component": "App",
+          "endpoint": null,
+          "permission_condition": null,
+          "confidence": "medium",
+          "evidence": [
+            "frontend/src/App.jsx"
+          ]
+        },
+        {
+          "label": "Supprimer contacts",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/contacts/{id}/",
+          "permission_condition": "IsAuthenticated",
+          "confidence": "high",
+          "evidence": [
+            "/api/contacts/{id}/",
+            "Contact",
+            "DELETE /contacts/{id}/",
+            "GET /auth/whoami/"
+          ]
+        },
+        {
+          "label": "Supprimer utilisateurs",
+          "status": "derived",
+          "component": null,
+          "endpoint": "/api/users/{id}/",
+          "permission_condition": "IsAdminUser",
+          "confidence": "high",
+          "evidence": [
+            "/api/users/{id}/",
+            "User"
+          ]
+        }
+      ]
+    }
+  }
+}

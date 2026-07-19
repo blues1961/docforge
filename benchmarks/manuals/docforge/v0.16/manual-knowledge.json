@@ -1,0 +1,2218 @@
+{
+  "schema_version": 2,
+  "project": {
+    "name": "docforge",
+    "version": "0.1.0",
+    "description": "Assistant local d'analyse et de documentation de projets logiciels.",
+    "profile_type": "python-cli",
+    "python_requires": ">=3.11",
+    "cli_entry_point": "docforge -> docforge.cli:app",
+    "source": {
+      "status": "detected",
+      "sources": [
+        "pyproject.toml",
+        "ProjectKnowledge.pyproject"
+      ],
+      "notes": []
+    }
+  },
+  "profile": {
+    "name": "python-cli",
+    "label": "Outil Python CLI",
+    "description": "Application Python en ligne de commande, installable depuis pyproject.toml et testée avec pytest.",
+    "confidence": 95,
+    "evidence": [
+      "configuration détectée : pyproject.toml",
+      "point d’entrée CLI détecté dans pyproject.toml",
+      "langage détecté : Python",
+      "suite de tests détectée : tests/"
+    ],
+    "source": {
+      "status": "detected",
+      "sources": [
+        "ProfileDetector",
+        "configuration détectée : pyproject.toml",
+        "point d’entrée CLI détecté dans pyproject.toml",
+        "langage détecté : Python",
+        "suite de tests détectée : tests/"
+      ],
+      "notes": []
+    }
+  },
+  "installation": {
+    "summary": "Installation locale à partir d’une copie du dépôt.",
+    "prerequisites": [
+      "Python >=3.11",
+      "Git",
+      "Un shell compatible POSIX"
+    ],
+    "steps": [
+      {
+        "title": "Créer un environnement virtuel",
+        "command": "python -m venv .venv",
+        "source": {
+          "status": "derived",
+          "sources": [
+            "pyproject.toml"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Activer l’environnement",
+        "command": "source .venv/bin/activate",
+        "source": {
+          "status": "derived",
+          "sources": [
+            "README_DEV.md"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Installer le paquet localement",
+        "command": "python -m pip install -e .",
+        "source": {
+          "status": "derived",
+          "sources": [
+            "pyproject.toml"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Installer les dépendances de développement",
+        "command": "python -m pip install -e \".[dev]\"",
+        "source": {
+          "status": "configured",
+          "sources": [
+            "pyproject.toml"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Vérifier l’installation CLI",
+        "command": "docforge --help",
+        "source": {
+          "status": "derived",
+          "sources": [
+            "CliAnalyzer"
+          ],
+          "notes": []
+        }
+      },
+      {
+        "title": "Exécuter les tests",
+        "command": "pytest -q",
+        "source": {
+          "status": "derived",
+          "sources": [
+            "tests/"
+          ],
+          "notes": []
+        }
+      }
+    ],
+    "source": {
+      "status": "derived",
+      "sources": [
+        "pyproject.toml",
+        "README_DEV.md"
+      ],
+      "notes": []
+    }
+  },
+  "application": {},
+  "environments": {},
+  "operational_commands": {},
+  "environment_variables": {},
+  "service_endpoints": {},
+  "django": {},
+  "react": {},
+  "capabilities": {},
+  "template": {},
+  "missing_information": [],
+  "conflicts": [],
+  "commands": [
+    {
+      "name": "analyze",
+      "command_path": "analyze",
+      "invocation": "docforge analyze",
+      "group": null,
+      "help": "Analyser un projet sans modifier ses fichiers.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à analyser.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--json",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--json"
+          ],
+          "help": "Afficher le résultat complet en JSON.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "json_output",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge analyze"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "analyze"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "analyze-template",
+      "command_path": "analyze-template",
+      "invocation": "docforge analyze-template",
+      "group": null,
+      "help": "Analyser le modèle canonique des applications auto-hébergées.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Chemin du dépôt app-template.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--no-cache",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--no-cache"
+          ],
+          "help": "Analyser sans écrire template.json.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "no_cache",
+          "source": null
+        },
+        {
+          "name": "--json",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--json"
+          ],
+          "help": "Afficher l'analyse complète en JSON.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "json_output",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge analyze-template"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "analyze_template_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "apply",
+      "command_path": "apply",
+      "invocation": "docforge apply",
+      "group": null,
+      "help": "Copier des documents validés de l'aperçu vers le projet.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "DOCUMENTS",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Documents d'aperçu à intégrer.",
+          "type_annotation": "list[str]",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "documents",
+          "source": null
+        },
+        {
+          "name": "--owner-approved",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--owner-approved"
+          ],
+          "help": "Confirmer l’autorisation explicite du propriétaire pour appliquer un document protégé.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "owner_approved",
+          "source": null
+        },
+        {
+          "name": "--allow-dirty",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--allow-dirty"
+          ],
+          "help": "Autoriser exceptionnellement un dépôt Git modifié.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "allow_dirty",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge apply"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "apply_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "approve-invariants",
+      "command_path": "approve-invariants",
+      "invocation": "docforge approve-invariants",
+      "group": null,
+      "help": "Enregistrer la version approuvée des invariants globaux.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "TEMPLATE_PATH",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Chemin du dépôt app-template.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--owner-approved",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--owner-approved"
+          ],
+          "help": "Confirmer que le propriétaire autorise l'enregistrement de cette version.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "owner_approved",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge approve-invariants"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "approve_invariants_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "audit-all",
+      "command_path": "audit-all",
+      "invocation": "docforge audit-all",
+      "group": null,
+      "help": "Comparer les applications enregistrées à app-template.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--template",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--template"
+          ],
+          "help": "Chemin du template canonique.",
+          "type_annotation": "Path",
+          "default": "Path.home() / 'projets' / 'app-template'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--show-findings",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--show-findings"
+          ],
+          "help": "Afficher les écarts détaillés.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "show_findings",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge audit-all"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "audit_all_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "audit-diff",
+      "command_path": "audit-diff",
+      "invocation": "docforge audit-diff",
+      "group": null,
+      "help": "Comparer deux rapports de conformité.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--current",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--current"
+          ],
+          "help": "Rapport JSON courant.",
+          "type_annotation": "Path",
+          "default": "Path('reports/audit-latest.json')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "current",
+          "source": null
+        },
+        {
+          "name": "--previous",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--previous"
+          ],
+          "help": "Rapport JSON précédent. Le plus récent de reports/history est utilisé par défaut.",
+          "type_annotation": "Path | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "previous",
+          "source": null
+        },
+        {
+          "name": "--output",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output",
+            "-o"
+          ],
+          "help": "Fichier Markdown de comparaison.",
+          "type_annotation": "Path | None",
+          "default": "Path('reports/audit-diff-latest.md')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge audit-diff"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "audit_diff_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "audit-report",
+      "command_path": "audit-report",
+      "invocation": "docforge audit-report",
+      "group": null,
+      "help": "Générer un rapport persistant JSON et Markdown.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--template",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--template"
+          ],
+          "help": "Chemin du template canonique.",
+          "type_annotation": "Path",
+          "default": "Path.home() / 'projets' / 'app-template'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--output-dir",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output-dir",
+            "-o"
+          ],
+          "help": "Répertoire de destination des rapports.",
+          "type_annotation": "Path",
+          "default": "Path('reports')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output_dir",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge audit-report"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "audit_report_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "document",
+      "command_path": "document",
+      "invocation": "docforge document",
+      "group": null,
+      "help": "Générer un aperçu des documents obligatoires manquants.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à documenter.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--profile",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Profil documentaire explicite. Par défaut, utilise la configuration locale.",
+          "type_annotation": "str | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "profile",
+          "source": null
+        },
+        {
+          "name": "--clean",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--clean"
+          ],
+          "help": "Supprimer l'ancien aperçu avant la génération.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "clean",
+          "source": null
+        },
+        {
+          "name": "--refresh",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--refresh"
+          ],
+          "help": "Régénérer les documents déterministes même s'ils existent déjà dans le projet.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "refresh",
+          "source": null
+        },
+        {
+          "name": "--write",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--write"
+          ],
+          "help": "Écrire dans le projet réel.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "write",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge document",
+        "docforge document . --refresh --clean"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "document"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "generate",
+      "command_path": "generate",
+      "invocation": "docforge generate",
+      "group": null,
+      "help": "Remplir avec Ollama les documents manquants en aperçu.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à documenter.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--model",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--model",
+            "-m"
+          ],
+          "help": "Modèle Ollama utilisé.",
+          "type_annotation": "str",
+          "default": "'gemma4:latest'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "model",
+          "source": null
+        },
+        {
+          "name": "--clean",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--clean"
+          ],
+          "help": "Recréer entièrement le dossier d'aperçu.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "clean",
+          "source": null
+        },
+        {
+          "name": "--refresh",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--refresh"
+          ],
+          "help": "Régénérer aussi les documents déterministes déjà présents.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "refresh",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge generate",
+        "docforge generate . --refresh --clean"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "generate_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "generate-global-invariants",
+      "command_path": "generate-global-invariants",
+      "invocation": "docforge generate-global-invariants",
+      "group": null,
+      "help": "Générer les invariants globaux depuis app-template.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "TEMPLATE_PATH",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Chemin du dépôt app-template.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--output",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output",
+            "-o"
+          ],
+          "help": "Fichier Markdown à générer.",
+          "type_annotation": "Path",
+          "default": "Path('defaults/global-invariants.md')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge generate-global-invariants"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "generate_global_invariants_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "init",
+      "command_path": "init",
+      "invocation": "docforge init",
+      "group": null,
+      "help": "Créer la configuration locale d'un projet.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à initialiser.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--force",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--force"
+          ],
+          "help": "Remplacer une configuration locale existante.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "force",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge init"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "init_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "knowledge",
+      "command_path": "knowledge",
+      "invocation": "docforge knowledge",
+      "group": null,
+      "help": "Construire la connaissance structurée d'un projet.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Projet à analyser.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--output",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output",
+            "-o"
+          ],
+          "help": "Fichier JSON de destination. Par défaut, utilise .docforge/cache/project-knowledge.json.",
+          "type_annotation": "Path | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output",
+          "source": null
+        },
+        {
+          "name": "--json",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--json"
+          ],
+          "help": "Afficher le JSON pur sur la sortie standard.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "print_json",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge knowledge"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "knowledge_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "profile",
+      "command_path": "profile",
+      "invocation": "docforge profile",
+      "group": null,
+      "help": "Détecter et afficher le profil d'un projet.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Projet dont le profil doit être détecté.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge profile"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "profile_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "refresh-all",
+      "command_path": "refresh-all",
+      "invocation": "docforge refresh-all",
+      "group": null,
+      "help": "Actualiser les aperçus de tous les projets enregistrés.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--clean",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--clean"
+          ],
+          "help": "Supprimer les anciens aperçus avant chaque régénération.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "clean",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge refresh-all"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "refresh_all_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "remediation-plan",
+      "command_path": "remediation-plan",
+      "invocation": "docforge remediation-plan",
+      "group": null,
+      "help": "Générer un plan de mise en conformité sans appliquer de changement.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--template",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--template"
+          ],
+          "help": "Chemin du template canonique.",
+          "type_annotation": "Path",
+          "default": "Path.home() / 'projets' / 'app-template'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--output",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output",
+            "-o"
+          ],
+          "help": "Fichier Markdown à générer.",
+          "type_annotation": "Path",
+          "default": "Path('reports/remediation-latest.md')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge remediation-plan"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "remediation_plan_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "status-all",
+      "command_path": "status-all",
+      "invocation": "docforge status-all",
+      "group": null,
+      "help": "Afficher l’état quotidien de tous les projets.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "--template",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--template"
+          ],
+          "help": "Chemin du template canonique.",
+          "type_annotation": "Path",
+          "default": "Path.home() / 'projets' / 'app-template'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        },
+        {
+          "name": "--show-details",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--show-details"
+          ],
+          "help": "Afficher les documents différents et les écarts de conformité.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "show_details",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge status-all"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "status_all_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "verify",
+      "command_path": "verify",
+      "invocation": "docforge verify",
+      "group": null,
+      "help": "Comparer un projet au standard documentaire.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à vérifier.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--profile",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Profil documentaire à appliquer. Par défaut, utilise la configuration locale ou la détection automatique.",
+          "type_annotation": "str | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "profile",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge verify"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "verify"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "verify-invariants",
+      "command_path": "verify-invariants",
+      "invocation": "docforge verify-invariants",
+      "group": null,
+      "help": "Vérifier que les invariants correspondent à la version approuvée.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "TEMPLATE_PATH",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Chemin du dépôt app-template.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "template_path",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge verify-invariants"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "verify_invariants_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "prepare",
+      "command_path": "manual prepare",
+      "invocation": "docforge manual prepare",
+      "group": "manual",
+      "help": "Préparer les entrées déterministes d’un manuel utilisateur.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": false,
+          "flags": [],
+          "help": "Chemin du projet à préparer.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--clean",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--clean"
+          ],
+          "help": "Supprimer la préparation précédente avant génération.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "clean",
+          "source": null
+        },
+        {
+          "name": "--mode",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--mode"
+          ],
+          "help": "Mode de génération : full, sections ou both.",
+          "type_annotation": "str",
+          "default": "'both'",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "mode",
+          "source": null
+        },
+        {
+          "name": "--output-dir",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--output-dir"
+          ],
+          "help": "Répertoire cible pour les artefacts du manuel.",
+          "type_annotation": "Path",
+          "default": "Path('.docforge/manual')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "output_dir",
+          "source": null
+        },
+        {
+          "name": "--context-budget",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--context-budget"
+          ],
+          "help": "Budget maximum estimé par contexte de section. La préparation échoue si une section dépasse ce budget.",
+          "type_annotation": "int | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "context_budget",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge manual prepare"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "manual_prepare_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "validate",
+      "command_path": "manual validate",
+      "invocation": "docforge manual validate",
+      "group": "manual",
+      "help": "Valider un manuel Markdown contre les artefacts préparés.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "MARKDOWN_FILE",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Fichier Markdown du manuel à valider.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "markdown_file",
+          "source": null
+        },
+        {
+          "name": "--project-root",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--project-root"
+          ],
+          "help": "Racine du projet correspondant aux artefacts de préparation.",
+          "type_annotation": "Path",
+          "default": "Path('.')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "project_root",
+          "source": null
+        },
+        {
+          "name": "--manual-dir",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--manual-dir"
+          ],
+          "help": "Répertoire contenant manual-knowledge.json et manual-manifest.json.",
+          "type_annotation": "Path",
+          "default": "Path('.docforge/manual')",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "manual_dir",
+          "source": null
+        },
+        {
+          "name": "--json",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--json"
+          ],
+          "help": "Émettre les diagnostics en JSON pour l’automatisation.",
+          "type_annotation": "bool",
+          "default": "False",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "json_output",
+          "source": null
+        },
+        {
+          "name": "--document-id",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--document-id"
+          ],
+          "help": "Identifiant du document à valider lorsque plusieurs guides ont été préparés.",
+          "type_annotation": "str | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "document_id",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge manual validate"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "manual_validate_command"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "add",
+      "command_path": "projects add",
+      "invocation": "docforge projects add",
+      "group": "projects",
+      "help": "Ajouter ou mettre à jour un projet dans le registre.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "PATH",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Chemin du projet à enregistrer.",
+          "type_annotation": "Path",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "path",
+          "source": null
+        },
+        {
+          "name": "--name",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--name"
+          ],
+          "help": "Nom personnalisé du projet.",
+          "type_annotation": "str | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "name",
+          "source": null
+        },
+        {
+          "name": "--profile",
+          "kind": "option",
+          "required": false,
+          "flags": [
+            "--profile",
+            "-p"
+          ],
+          "help": "Profil documentaire explicite.",
+          "type_annotation": "str | None",
+          "default": "None",
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "profile",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge projects add"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "projects_add"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "list",
+      "command_path": "projects list",
+      "invocation": "docforge projects list",
+      "group": "projects",
+      "help": "Afficher les projets enregistrés.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [],
+      "examples": [
+        "docforge projects list"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "projects_list"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "remove",
+      "command_path": "projects remove",
+      "invocation": "docforge projects remove",
+      "group": "projects",
+      "help": "Retirer un projet du registre.",
+      "visibility": "public",
+      "documented": false,
+      "audience": null,
+      "reference_level": null,
+      "provenance": null,
+      "documentation_policy": null,
+      "exclusion_reason": null,
+      "provenance_evidence": [],
+      "destructive": false,
+      "destructive_effects": [],
+      "environment": [],
+      "prerequisites": [],
+      "parameters": [
+        {
+          "name": "IDENTIFIER",
+          "kind": "argument",
+          "required": true,
+          "flags": [],
+          "help": "Nom ou chemin du projet à retirer.",
+          "type_annotation": "str",
+          "default": null,
+          "example": null,
+          "description": null,
+          "allowed_values": [],
+          "origin": "identifier",
+          "source": null
+        }
+      ],
+      "examples": [
+        "docforge projects remove"
+      ],
+      "source": {
+        "status": "detected",
+        "sources": [
+          "docforge.cli",
+          "projects_remove"
+        ],
+        "notes": []
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "identifier": "analyze-project",
+      "title": "Analyser un projet",
+      "summary": "Inspecter un dépôt sans modifier ses fichiers.",
+      "commands": [
+        "docforge analyze"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge analyze"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "detect-profile",
+      "title": "Détecter son profil",
+      "summary": "Identifier le profil documentaire concret du dépôt.",
+      "commands": [
+        "docforge profile"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge profile"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "build-project-knowledge",
+      "title": "Construire ProjectKnowledge",
+      "summary": "Produire la représentation factuelle structurée du dépôt.",
+      "commands": [
+        "docforge knowledge"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge knowledge"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "generate-preview",
+      "title": "Générer un aperçu documentaire",
+      "summary": "Créer des aperçus déterministes sans modifier les documents réels.",
+      "commands": [
+        "docforge document . --refresh --clean"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge document . --refresh --clean"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "review-preview",
+      "title": "Réviser les aperçus",
+      "summary": "Contrôler les fichiers générés avant toute application.",
+      "commands": [
+        "docforge document . --refresh --clean",
+        "git diff -- . ':(exclude).docforge'"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge document . --refresh --clean",
+          "git diff -- . ':(exclude).docforge'"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "apply-validated-document",
+      "title": "Appliquer un document validé",
+      "summary": "Copier explicitement un aperçu validé dans le projet.",
+      "commands": [
+        "docforge apply . README.md"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge apply . README.md"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "apply-protected-document",
+      "title": "Appliquer un document protégé",
+      "summary": "Appliquer un document protégé avec autorisation explicite du propriétaire.",
+      "commands": [
+        "docforge apply . INVARIANTS.md --owner-approved"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge apply . INVARIANTS.md --owner-approved"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "generate-with-ollama",
+      "title": "Utiliser Ollama avec docforge generate",
+      "summary": "Compléter les documents manquants via le flux LLM dédié.",
+      "commands": [
+        "docforge generate . --refresh --clean"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge generate . --refresh --clean"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "manage-projects",
+      "title": "Gérer plusieurs projets",
+      "summary": "Enregistrer, lister et retirer des projets du registre utilisateur.",
+      "commands": [
+        "docforge projects add .",
+        "docforge projects list",
+        "docforge projects remove demo"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge projects add .",
+          "docforge projects list",
+          "docforge projects remove demo"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "identifier": "produce-audit",
+      "title": "Produire un audit",
+      "summary": "Comparer les projets enregistrés et produire un rapport de conformité.",
+      "commands": [
+        "docforge audit-all --show-findings",
+        "docforge audit-report"
+      ],
+      "operational_status": "operational",
+      "notes": [],
+      "source": {
+        "status": "derived",
+        "sources": [
+          "docforge audit-all --show-findings",
+          "docforge audit-report"
+        ],
+        "notes": []
+      }
+    }
+  ],
+  "configuration": {
+    "user_config_root": "~/.config/docforge",
+    "project_state_root": ".docforge",
+    "project_config_file": ".docforge.yml",
+    "report_root": "reports",
+    "files": [
+      {
+        "path": "~/.config/docforge/projects.yml",
+        "scope": "utilisateur",
+        "exists": true,
+        "tracked_candidate": false,
+        "description": "Registre des projets connus par docforge."
+      },
+      {
+        "path": "~/.config/docforge/invariant-baseline.json",
+        "scope": "utilisateur",
+        "exists": true,
+        "tracked_candidate": false,
+        "description": "Empreintes approuvées des documents d’invariants protégés."
+      },
+      {
+        "path": ".docforge.yml",
+        "scope": "projet",
+        "exists": false,
+        "tracked_candidate": true,
+        "description": "Configuration locale du projet pour le profil, la sélection documentaire et les exclusions de scan."
+      },
+      {
+        "path": ".docforge/cache/",
+        "scope": "projet",
+        "exists": true,
+        "tracked_candidate": false,
+        "description": "Cache local des faits et de ProjectKnowledge."
+      },
+      {
+        "path": ".docforge/preview/",
+        "scope": "projet",
+        "exists": true,
+        "tracked_candidate": false,
+        "description": "Aperçus documentaires générés avant application."
+      },
+      {
+        "path": "reports/",
+        "scope": "dépôt",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Rapports durables pouvant être suivis par Git."
+      },
+      {
+        "path": "pyproject.toml",
+        "scope": "dépôt",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Métadonnées du paquet, dépendances et point d’entrée CLI."
+      },
+      {
+        "path": ".gitignore",
+        "scope": "dépôt",
+        "exists": true,
+        "tracked_candidate": true,
+        "description": "Exclusions Git, notamment caches, aperçus et environnements virtuels."
+      }
+    ],
+    "environment_variables": [],
+    "ignored_paths": [
+      ".docforge/",
+      ".pytest_cache/",
+      ".venv/",
+      "__pycache__/"
+    ],
+    "source": {
+      "status": "configured",
+      "sources": [
+        "ConfigurationAnalyzer",
+        ".docforge.yml",
+        ".gitignore"
+      ],
+      "notes": []
+    }
+  },
+  "security": {
+    "protected_documents": [
+      "INVARIANTS.md"
+    ],
+    "controls": [
+      {
+        "identifier": "SEC-001",
+        "category": "secrets",
+        "description": "Le manuel ne doit contenir aucun secret ni reproduire de valeur sensible.",
+        "evidence": null
+      },
+      {
+        "identifier": "SEC-002",
+        "category": "aperçu",
+        "description": "La génération documentaire doit écrire dans .docforge/preview avant toute application.",
+        "evidence": ".docforge/preview/"
+      },
+      {
+        "identifier": "SEC-003",
+        "category": "application",
+        "description": "Un document généré ne doit être appliqué qu’après une commande explicite.",
+        "evidence": "docforge apply"
+      },
+      {
+        "identifier": "SEC-004",
+        "category": "invariants",
+        "description": "Les documents protégés doivent exiger une autorisation explicite du propriétaire.",
+        "evidence": "--owner-approved"
+      },
+      {
+        "identifier": "SEC-005",
+        "category": "intégrité",
+        "description": "Les invariants approuvés doivent pouvoir être vérifiés par empreinte.",
+        "evidence": "invariant-baseline.json"
+      },
+      {
+        "identifier": "SEC-006",
+        "category": "portabilité",
+        "description": "Les documents générés ne doivent pas contenir de chemin absolu propre à une machine.",
+        "evidence": null
+      },
+      {
+        "identifier": "SEC-007",
+        "category": "Git",
+        "description": "Les caches, aperçus, environnements virtuels et secrets ne doivent pas être suivis par Git.",
+        "evidence": ".gitignore"
+      },
+      {
+        "identifier": "SEC-008",
+        "category": "analyse statique",
+        "description": "Les analyseurs doivent éviter d’importer ou d’exécuter le code des projets inspectés.",
+        "evidence": "analyse AST du CLI"
+      }
+    ],
+    "risks": [
+      "Divulgation involontaire d’un secret dans un document, un rapport ou un journal.",
+      "Application automatique d’un aperçu non validé.",
+      "Modification non autorisée d’un document d’invariants.",
+      "Exécution de code lors de l’analyse d’un dépôt.",
+      "Introduction d’un chemin local non portable dans la documentation.",
+      "Suivi Git accidentel des caches ou des aperçus.",
+      "Affaiblissement d’un test afin de masquer une régression de sécurité."
+    ],
+    "validation_commands": [
+      "pytest -q",
+      "docforge --help",
+      "docforge verify-invariants /chemin/vers/app-template",
+      "docforge document /chemin/du/projet --refresh --clean",
+      "git status --short"
+    ],
+    "source": {
+      "status": "detected",
+      "sources": [
+        "SecurityAnalyzer",
+        "INVARIANTS.md"
+      ],
+      "notes": []
+    }
+  },
+  "limitations": {
+    "items": [
+      "Le manuel préparé ne contient que des faits présents dans ProjectKnowledge et dans les politiques du profil.",
+      "Toute information absente ou incertaine doit être signalée comme manquante dans la rédaction finale.",
+      "Les workflows proposés restent limités aux commandes détectées dans la CLI.",
+      "Certains constats d’environnement non pertinents pour ce profil sont exclus de la projection manuel."
+    ],
+    "source": {
+      "status": "derived",
+      "sources": [
+        "ProjectKnowledge",
+        "ProfileDetector"
+      ],
+      "notes": []
+    }
+  },
+  "documentation_policy": {
+    "required_documents": [
+      "README.md",
+      "README_DEV.md",
+      "CODEX_START.md",
+      "AGENTS.md",
+      "docs/architecture.md",
+      "docs/cli.md",
+      "docs/specification.md",
+      "docs/configuration.md",
+      "docs/security.md"
+    ],
+    "optional_documents": [
+      "docs/roadmap.md",
+      "docs/workflows.md"
+    ],
+    "deterministic_documents": [
+      "README.md",
+      "README_DEV.md",
+      "CODEX_START.md",
+      "AGENTS.md",
+      "docs/architecture.md",
+      "docs/cli.md",
+      "docs/configuration.md",
+      "docs/specification.md",
+      "docs/security.md"
+    ],
+    "protected_documents": [],
+    "source": {
+      "status": "configured",
+      "sources": [
+        "profile:python-cli"
+      ],
+      "notes": []
+    }
+  },
+  "source_traceability": {
+    "items": {
+      "project": {
+        "status": "detected",
+        "sources": [
+          "pyproject.toml",
+          "ProjectKnowledge.identity"
+        ],
+        "notes": []
+      },
+      "profile": {
+        "status": "detected",
+        "sources": [
+          "ProfileDetector"
+        ],
+        "notes": []
+      },
+      "installation": {
+        "status": "derived",
+        "sources": [
+          "pyproject.toml"
+        ],
+        "notes": []
+      },
+      "commands": {
+        "status": "detected",
+        "sources": [
+          "CliAnalyzer",
+          "docforge/cli.py"
+        ],
+        "notes": []
+      },
+      "workflows": {
+        "status": "derived",
+        "sources": [
+          "CliAnalyzer",
+          "ProfileDocumentPolicy"
+        ],
+        "notes": []
+      },
+      "configuration": {
+        "status": "configured",
+        "sources": [
+          "ConfigurationAnalyzer"
+        ],
+        "notes": []
+      },
+      "security": {
+        "status": "detected",
+        "sources": [
+          "SecurityAnalyzer"
+        ],
+        "notes": []
+      },
+      "limitations": {
+        "status": "derived",
+        "sources": [
+          "ProjectKnowledge.findings",
+          "ProjectProfile"
+        ],
+        "notes": []
+      }
+    }
+  }
+}

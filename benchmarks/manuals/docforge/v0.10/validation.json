@@ -1,0 +1,107 @@
+{
+  "reference_version": "v0.10",
+  "guide_file": "docforge-guide-usager.md",
+  "knowledge_file": "manual-knowledge.json",
+  "manifest_file": "manual-manifest.json",
+  "manual_markdown_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "structure": {
+    "expected_sections": 21,
+    "present_sections": 21,
+    "missing_sections": []
+  },
+  "command_coverage": {
+    "command_path": {
+      "present": 23,
+      "total": 23,
+      "percent": 100.0
+    },
+    "executable_invocation": {
+      "present": 23,
+      "total": 23,
+      "percent": 100.0
+    },
+    "totally_absent": [],
+    "command_path_only": [],
+    "missing_invocations": []
+  },
+  "command_fidelity": {
+    "strict_error_count": 0,
+    "warning_count": 9,
+    "unknown_command_mentions": [],
+    "unknown_options": [],
+    "strict_errors": [],
+    "warnings": [
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "audit-diff",
+        "message": "Option connue omise dans le guide assemblé : `-o`.",
+        "fact": "-o"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "audit-report",
+        "message": "Option connue omise dans le guide assemblé : `-o`.",
+        "fact": "-o"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "document",
+        "message": "Option connue omise dans le guide assemblé : `-p`.",
+        "fact": "-p"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "generate",
+        "message": "Option connue omise dans le guide assemblé : `-m`.",
+        "fact": "-m"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "generate-global-invariants",
+        "message": "Option connue omise dans le guide assemblé : `-o`.",
+        "fact": "-o"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "knowledge",
+        "message": "Option connue omise dans le guide assemblé : `-o`.",
+        "fact": "-o"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "remediation-plan",
+        "message": "Option connue omise dans le guide assemblé : `-o`.",
+        "fact": "-o"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "verify",
+        "message": "Option connue omise dans le guide assemblé : `-p`.",
+        "fact": "-p"
+      },
+      {
+        "code": "FIDELITY104",
+        "severity": "warning",
+        "command_path": "projects add",
+        "message": "Option connue omise dans le guide assemblé : `-p`.",
+        "fact": "-p"
+      }
+    ]
+  },
+  "non_blocking_warning_policy": {
+    "blocking": false,
+    "rule": "Les omissions de raccourcis d’options comme -o, -m ou -p restent des avertissements de complétude, non bloquants pour la compatibilité de la référence."
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "identifier": "limitations",
+  "title": "Limites des informations disponibles",
+  "purpose": "Exposer les limites de la source de vérité fournie au modèle.",
+  "estimated_tokens": 395,
+  "context_budget": null,
+  "fact_breakdown": {
+    "missing_information": 1,
+    "limitations": 229,
+    "source_traceability": 108
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "missing_information": [],
+    "limitations": {
+      "items": [
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Le manuel préparé ne contient que des faits présents dans ProjectKnowledge et dans les politiques du profil.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Toute information absente ou incertaine doit être signalée comme manquante dans la rédaction finale.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Les workflows proposés restent limités aux commandes détectées dans la CLI.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Certains constats d’environnement non pertinents pour ce profil sont exclus de la projection manuel.",
+          "affected_sections": [],
+          "sources": []
+        }
+      ]
+    },
+    "source_traceability": {
+      "items": {
+        "project": {
+          "status": "detected",
+          "sources": []
+        },
+        "profile": {
+          "status": "detected",
+          "sources": []
+        },
+        "installation": {
+          "status": "derived",
+          "sources": []
+        },
+        "commands": {
+          "status": "detected",
+          "sources": []
+        },
+        "workflows": {
+          "status": "derived",
+          "sources": []
+        },
+        "configuration": {
+          "status": "configured",
+          "sources": []
+        },
+        "security": {
+          "status": "detected",
+          "sources": []
+        },
+        "limitations": {
+          "status": "derived",
+          "sources": []
+        }
+      }
+    }
+  }
+}

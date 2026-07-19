@@ -1,0 +1,32 @@
+{
+  "identifier": "user-functional-administration",
+  "title": "Administration fonctionnelle",
+  "purpose": "Présenter la gestion fonctionnelle des comptes lorsque démontrée.",
+  "estimated_tokens": 113,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "capabilities": 810,
+    "django": 2152
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "roles": [
+        "IsAuthenticated"
+      ],
+      "features": [
+        "Aide",
+        "Changement de thème",
+        "Connexion",
+        "Consulter contacts",
+        "Créer contacts",
+        "Gérer un coffre local chiffré côté client",
+        "Modifier contacts",
+        "Recherche",
+        "Révélation d’une valeur",
+        "Supprimer contacts"
+      ]
+    }
+  }
+}

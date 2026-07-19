@@ -1,0 +1,348 @@
+{
+  "identifier": "operator-make-commands",
+  "title": "Commandes Make",
+  "purpose": "Fournir la référence déterministe des cibles Make publiques.",
+  "estimated_tokens": 1586,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "operational_commands": 1636
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "operational_commands": {
+      "primary_commands": [
+        {
+          "name": "ps",
+          "category": "diagnostic",
+          "command_path": "make ps",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "dev",
+          "category": "environment",
+          "command_path": "make dev",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "logs",
+          "category": "logs",
+          "command_path": "make logs",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "migrate",
+          "category": "migrations",
+          "command_path": "make migrate",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "help",
+          "category": "other",
+          "command_path": "make help",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "restart",
+          "category": "restart",
+          "command_path": "make restart",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "init",
+          "category": "setup",
+          "command_path": "make init",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "down",
+          "category": "shutdown",
+          "command_path": "make down",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "main-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Arrêt des services actifs"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "up",
+          "category": "startup",
+          "command_path": "make up",
+          "audience": "operator",
+          "reference_level": "primary",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "quick-start",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        }
+      ],
+      "advanced_commands": [
+        {
+          "name": "backup",
+          "category": "backup",
+          "command_path": "make backup",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "rebuild",
+          "category": "build",
+          "command_path": "make rebuild",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": [
+            {
+              "name": "SERVICE",
+              "required": true,
+              "allowed_values": [
+                "backend",
+                "db",
+                "frontend"
+              ],
+              "origin": "user-exposed"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "category": "build",
+          "command_path": "make update",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "application-public",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Reconstruction des images ou services"
+          ],
+          "parameters": []
+        },
+        {
+          "name": "check",
+          "category": "diagnostic",
+          "command_path": "make check",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "prod",
+          "category": "environment",
+          "command_path": "make prod",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": false,
+          "destructive_effects": [],
+          "parameters": []
+        },
+        {
+          "name": "restore",
+          "category": "restore",
+          "command_path": "make restore",
+          "audience": "operator",
+          "reference_level": "advanced",
+          "environment": [
+            "dev",
+            "prod"
+          ],
+          "visibility": "public",
+          "documented": false,
+          "provenance": "template-standard",
+          "documentation_policy": "advanced-reference",
+          "prerequisites": [],
+          "destructive": true,
+          "destructive_effects": [
+            "Modification ou écrasement potentiel des données PostgreSQL"
+          ],
+          "parameters": [
+            {
+              "name": "FILE",
+              "required": false,
+              "allowed_values": [],
+              "origin": "user-exposed"
+            }
+          ]
+        }
+      ],
+      "excluded_commands_summary": {
+        "total": 0,
+        "by_provenance": {},
+        "reasons": [],
+        "commands": []
+      }
+    }
+  }
+}

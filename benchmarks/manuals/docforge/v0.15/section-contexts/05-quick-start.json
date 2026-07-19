@@ -1,0 +1,79 @@
+{
+  "identifier": "quick-start",
+  "title": "Démarrage rapide",
+  "purpose": "Fournir une première séquence de commandes pour vérifier l’outil.",
+  "estimated_tokens": 275,
+  "context_budget": null,
+  "fact_breakdown": {
+    "installation.steps": 213,
+    "commands": 3832,
+    "workflows": 649
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "installation": {
+      "steps": [
+        {
+          "title": "Créer un environnement virtuel",
+          "command": "python -m venv .venv",
+          "source": {
+            "status": "derived",
+            "sources": [],
+            "notes": []
+          }
+        },
+        {
+          "title": "Activer l’environnement",
+          "command": "source .venv/bin/activate",
+          "source": {
+            "status": "derived",
+            "sources": [],
+            "notes": []
+          }
+        },
+        {
+          "title": "Installer le paquet localement",
+          "command": "python -m pip install -e .",
+          "source": {
+            "status": "derived",
+            "sources": [],
+            "notes": []
+          }
+        },
+        {
+          "title": "Installer les dépendances de développement",
+          "command": "python -m pip install -e \".[dev]\"",
+          "source": {
+            "status": "configured",
+            "sources": [],
+            "notes": []
+          }
+        },
+        {
+          "title": "Vérifier l’installation CLI",
+          "command": "docforge --help",
+          "source": {
+            "status": "derived",
+            "sources": [],
+            "notes": []
+          }
+        },
+        {
+          "title": "Exécuter les tests",
+          "command": "pytest -q",
+          "source": {
+            "status": "derived",
+            "sources": [],
+            "notes": []
+          }
+        }
+      ]
+    },
+    "commands": [],
+    "workflows": [],
+    "service_endpoints": {
+      "endpoints": []
+    }
+  }
+}

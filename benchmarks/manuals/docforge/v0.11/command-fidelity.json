@@ -1,0 +1,1780 @@
+{
+  "documented_command_count": 23,
+  "command_path_coverage": {
+    "present": 23,
+    "total": 23,
+    "percent": 100.0
+  },
+  "executable_invocation_coverage": {
+    "present": 23,
+    "total": 23,
+    "percent": 100.0
+  },
+  "strict_error_count": 0,
+  "warning_count": 38,
+  "unknown_command_mentions": [],
+  "unknown_options": [],
+  "totally_absent_commands": [],
+  "command_path_only_commands": [],
+  "missing_full_invocations": [],
+  "strict_errors": [],
+  "warnings": [
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "analyze",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+      "fact": "--json"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "analyze-template",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--no-cache`.",
+      "fact": "--no-cache"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "analyze-template",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+      "fact": "--json"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "apply",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--owner-approved`.",
+      "fact": "--owner-approved"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "apply",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--allow-dirty`.",
+      "fact": "--allow-dirty"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "approve-invariants",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--owner-approved`.",
+      "fact": "--owner-approved"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-all",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+      "fact": "--template"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-all",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--show-findings`.",
+      "fact": "--show-findings"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-diff",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--current`.",
+      "fact": "--current"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-diff",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--previous`.",
+      "fact": "--previous"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-diff",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+      "fact": "--output / -o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-report",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+      "fact": "--template"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-report",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output-dir / -o`.",
+      "fact": "--output-dir / -o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "document",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+      "fact": "--profile / -p"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "document",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--write`.",
+      "fact": "--write"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--model / -m`.",
+      "fact": "--model / -m"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+      "fact": "--clean"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--refresh`.",
+      "fact": "--refresh"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate-global-invariants",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+      "fact": "--output / -o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "init",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--force`.",
+      "fact": "--force"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "knowledge",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+      "fact": "--output / -o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "knowledge",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+      "fact": "--json"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "refresh-all",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+      "fact": "--clean"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "remediation-plan",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+      "fact": "--template"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "remediation-plan",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+      "fact": "--output / -o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "status-all",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+      "fact": "--template"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "status-all",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--show-details`.",
+      "fact": "--show-details"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "verify",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+      "fact": "--profile / -p"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual prepare",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+      "fact": "--clean"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual prepare",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--mode`.",
+      "fact": "--mode"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual prepare",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--output-dir`.",
+      "fact": "--output-dir"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual prepare",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--context-budget`.",
+      "fact": "--context-budget"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual validate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--project-root`.",
+      "fact": "--project-root"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual validate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--manual-dir`.",
+      "fact": "--manual-dir"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual validate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+      "fact": "--json"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "manual validate",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--document-id`.",
+      "fact": "--document-id"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "projects add",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--name`.",
+      "fact": "--name"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "projects add",
+      "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+      "fact": "--profile / -p"
+    }
+  ],
+  "commands": [
+    {
+      "name": "analyze",
+      "command_path": "analyze",
+      "invocation": "docforge analyze",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--json",
+            "aliases": [
+              "--json"
+            ],
+            "label": "--json"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--json"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--json"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "analyze"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "analyze",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+          "fact": "--json"
+        }
+      ]
+    },
+    {
+      "name": "analyze-template",
+      "command_path": "analyze-template",
+      "invocation": "docforge analyze-template",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--no-cache",
+            "aliases": [
+              "--no-cache"
+            ],
+            "label": "--no-cache"
+          },
+          {
+            "parameter_name": "--json",
+            "aliases": [
+              "--json"
+            ],
+            "label": "--json"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--no-cache",
+          "--json"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--no-cache",
+          "--json"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "analyze-template"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "analyze-template",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--no-cache`.",
+          "fact": "--no-cache"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "analyze-template",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+          "fact": "--json"
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "command_path": "apply",
+      "invocation": "docforge apply",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--owner-approved",
+            "aliases": [
+              "--owner-approved"
+            ],
+            "label": "--owner-approved"
+          },
+          {
+            "parameter_name": "--allow-dirty",
+            "aliases": [
+              "--allow-dirty"
+            ],
+            "label": "--allow-dirty"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--owner-approved",
+          "--allow-dirty"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--owner-approved",
+          "--allow-dirty"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH",
+          "DOCUMENTS"
+        ],
+        "present": [],
+        "missing": [
+          "PATH",
+          "DOCUMENTS"
+        ]
+      },
+      "non_executable_snippets": [
+        "apply"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "apply",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--owner-approved`.",
+          "fact": "--owner-approved"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "apply",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--allow-dirty`.",
+          "fact": "--allow-dirty"
+        }
+      ]
+    },
+    {
+      "name": "approve-invariants",
+      "command_path": "approve-invariants",
+      "invocation": "docforge approve-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--owner-approved",
+            "aliases": [
+              "--owner-approved"
+            ],
+            "label": "--owner-approved"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--owner-approved"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--owner-approved"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [],
+        "missing": [
+          "TEMPLATE_PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "approve-invariants"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "approve-invariants",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--owner-approved`.",
+          "fact": "--owner-approved"
+        }
+      ]
+    },
+    {
+      "name": "audit-all",
+      "command_path": "audit-all",
+      "invocation": "docforge audit-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--template",
+            "aliases": [
+              "--template"
+            ],
+            "label": "--template"
+          },
+          {
+            "parameter_name": "--show-findings",
+            "aliases": [
+              "--show-findings"
+            ],
+            "label": "--show-findings"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--template",
+          "--show-findings"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--template",
+          "--show-findings"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "audit-all"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-all",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+          "fact": "--template"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-all",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--show-findings`.",
+          "fact": "--show-findings"
+        }
+      ]
+    },
+    {
+      "name": "audit-diff",
+      "command_path": "audit-diff",
+      "invocation": "docforge audit-diff",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--current",
+            "aliases": [
+              "--current"
+            ],
+            "label": "--current"
+          },
+          {
+            "parameter_name": "--previous",
+            "aliases": [
+              "--previous"
+            ],
+            "label": "--previous"
+          },
+          {
+            "parameter_name": "--output",
+            "aliases": [
+              "--output",
+              "-o"
+            ],
+            "label": "--output / -o"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--current",
+          "--previous",
+          "--output / -o"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--current",
+          "--previous",
+          "--output",
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "audit-diff"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-diff",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--current`.",
+          "fact": "--current"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-diff",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--previous`.",
+          "fact": "--previous"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-diff",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+          "fact": "--output / -o"
+        }
+      ]
+    },
+    {
+      "name": "audit-report",
+      "command_path": "audit-report",
+      "invocation": "docforge audit-report",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--template",
+            "aliases": [
+              "--template"
+            ],
+            "label": "--template"
+          },
+          {
+            "parameter_name": "--output-dir",
+            "aliases": [
+              "--output-dir",
+              "-o"
+            ],
+            "label": "--output-dir / -o"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--template",
+          "--output-dir / -o"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--template",
+          "--output-dir",
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "audit-report"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-report",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+          "fact": "--template"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-report",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output-dir / -o`.",
+          "fact": "--output-dir / -o"
+        }
+      ]
+    },
+    {
+      "name": "document",
+      "command_path": "document",
+      "invocation": "docforge document",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--profile",
+            "aliases": [
+              "--profile",
+              "-p"
+            ],
+            "label": "--profile / -p"
+          },
+          {
+            "parameter_name": "--clean",
+            "aliases": [
+              "--clean"
+            ],
+            "label": "--clean"
+          },
+          {
+            "parameter_name": "--refresh",
+            "aliases": [
+              "--refresh"
+            ],
+            "label": "--refresh"
+          },
+          {
+            "parameter_name": "--write",
+            "aliases": [
+              "--write"
+            ],
+            "label": "--write"
+          }
+        ],
+        "known_present_groups": [
+          "--clean",
+          "--refresh"
+        ],
+        "known_missing_groups": [
+          "--profile / -p",
+          "--write"
+        ],
+        "presented_aliases": [
+          "--refresh",
+          "--clean"
+        ],
+        "omitted_aliases": [
+          "--profile",
+          "-p",
+          "--write"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "document"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "document",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+          "fact": "--profile / -p"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "document",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--write`.",
+          "fact": "--write"
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "command_path": "generate",
+      "invocation": "docforge generate",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--model",
+            "aliases": [
+              "--model",
+              "-m"
+            ],
+            "label": "--model / -m"
+          },
+          {
+            "parameter_name": "--clean",
+            "aliases": [
+              "--clean"
+            ],
+            "label": "--clean"
+          },
+          {
+            "parameter_name": "--refresh",
+            "aliases": [
+              "--refresh"
+            ],
+            "label": "--refresh"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--model / -m",
+          "--clean",
+          "--refresh"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--model",
+          "-m",
+          "--clean",
+          "--refresh"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "generate"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--model / -m`.",
+          "fact": "--model / -m"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+          "fact": "--clean"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--refresh`.",
+          "fact": "--refresh"
+        }
+      ]
+    },
+    {
+      "name": "generate-global-invariants",
+      "command_path": "generate-global-invariants",
+      "invocation": "docforge generate-global-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--output",
+            "aliases": [
+              "--output",
+              "-o"
+            ],
+            "label": "--output / -o"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--output / -o"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--output",
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [],
+        "missing": [
+          "TEMPLATE_PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "generate-global-invariants"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate-global-invariants",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+          "fact": "--output / -o"
+        }
+      ]
+    },
+    {
+      "name": "init",
+      "command_path": "init",
+      "invocation": "docforge init",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--force",
+            "aliases": [
+              "--force"
+            ],
+            "label": "--force"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--force"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--force"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "init"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "init",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--force`.",
+          "fact": "--force"
+        }
+      ]
+    },
+    {
+      "name": "knowledge",
+      "command_path": "knowledge",
+      "invocation": "docforge knowledge",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--output",
+            "aliases": [
+              "--output",
+              "-o"
+            ],
+            "label": "--output / -o"
+          },
+          {
+            "parameter_name": "--json",
+            "aliases": [
+              "--json"
+            ],
+            "label": "--json"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--output / -o",
+          "--json"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--output",
+          "-o",
+          "--json"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "knowledge"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "knowledge",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+          "fact": "--output / -o"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "knowledge",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+          "fact": "--json"
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "command_path": "profile",
+      "invocation": "docforge profile",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [],
+        "known_present_groups": [],
+        "known_missing_groups": [],
+        "presented_aliases": [],
+        "omitted_aliases": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "profile"
+      ],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "refresh-all",
+      "command_path": "refresh-all",
+      "invocation": "docforge refresh-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--clean",
+            "aliases": [
+              "--clean"
+            ],
+            "label": "--clean"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--clean"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--clean"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "refresh-all"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "refresh-all",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+          "fact": "--clean"
+        }
+      ]
+    },
+    {
+      "name": "remediation-plan",
+      "command_path": "remediation-plan",
+      "invocation": "docforge remediation-plan",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--template",
+            "aliases": [
+              "--template"
+            ],
+            "label": "--template"
+          },
+          {
+            "parameter_name": "--output",
+            "aliases": [
+              "--output",
+              "-o"
+            ],
+            "label": "--output / -o"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--template",
+          "--output / -o"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--template",
+          "--output",
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "remediation-plan"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "remediation-plan",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+          "fact": "--template"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "remediation-plan",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output / -o`.",
+          "fact": "--output / -o"
+        }
+      ]
+    },
+    {
+      "name": "status-all",
+      "command_path": "status-all",
+      "invocation": "docforge status-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--template",
+            "aliases": [
+              "--template"
+            ],
+            "label": "--template"
+          },
+          {
+            "parameter_name": "--show-details",
+            "aliases": [
+              "--show-details"
+            ],
+            "label": "--show-details"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--template",
+          "--show-details"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--template",
+          "--show-details"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "status-all"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "status-all",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--template`.",
+          "fact": "--template"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "status-all",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--show-details`.",
+          "fact": "--show-details"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "command_path": "verify",
+      "invocation": "docforge verify",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--profile",
+            "aliases": [
+              "--profile",
+              "-p"
+            ],
+            "label": "--profile / -p"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--profile / -p"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--profile",
+          "-p"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "verify"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "verify",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+          "fact": "--profile / -p"
+        }
+      ]
+    },
+    {
+      "name": "verify-invariants",
+      "command_path": "verify-invariants",
+      "invocation": "docforge verify-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [],
+        "known_present_groups": [],
+        "known_missing_groups": [],
+        "presented_aliases": [],
+        "omitted_aliases": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [],
+        "missing": [
+          "TEMPLATE_PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "verify-invariants"
+      ],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "prepare",
+      "command_path": "manual prepare",
+      "invocation": "docforge manual prepare",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--clean",
+            "aliases": [
+              "--clean"
+            ],
+            "label": "--clean"
+          },
+          {
+            "parameter_name": "--mode",
+            "aliases": [
+              "--mode"
+            ],
+            "label": "--mode"
+          },
+          {
+            "parameter_name": "--output-dir",
+            "aliases": [
+              "--output-dir"
+            ],
+            "label": "--output-dir"
+          },
+          {
+            "parameter_name": "--context-budget",
+            "aliases": [
+              "--context-budget"
+            ],
+            "label": "--context-budget"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--clean",
+          "--mode",
+          "--output-dir",
+          "--context-budget"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--clean",
+          "--mode",
+          "--output-dir",
+          "--context-budget"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "manual prepare"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual prepare",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--clean`.",
+          "fact": "--clean"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual prepare",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--mode`.",
+          "fact": "--mode"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual prepare",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--output-dir`.",
+          "fact": "--output-dir"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual prepare",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--context-budget`.",
+          "fact": "--context-budget"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "command_path": "manual validate",
+      "invocation": "docforge manual validate",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--project-root",
+            "aliases": [
+              "--project-root"
+            ],
+            "label": "--project-root"
+          },
+          {
+            "parameter_name": "--manual-dir",
+            "aliases": [
+              "--manual-dir"
+            ],
+            "label": "--manual-dir"
+          },
+          {
+            "parameter_name": "--json",
+            "aliases": [
+              "--json"
+            ],
+            "label": "--json"
+          },
+          {
+            "parameter_name": "--document-id",
+            "aliases": [
+              "--document-id"
+            ],
+            "label": "--document-id"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--project-root",
+          "--manual-dir",
+          "--json",
+          "--document-id"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--project-root",
+          "--manual-dir",
+          "--json",
+          "--document-id"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "MARKDOWN_FILE"
+        ],
+        "present": [],
+        "missing": [
+          "MARKDOWN_FILE"
+        ]
+      },
+      "non_executable_snippets": [
+        "manual validate"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual validate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--project-root`.",
+          "fact": "--project-root"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual validate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--manual-dir`.",
+          "fact": "--manual-dir"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual validate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--json`.",
+          "fact": "--json"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "manual validate",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--document-id`.",
+          "fact": "--document-id"
+        }
+      ]
+    },
+    {
+      "name": "add",
+      "command_path": "projects add",
+      "invocation": "docforge projects add",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [
+          {
+            "parameter_name": "--name",
+            "aliases": [
+              "--name"
+            ],
+            "label": "--name"
+          },
+          {
+            "parameter_name": "--profile",
+            "aliases": [
+              "--profile",
+              "-p"
+            ],
+            "label": "--profile / -p"
+          }
+        ],
+        "known_present_groups": [],
+        "known_missing_groups": [
+          "--name",
+          "--profile / -p"
+        ],
+        "presented_aliases": [],
+        "omitted_aliases": [
+          "--name",
+          "--profile",
+          "-p"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [],
+        "missing": [
+          "PATH"
+        ]
+      },
+      "non_executable_snippets": [
+        "projects add"
+      ],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "projects add",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--name`.",
+          "fact": "--name"
+        },
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "projects add",
+          "message": "Groupe d’options connu omis dans le guide assemblé : `--profile / -p`.",
+          "fact": "--profile / -p"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "command_path": "projects list",
+      "invocation": "docforge projects list",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [],
+        "known_present_groups": [],
+        "known_missing_groups": [],
+        "presented_aliases": [],
+        "omitted_aliases": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "projects list"
+      ],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "remove",
+      "command_path": "projects remove",
+      "invocation": "docforge projects remove",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_groups": [],
+        "known_present_groups": [],
+        "known_missing_groups": [],
+        "presented_aliases": [],
+        "omitted_aliases": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "IDENTIFIER"
+        ],
+        "present": [],
+        "missing": [
+          "IDENTIFIER"
+        ]
+      },
+      "non_executable_snippets": [
+        "projects remove"
+      ],
+      "strict_errors": [],
+      "warnings": []
+    }
+  ],
+  "classification": {
+    "strict_errors": [
+      {
+        "kind": "commande inconnue",
+        "rule": "Un extrait qui invoque `docforge ...` avec un chemin absent de ManualKnowledge contredit les faits disponibles."
+      },
+      {
+        "kind": "option inconnue",
+        "rule": "Une option absente des paramètres connus de la commande est une invention factuelle, donc une erreur stricte."
+      },
+      {
+        "kind": "syntaxe contredisant les faits",
+        "rule": "Une invocation complète qui associe une option à la mauvaise commande ou reconstruit une syntaxe incompatible avec les faits structurés est une erreur stricte."
+      },
+      {
+        "kind": "invocation requise mais non exécutable",
+        "rule": "Une syntaxe présentée comme copiable mais privée du préfixe exécutable documenté reste non exécutable et doit être signalée."
+      }
+    ],
+    "warnings": [
+      {
+        "kind": "commande connue totalement absente",
+        "rule": "L’absence de mention n’invente rien; elle mesure une lacune de couverture documentaire."
+      },
+      {
+        "kind": "option connue omise",
+        "rule": "Un groupe d’options démontré mais jamais documenté indique une référence incomplète, pas une contradiction."
+      },
+      {
+        "kind": "commande présente seulement sous forme de command_path",
+        "rule": "La commande est identifiable, mais l’invocation exécutable complète manque; c’est un problème de complétude, pas un fait inventé."
+      }
+    ]
+  }
+}

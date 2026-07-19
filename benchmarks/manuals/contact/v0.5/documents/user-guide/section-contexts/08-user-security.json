@@ -1,0 +1,31 @@
+{
+  "identifier": "user-security",
+  "title": "Sécurité pour l’utilisateur",
+  "purpose": "Présenter les protections pertinentes pour l’utilisateur.",
+  "estimated_tokens": 191,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "security": 303,
+    "react": 503
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "local_encrypted_vault": true,
+      "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+      "unlock_behavior": "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale.",
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": [
+        {
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend."
+        },
+        {
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel."
+        }
+      ]
+    }
+  }
+}

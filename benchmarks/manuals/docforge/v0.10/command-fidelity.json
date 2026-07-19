@@ -1,0 +1,891 @@
+{
+  "documented_command_count": 23,
+  "command_path_coverage": {
+    "present": 23,
+    "total": 23,
+    "percent": 100.0
+  },
+  "executable_invocation_coverage": {
+    "present": 23,
+    "total": 23,
+    "percent": 100.0
+  },
+  "strict_error_count": 0,
+  "warning_count": 9,
+  "unknown_command_mentions": [],
+  "unknown_options": [],
+  "totally_absent_commands": [],
+  "command_path_only_commands": [],
+  "missing_full_invocations": [],
+  "strict_errors": [],
+  "warnings": [
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-diff",
+      "message": "Option connue omise dans le guide assemblé : `-o`.",
+      "fact": "-o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "audit-report",
+      "message": "Option connue omise dans le guide assemblé : `-o`.",
+      "fact": "-o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "document",
+      "message": "Option connue omise dans le guide assemblé : `-p`.",
+      "fact": "-p"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate",
+      "message": "Option connue omise dans le guide assemblé : `-m`.",
+      "fact": "-m"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "generate-global-invariants",
+      "message": "Option connue omise dans le guide assemblé : `-o`.",
+      "fact": "-o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "knowledge",
+      "message": "Option connue omise dans le guide assemblé : `-o`.",
+      "fact": "-o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "remediation-plan",
+      "message": "Option connue omise dans le guide assemblé : `-o`.",
+      "fact": "-o"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "verify",
+      "message": "Option connue omise dans le guide assemblé : `-p`.",
+      "fact": "-p"
+    },
+    {
+      "code": "FIDELITY104",
+      "severity": "warning",
+      "command_path": "projects add",
+      "message": "Option connue omise dans le guide assemblé : `-p`.",
+      "fact": "-p"
+    }
+  ],
+  "commands": [
+    {
+      "name": "analyze",
+      "command_path": "analyze",
+      "invocation": "docforge analyze",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--json"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "analyze-template",
+      "command_path": "analyze-template",
+      "invocation": "docforge analyze-template",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--no-cache",
+          "--json"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "apply",
+      "command_path": "apply",
+      "invocation": "docforge apply",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--owner-approved",
+          "--allow-dirty"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH",
+          "DOCUMENTS"
+        ],
+        "present": [
+          "PATH",
+          "DOCUMENTS"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "approve-invariants",
+      "command_path": "approve-invariants",
+      "invocation": "docforge approve-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--owner-approved"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [
+          "TEMPLATE_PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "audit-all",
+      "command_path": "audit-all",
+      "invocation": "docforge audit-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--show-findings",
+          "--template"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "audit-diff",
+      "command_path": "audit-diff",
+      "invocation": "docforge audit-diff",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--current",
+          "--previous",
+          "--output"
+        ],
+        "known_missing": [
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-diff",
+          "message": "Option connue omise dans le guide assemblé : `-o`.",
+          "fact": "-o"
+        }
+      ]
+    },
+    {
+      "name": "audit-report",
+      "command_path": "audit-report",
+      "invocation": "docforge audit-report",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--template",
+          "--output-dir"
+        ],
+        "known_missing": [
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "audit-report",
+          "message": "Option connue omise dans le guide assemblé : `-o`.",
+          "fact": "-o"
+        }
+      ]
+    },
+    {
+      "name": "document",
+      "command_path": "document",
+      "invocation": "docforge document",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--refresh",
+          "--clean",
+          "--profile",
+          "--write"
+        ],
+        "known_missing": [
+          "-p"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "document",
+          "message": "Option connue omise dans le guide assemblé : `-p`.",
+          "fact": "-p"
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "command_path": "generate",
+      "invocation": "docforge generate",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--refresh",
+          "--clean",
+          "--model"
+        ],
+        "known_missing": [
+          "-m"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate",
+          "message": "Option connue omise dans le guide assemblé : `-m`.",
+          "fact": "-m"
+        }
+      ]
+    },
+    {
+      "name": "generate-global-invariants",
+      "command_path": "generate-global-invariants",
+      "invocation": "docforge generate-global-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--output"
+        ],
+        "known_missing": [
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [
+          "TEMPLATE_PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "generate-global-invariants",
+          "message": "Option connue omise dans le guide assemblé : `-o`.",
+          "fact": "-o"
+        }
+      ]
+    },
+    {
+      "name": "init",
+      "command_path": "init",
+      "invocation": "docforge init",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--force"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "knowledge",
+      "command_path": "knowledge",
+      "invocation": "docforge knowledge",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--output",
+          "--json"
+        ],
+        "known_missing": [
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "knowledge",
+          "message": "Option connue omise dans le guide assemblé : `-o`.",
+          "fact": "-o"
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "command_path": "profile",
+      "invocation": "docforge profile",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [
+        "profile"
+      ],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "refresh-all",
+      "command_path": "refresh-all",
+      "invocation": "docforge refresh-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--clean"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "remediation-plan",
+      "command_path": "remediation-plan",
+      "invocation": "docforge remediation-plan",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--template",
+          "--output"
+        ],
+        "known_missing": [
+          "-o"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "remediation-plan",
+          "message": "Option connue omise dans le guide assemblé : `-o`.",
+          "fact": "-o"
+        }
+      ]
+    },
+    {
+      "name": "status-all",
+      "command_path": "status-all",
+      "invocation": "docforge status-all",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--show-details",
+          "--template"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "verify",
+      "command_path": "verify",
+      "invocation": "docforge verify",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--profile"
+        ],
+        "known_missing": [
+          "-p"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "verify",
+          "message": "Option connue omise dans le guide assemblé : `-p`.",
+          "fact": "-p"
+        }
+      ]
+    },
+    {
+      "name": "verify-invariants",
+      "command_path": "verify-invariants",
+      "invocation": "docforge verify-invariants",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "TEMPLATE_PATH"
+        ],
+        "present": [
+          "TEMPLATE_PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "prepare",
+      "command_path": "manual prepare",
+      "invocation": "docforge manual prepare",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--clean",
+          "--mode",
+          "--output-dir",
+          "--context-budget"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "validate",
+      "command_path": "manual validate",
+      "invocation": "docforge manual validate",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--project-root",
+          "--manual-dir",
+          "--json",
+          "--document-id"
+        ],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "MARKDOWN_FILE"
+        ],
+        "present": [
+          "MARKDOWN_FILE"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "add",
+      "command_path": "projects add",
+      "invocation": "docforge projects add",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [
+          "--name",
+          "--profile"
+        ],
+        "known_missing": [
+          "-p"
+        ],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "PATH"
+        ],
+        "present": [
+          "PATH"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": [
+        {
+          "code": "FIDELITY104",
+          "severity": "warning",
+          "command_path": "projects add",
+          "message": "Option connue omise dans le guide assemblé : `-p`.",
+          "fact": "-p"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "command_path": "projects list",
+      "invocation": "docforge projects list",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [],
+        "present": [],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    },
+    {
+      "name": "remove",
+      "command_path": "projects remove",
+      "invocation": "docforge projects remove",
+      "presence": {
+        "command_path_present": true,
+        "invocation_present": true,
+        "totally_absent": false,
+        "command_path_only": false
+      },
+      "options": {
+        "known_present": [],
+        "known_missing": [],
+        "unknown": []
+      },
+      "positionals": {
+        "known": [
+          "IDENTIFIER"
+        ],
+        "present": [
+          "IDENTIFIER"
+        ],
+        "missing": []
+      },
+      "non_executable_snippets": [],
+      "strict_errors": [],
+      "warnings": []
+    }
+  ],
+  "classification": {
+    "strict_errors": [
+      {
+        "kind": "commande inconnue",
+        "rule": "Un extrait qui invoque `docforge ...` avec un chemin absent de ManualKnowledge contredit les faits disponibles."
+      },
+      {
+        "kind": "option inconnue",
+        "rule": "Une option absente des paramètres connus de la commande est une invention factuelle, donc une erreur stricte."
+      },
+      {
+        "kind": "syntaxe contredisant les faits",
+        "rule": "Une invocation complète qui associe une option à la mauvaise commande ou reconstruit une syntaxe incompatible avec les faits structurés est une erreur stricte."
+      },
+      {
+        "kind": "invocation requise mais non exécutable",
+        "rule": "Une invocation complète mal formée est une erreur stricte; une simple mention du command_path sans préfixe exécutable reste un manque de complétude."
+      }
+    ],
+    "warnings": [
+      {
+        "kind": "commande connue totalement absente",
+        "rule": "L’absence de mention n’invente rien; elle mesure une lacune de couverture documentaire."
+      },
+      {
+        "kind": "option connue omise",
+        "rule": "Une option démontrée mais non citée indique une référence incomplète, pas une contradiction."
+      },
+      {
+        "kind": "commande présente seulement sous forme de command_path",
+        "rule": "La commande est identifiable, mais l’invocation exécutable complète manque; c’est un problème de complétude, pas un fait inventé."
+      }
+    ]
+  }
+}

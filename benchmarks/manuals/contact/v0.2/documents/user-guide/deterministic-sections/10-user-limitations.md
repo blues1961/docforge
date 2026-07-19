@@ -1,0 +1,1 @@
+- La procédure de récupération du coffre privé n’est pas démontrée dans le code analysé.

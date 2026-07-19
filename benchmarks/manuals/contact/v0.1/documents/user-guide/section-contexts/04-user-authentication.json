@@ -1,0 +1,41 @@
+{
+  "identifier": "user-authentication",
+  "title": "Authentification",
+  "purpose": "Expliquer les mécanismes d’authentification démontrés sans procédure technique.",
+  "estimated_tokens": 236,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "django": 2152,
+    "react": 503,
+    "security": 303
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "application": {
+        "name": null,
+        "category": null
+      },
+      "production_frontend_urls": [],
+      "roles": [],
+      "features": [],
+      "user_actions": [],
+      "authentication_required": true,
+      "local_encrypted_vault": true,
+      "lock_behavior": "Des données privées sont chiffrées côté client avant stockage.",
+      "unlock_behavior": "Des données privées sont déchiffrées côté client lors de l’utilisation de la session locale.",
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": [
+        {
+          "category": "authentification",
+          "description": "Des mécanismes d’authentification ont été détectés côté backend et/ou frontend."
+        },
+        {
+          "category": "secrets",
+          "description": "Des variables sensibles sont requises et leurs valeurs ne doivent pas être publiées dans le manuel."
+        }
+      ]
+    }
+  }
+}

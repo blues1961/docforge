@@ -1,0 +1,8 @@
+{
+  "reference_version": "v0.14",
+  "supersedes": "v0.13",
+  "cli_reference_generation_mode": "deterministic",
+  "signature_coverage": "required",
+  "security_fact_projection": "profile-scoped",
+  "ollama_called": false
+}

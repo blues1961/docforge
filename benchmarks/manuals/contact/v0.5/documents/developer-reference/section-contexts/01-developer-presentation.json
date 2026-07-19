@@ -1,0 +1,61 @@
+{
+  "identifier": "developer-presentation",
+  "title": "Présentation technique",
+  "purpose": "Présenter le périmètre technique démontré.",
+  "estimated_tokens": 262,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "application": 66,
+    "template": 153
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "application": {
+      "name": "contact",
+      "category": "django-react",
+      "backend_framework": "Django",
+      "frontend_framework": "React/Vite",
+      "prepared_by": "DocForge",
+      "source_paths": [
+        "backend/App/settings.py",
+        "frontend/package.json",
+        "docker-compose.dev.yml",
+        "… (+1 autres sources)"
+      ]
+    },
+    "template": {
+      "project_kind": "application",
+      "template_id": null,
+      "origin_template_id": "app-template",
+      "template_version": null,
+      "origin_template_version": null,
+      "base_profile": "django-react",
+      "manifest_source": "heuristic: INVARIANTS.md + Makefile + Docker Compose",
+      "current_state": null,
+      "target_state": null,
+      "materialization": null,
+      "manifest_verified_targets": [
+        "backup",
+        "check",
+        "dev",
+        "down",
+        "init",
+        "logs",
+        "migrate",
+        "prod",
+        "ps",
+        "rebuild",
+        "restart",
+        "restore",
+        "up"
+      ],
+      "manifest_missing_targets": [],
+      "missing_steps": [],
+      "risks": [],
+      "placeholders": [],
+      "creator_workflows": [],
+      "maintainer_workflows": []
+    }
+  }
+}

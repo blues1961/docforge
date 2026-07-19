@@ -1,0 +1,31 @@
+{
+  "identifier": "user-application-usage",
+  "title": "Utilisation de l’application",
+  "purpose": "Décrire les parcours fonctionnels démontrés.",
+  "estimated_tokens": 108,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "capabilities": 810,
+    "react": 503,
+    "django": 2152
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "user_actions": [
+        "Aide",
+        "Changement de thème",
+        "Connexion",
+        "Consulter contacts",
+        "Créer contacts",
+        "Gérer un coffre local chiffré côté client",
+        "Modifier contacts",
+        "Recherche",
+        "Révélation d’une valeur",
+        "Supprimer contacts"
+      ],
+      "authentication_required": true
+    }
+  }
+}

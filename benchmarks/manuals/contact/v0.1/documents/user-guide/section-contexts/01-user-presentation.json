@@ -1,0 +1,32 @@
+{
+  "identifier": "user-presentation",
+  "title": "Présentation",
+  "purpose": "Présenter Contact et son objectif fonctionnel.",
+  "estimated_tokens": 124,
+  "context_budget": 8192,
+  "fact_breakdown": {
+    "application": 66,
+    "project": 60,
+    "profile": 131
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "user_view": {
+      "application": {
+        "name": "contact",
+        "category": "django-react"
+      },
+      "production_frontend_urls": [],
+      "roles": [],
+      "features": [],
+      "user_actions": [],
+      "authentication_required": false,
+      "local_encrypted_vault": false,
+      "lock_behavior": null,
+      "unlock_behavior": null,
+      "recovery": "Aucune procédure de récupération n’est démontrée.",
+      "security_guidance": []
+    }
+  }
+}

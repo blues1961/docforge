@@ -1,0 +1,465 @@
+{
+  "schema_version": 2,
+  "project_name": "docforge",
+  "profile_name": "python-cli",
+  "project_kind": null,
+  "command_provenance_summary": {
+    "total_detected": 0,
+    "by_provenance": {},
+    "primary_documented": 0,
+    "advanced_documented": 0,
+    "excluded": 0,
+    "top_exclusion_reasons": []
+  },
+  "generated_at": "2026-07-18T02:52:26+00:00",
+  "context_budget": null,
+  "knowledge_file": "manual-knowledge.json",
+  "full_prompt": "manual-prompt.md",
+  "full_prompt_estimated_tokens": 37758,
+  "section_prompts": [
+    "section-prompts/01-presentation.md",
+    "section-prompts/02-target-audience.md",
+    "section-prompts/03-prerequisites.md",
+    "section-prompts/04-installation.md",
+    "section-prompts/05-quick-start.md",
+    "section-prompts/06-core-concepts.md",
+    "section-prompts/07-analyze-project.md",
+    "section-prompts/08-detect-profile.md",
+    "section-prompts/09-build-project-knowledge.md",
+    "section-prompts/10-documentation-generation.md",
+    "section-prompts/11-ollama-generation.md",
+    "section-prompts/12-preview-review.md",
+    "section-prompts/13-apply-documents.md",
+    "section-prompts/14-protected-documents.md",
+    "section-prompts/15-project-management.md",
+    "section-prompts/16-audits-compliance.md",
+    "section-prompts/17-configuration.md",
+    "section-prompts/18-security.md",
+    "section-prompts/19-troubleshooting.md",
+    "section-prompts/20-limitations.md",
+    "section-prompts/21-cli-reference.md"
+  ],
+  "section_contexts": [
+    {
+      "identifier": "presentation",
+      "title": "Présentation",
+      "prompt_file": "section-prompts/01-presentation.md",
+      "context_file": "section-contexts/01-presentation.json",
+      "estimated_tokens": 221,
+      "context_budget": null
+    },
+    {
+      "identifier": "target-audience",
+      "title": "Public visé",
+      "prompt_file": "section-prompts/02-target-audience.md",
+      "context_file": "section-contexts/02-target-audience.json",
+      "estimated_tokens": 4063,
+      "context_budget": null
+    },
+    {
+      "identifier": "prerequisites",
+      "title": "Prérequis",
+      "prompt_file": "section-prompts/03-prerequisites.md",
+      "context_file": "section-contexts/03-prerequisites.json",
+      "estimated_tokens": 505,
+      "context_budget": null
+    },
+    {
+      "identifier": "installation",
+      "title": "Installation",
+      "prompt_file": "section-prompts/04-installation.md",
+      "context_file": "section-contexts/04-installation.json",
+      "estimated_tokens": 196,
+      "context_budget": null
+    },
+    {
+      "identifier": "quick-start",
+      "title": "Démarrage rapide",
+      "prompt_file": "section-prompts/05-quick-start.md",
+      "context_file": "section-contexts/05-quick-start.json",
+      "estimated_tokens": 275,
+      "context_budget": null
+    },
+    {
+      "identifier": "core-concepts",
+      "title": "Concepts essentiels",
+      "prompt_file": "section-prompts/06-core-concepts.md",
+      "context_file": "section-contexts/06-core-concepts.json",
+      "estimated_tokens": 942,
+      "context_budget": null
+    },
+    {
+      "identifier": "analyze-project",
+      "title": "Analyse d’un projet",
+      "prompt_file": "section-prompts/07-analyze-project.md",
+      "context_file": "section-contexts/07-analyze-project.json",
+      "estimated_tokens": 95,
+      "context_budget": null
+    },
+    {
+      "identifier": "detect-profile",
+      "title": "Détection du profil",
+      "prompt_file": "section-prompts/08-detect-profile.md",
+      "context_file": "section-contexts/08-detect-profile.json",
+      "estimated_tokens": 206,
+      "context_budget": null
+    },
+    {
+      "identifier": "build-project-knowledge",
+      "title": "Construction de ProjectKnowledge",
+      "prompt_file": "section-prompts/09-build-project-knowledge.md",
+      "context_file": "section-contexts/09-build-project-knowledge.json",
+      "estimated_tokens": 266,
+      "context_budget": null
+    },
+    {
+      "identifier": "documentation-generation",
+      "title": "Génération documentaire",
+      "prompt_file": "section-prompts/10-documentation-generation.md",
+      "context_file": "section-contexts/10-documentation-generation.json",
+      "estimated_tokens": 971,
+      "context_budget": null
+    },
+    {
+      "identifier": "ollama-generation",
+      "title": "Génération avec Ollama",
+      "prompt_file": "section-prompts/11-ollama-generation.md",
+      "context_file": "section-contexts/11-ollama-generation.json",
+      "estimated_tokens": 355,
+      "context_budget": null
+    },
+    {
+      "identifier": "preview-review",
+      "title": "Révision des aperçus",
+      "prompt_file": "section-prompts/12-preview-review.md",
+      "context_file": "section-contexts/12-preview-review.json",
+      "estimated_tokens": 832,
+      "context_budget": null
+    },
+    {
+      "identifier": "apply-documents",
+      "title": "Application des documents",
+      "prompt_file": "section-prompts/13-apply-documents.md",
+      "context_file": "section-contexts/13-apply-documents.json",
+      "estimated_tokens": 747,
+      "context_budget": null
+    },
+    {
+      "identifier": "protected-documents",
+      "title": "Documents protégés",
+      "prompt_file": "section-prompts/14-protected-documents.md",
+      "context_file": "section-contexts/14-protected-documents.json",
+      "estimated_tokens": 836,
+      "context_budget": null
+    },
+    {
+      "identifier": "project-management",
+      "title": "Gestion des projets",
+      "prompt_file": "section-prompts/15-project-management.md",
+      "context_file": "section-contexts/15-project-management.json",
+      "estimated_tokens": 554,
+      "context_budget": null
+    },
+    {
+      "identifier": "audits-compliance",
+      "title": "Audits et conformité",
+      "prompt_file": "section-prompts/16-audits-compliance.md",
+      "context_file": "section-contexts/16-audits-compliance.json",
+      "estimated_tokens": 683,
+      "context_budget": null
+    },
+    {
+      "identifier": "configuration",
+      "title": "Configuration",
+      "prompt_file": "section-prompts/17-configuration.md",
+      "context_file": "section-contexts/17-configuration.json",
+      "estimated_tokens": 469,
+      "context_budget": null
+    },
+    {
+      "identifier": "security",
+      "title": "Sécurité",
+      "prompt_file": "section-prompts/18-security.md",
+      "context_file": "section-contexts/18-security.json",
+      "estimated_tokens": 766,
+      "context_budget": null
+    },
+    {
+      "identifier": "troubleshooting",
+      "title": "Dépannage",
+      "prompt_file": "section-prompts/19-troubleshooting.md",
+      "context_file": "section-contexts/19-troubleshooting.json",
+      "estimated_tokens": 4673,
+      "context_budget": null
+    },
+    {
+      "identifier": "limitations",
+      "title": "Limites des informations disponibles",
+      "prompt_file": "section-prompts/20-limitations.md",
+      "context_file": "section-contexts/20-limitations.json",
+      "estimated_tokens": 395,
+      "context_budget": null
+    },
+    {
+      "identifier": "cli-reference",
+      "title": "Référence CLI",
+      "prompt_file": "section-prompts/21-cli-reference.md",
+      "context_file": "section-contexts/21-cli-reference.json",
+      "estimated_tokens": 3870,
+      "context_budget": null
+    }
+  ],
+  "documents": [
+    {
+      "identifier": "manual",
+      "title": "Guide utilisateur",
+      "audience": "user",
+      "kind": "user-guide",
+      "output_dir": ".",
+      "full_prompt": "manual-prompt.md",
+      "full_prompt_estimated_tokens": 37758,
+      "section_prompts": [
+        "section-prompts/01-presentation.md",
+        "section-prompts/02-target-audience.md",
+        "section-prompts/03-prerequisites.md",
+        "section-prompts/04-installation.md",
+        "section-prompts/05-quick-start.md",
+        "section-prompts/06-core-concepts.md",
+        "section-prompts/07-analyze-project.md",
+        "section-prompts/08-detect-profile.md",
+        "section-prompts/09-build-project-knowledge.md",
+        "section-prompts/10-documentation-generation.md",
+        "section-prompts/11-ollama-generation.md",
+        "section-prompts/12-preview-review.md",
+        "section-prompts/13-apply-documents.md",
+        "section-prompts/14-protected-documents.md",
+        "section-prompts/15-project-management.md",
+        "section-prompts/16-audits-compliance.md",
+        "section-prompts/17-configuration.md",
+        "section-prompts/18-security.md",
+        "section-prompts/19-troubleshooting.md",
+        "section-prompts/20-limitations.md",
+        "section-prompts/21-cli-reference.md"
+      ],
+      "section_contexts": [
+        {
+          "identifier": "presentation",
+          "title": "Présentation",
+          "prompt_file": "section-prompts/01-presentation.md",
+          "context_file": "section-contexts/01-presentation.json",
+          "estimated_tokens": 221,
+          "context_budget": null
+        },
+        {
+          "identifier": "target-audience",
+          "title": "Public visé",
+          "prompt_file": "section-prompts/02-target-audience.md",
+          "context_file": "section-contexts/02-target-audience.json",
+          "estimated_tokens": 4063,
+          "context_budget": null
+        },
+        {
+          "identifier": "prerequisites",
+          "title": "Prérequis",
+          "prompt_file": "section-prompts/03-prerequisites.md",
+          "context_file": "section-contexts/03-prerequisites.json",
+          "estimated_tokens": 505,
+          "context_budget": null
+        },
+        {
+          "identifier": "installation",
+          "title": "Installation",
+          "prompt_file": "section-prompts/04-installation.md",
+          "context_file": "section-contexts/04-installation.json",
+          "estimated_tokens": 196,
+          "context_budget": null
+        },
+        {
+          "identifier": "quick-start",
+          "title": "Démarrage rapide",
+          "prompt_file": "section-prompts/05-quick-start.md",
+          "context_file": "section-contexts/05-quick-start.json",
+          "estimated_tokens": 275,
+          "context_budget": null
+        },
+        {
+          "identifier": "core-concepts",
+          "title": "Concepts essentiels",
+          "prompt_file": "section-prompts/06-core-concepts.md",
+          "context_file": "section-contexts/06-core-concepts.json",
+          "estimated_tokens": 942,
+          "context_budget": null
+        },
+        {
+          "identifier": "analyze-project",
+          "title": "Analyse d’un projet",
+          "prompt_file": "section-prompts/07-analyze-project.md",
+          "context_file": "section-contexts/07-analyze-project.json",
+          "estimated_tokens": 95,
+          "context_budget": null
+        },
+        {
+          "identifier": "detect-profile",
+          "title": "Détection du profil",
+          "prompt_file": "section-prompts/08-detect-profile.md",
+          "context_file": "section-contexts/08-detect-profile.json",
+          "estimated_tokens": 206,
+          "context_budget": null
+        },
+        {
+          "identifier": "build-project-knowledge",
+          "title": "Construction de ProjectKnowledge",
+          "prompt_file": "section-prompts/09-build-project-knowledge.md",
+          "context_file": "section-contexts/09-build-project-knowledge.json",
+          "estimated_tokens": 266,
+          "context_budget": null
+        },
+        {
+          "identifier": "documentation-generation",
+          "title": "Génération documentaire",
+          "prompt_file": "section-prompts/10-documentation-generation.md",
+          "context_file": "section-contexts/10-documentation-generation.json",
+          "estimated_tokens": 971,
+          "context_budget": null
+        },
+        {
+          "identifier": "ollama-generation",
+          "title": "Génération avec Ollama",
+          "prompt_file": "section-prompts/11-ollama-generation.md",
+          "context_file": "section-contexts/11-ollama-generation.json",
+          "estimated_tokens": 355,
+          "context_budget": null
+        },
+        {
+          "identifier": "preview-review",
+          "title": "Révision des aperçus",
+          "prompt_file": "section-prompts/12-preview-review.md",
+          "context_file": "section-contexts/12-preview-review.json",
+          "estimated_tokens": 832,
+          "context_budget": null
+        },
+        {
+          "identifier": "apply-documents",
+          "title": "Application des documents",
+          "prompt_file": "section-prompts/13-apply-documents.md",
+          "context_file": "section-contexts/13-apply-documents.json",
+          "estimated_tokens": 747,
+          "context_budget": null
+        },
+        {
+          "identifier": "protected-documents",
+          "title": "Documents protégés",
+          "prompt_file": "section-prompts/14-protected-documents.md",
+          "context_file": "section-contexts/14-protected-documents.json",
+          "estimated_tokens": 836,
+          "context_budget": null
+        },
+        {
+          "identifier": "project-management",
+          "title": "Gestion des projets",
+          "prompt_file": "section-prompts/15-project-management.md",
+          "context_file": "section-contexts/15-project-management.json",
+          "estimated_tokens": 554,
+          "context_budget": null
+        },
+        {
+          "identifier": "audits-compliance",
+          "title": "Audits et conformité",
+          "prompt_file": "section-prompts/16-audits-compliance.md",
+          "context_file": "section-contexts/16-audits-compliance.json",
+          "estimated_tokens": 683,
+          "context_budget": null
+        },
+        {
+          "identifier": "configuration",
+          "title": "Configuration",
+          "prompt_file": "section-prompts/17-configuration.md",
+          "context_file": "section-contexts/17-configuration.json",
+          "estimated_tokens": 469,
+          "context_budget": null
+        },
+        {
+          "identifier": "security",
+          "title": "Sécurité",
+          "prompt_file": "section-prompts/18-security.md",
+          "context_file": "section-contexts/18-security.json",
+          "estimated_tokens": 766,
+          "context_budget": null
+        },
+        {
+          "identifier": "troubleshooting",
+          "title": "Dépannage",
+          "prompt_file": "section-prompts/19-troubleshooting.md",
+          "context_file": "section-contexts/19-troubleshooting.json",
+          "estimated_tokens": 4673,
+          "context_budget": null
+        },
+        {
+          "identifier": "limitations",
+          "title": "Limites des informations disponibles",
+          "prompt_file": "section-prompts/20-limitations.md",
+          "context_file": "section-contexts/20-limitations.json",
+          "estimated_tokens": 395,
+          "context_budget": null
+        },
+        {
+          "identifier": "cli-reference",
+          "title": "Référence CLI",
+          "prompt_file": "section-prompts/21-cli-reference.md",
+          "context_file": "section-contexts/21-cli-reference.json",
+          "estimated_tokens": 3870,
+          "context_budget": null
+        }
+      ]
+    }
+  ],
+  "expected_outputs": [
+    "manual-knowledge.json",
+    "manual-manifest.json",
+    "generated/",
+    "manual-prompt.md",
+    "section-prompts/01-presentation.md",
+    "section-prompts/02-target-audience.md",
+    "section-prompts/03-prerequisites.md",
+    "section-prompts/04-installation.md",
+    "section-prompts/05-quick-start.md",
+    "section-prompts/06-core-concepts.md",
+    "section-prompts/07-analyze-project.md",
+    "section-prompts/08-detect-profile.md",
+    "section-prompts/09-build-project-knowledge.md",
+    "section-prompts/10-documentation-generation.md",
+    "section-prompts/11-ollama-generation.md",
+    "section-prompts/12-preview-review.md",
+    "section-prompts/13-apply-documents.md",
+    "section-prompts/14-protected-documents.md",
+    "section-prompts/15-project-management.md",
+    "section-prompts/16-audits-compliance.md",
+    "section-prompts/17-configuration.md",
+    "section-prompts/18-security.md",
+    "section-prompts/19-troubleshooting.md",
+    "section-prompts/20-limitations.md",
+    "section-prompts/21-cli-reference.md",
+    "section-contexts/01-presentation.json",
+    "section-contexts/02-target-audience.json",
+    "section-contexts/03-prerequisites.json",
+    "section-contexts/04-installation.json",
+    "section-contexts/05-quick-start.json",
+    "section-contexts/06-core-concepts.json",
+    "section-contexts/07-analyze-project.json",
+    "section-contexts/08-detect-profile.json",
+    "section-contexts/09-build-project-knowledge.json",
+    "section-contexts/10-documentation-generation.json",
+    "section-contexts/11-ollama-generation.json",
+    "section-contexts/12-preview-review.json",
+    "section-contexts/13-apply-documents.json",
+    "section-contexts/14-protected-documents.json",
+    "section-contexts/15-project-management.json",
+    "section-contexts/16-audits-compliance.json",
+    "section-contexts/17-configuration.json",
+    "section-contexts/18-security.json",
+    "section-contexts/19-troubleshooting.json",
+    "section-contexts/20-limitations.json",
+    "section-contexts/21-cli-reference.json"
+  ],
+  "generated_directory": "generated"
+}

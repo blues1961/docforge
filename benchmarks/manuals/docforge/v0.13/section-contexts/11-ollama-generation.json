@@ -1,0 +1,65 @@
+{
+  "identifier": "ollama-generation",
+  "title": "Génération avec Ollama",
+  "purpose": "Expliquer le flux dédié à docforge generate sans le confondre avec la préparation du manuel.",
+  "estimated_tokens": 355,
+  "context_budget": null,
+  "fact_breakdown": {
+    "workflows": 649,
+    "commands": 3832,
+    "limitations": 229
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "workflows": [
+      {
+        "identifier": "generate-with-ollama",
+        "title": "Utiliser Ollama avec docforge generate",
+        "summary": "Compléter les documents manquants via le flux LLM dédié.",
+        "commands": [
+          "docforge generate . --refresh --clean"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "commands": [],
+    "limitations": {
+      "items": [
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Le manuel préparé ne contient que des faits présents dans ProjectKnowledge et dans les politiques du profil.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Toute information absente ou incertaine doit être signalée comme manquante dans la rédaction finale.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Les workflows proposés restent limités aux commandes détectées dans la CLI.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Certains constats d’environnement non pertinents pour ce profil sont exclus de la projection manuel.",
+          "affected_sections": [],
+          "sources": []
+        }
+      ]
+    }
+  }
+}

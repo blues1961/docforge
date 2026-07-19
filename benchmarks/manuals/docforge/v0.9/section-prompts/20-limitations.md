@@ -1,0 +1,111 @@
+BEGIN INSTRUCTIONS
+Rédige un document Markdown fidèle aux faits fournis.
+Utilise `manual-knowledge.json` comme source unique de vérité et n’utilise aucune connaissance externe pour compléter les procédures ou les caractéristiques du projet.
+Suis strictement le blueprint fourni.
+N’invente jamais une commande, une option, une procédure, une route, une URL, un paramètre, une variable, un service ou une fonctionnalité.
+N’ajoute pas de bonnes pratiques générales comme si elles étaient démontrées par le projet.
+Utilise toujours `command_path` pour référencer les commandes.
+Vérifie silencieusement chaque commande, paramètre, route, URL, variable, service, permission, workflow et champ cité avant de rédiger; cette vérification ne doit pas apparaître dans le manuel.
+Signale explicitement les informations manquantes et les limites sans reconstruire arbitrairement des faits absents.
+Ne produis jamais de chemin local propre à une machine.
+N’ajoute jamais de référence de citation interne comme `oaicite`.
+N’expose jamais de secret ni de valeur sensible; seuls les noms non sensibles ou les noms de variables peuvent être cités.
+Retourne uniquement le Markdown du manuel.
+Interprétation des statuts de faits : `detected` = fait directement démontré et pouvant être présenté comme établi.
+`derived` = fait déduit d’éléments compatibles; emploie une formulation prudente et ne le présente jamais comme un comportement testé en fonctionnement.
+`configured` = fait provenant du profil ou de la configuration DocForge; présente-le comme règle documentaire ou configuration du pipeline, pas comme comportement applicatif observé.
+`unresolved` = fait incomplet; n’invente jamais la partie manquante et signale la limite dans la section appropriée.
+Le manuel doit être en français, clair, pédagogique, concret, professionnel et orienté utilisateur.
+Ne transcris pas mécaniquement le JSON et ne mentionne pas inutilement les noms internes des dataclasses.
+Réduis les répétitions : le démarrage rapide reste court, la référence des commandes porte les détails, et les autres sections évitent de recopier des listes complètes sans nécessité.
+Le manuel concerne l’outil CLI analysé et ses commandes réelles, sans extrapolation sur des intégrations non démontrées.
+Ne transforme jamais les commandes de maintenance interne ou de génération documentaire en commandes d’usage courant si le projet ne les expose pas comme telles.
+Titre de section : Limites des informations disponibles
+Identifiant de section : limitations
+But : Exposer les limites de la source de vérité fournie au modèle.
+Taille estimée du contexte : 395 tokens.
+Produis uniquement la section demandée, sans titre de document global, sans conclusion générale et sans contenu hors sujet.
+END INSTRUCTIONS
+
+BEGIN SECTION FACTS
+{
+  "identifier": "limitations",
+  "title": "Limites des informations disponibles",
+  "purpose": "Exposer les limites de la source de vérité fournie au modèle.",
+  "facts": {
+    "missing_information": [],
+    "limitations": {
+      "items": [
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Le manuel préparé ne contient que des faits présents dans ProjectKnowledge et dans les politiques du profil.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Toute information absente ou incertaine doit être signalée comme manquante dans la rédaction finale.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Les workflows proposés restent limités aux commandes détectées dans la CLI.",
+          "affected_sections": [],
+          "sources": []
+        },
+        {
+          "identifier": null,
+          "category": "limitation",
+          "severity": "warning",
+          "description": "Certains constats d’environnement non pertinents pour ce profil sont exclus de la projection manuel.",
+          "affected_sections": [],
+          "sources": []
+        }
+      ]
+    },
+    "source_traceability": {
+      "items": {
+        "project": {
+          "status": "detected",
+          "sources": []
+        },
+        "profile": {
+          "status": "detected",
+          "sources": []
+        },
+        "installation": {
+          "status": "derived",
+          "sources": []
+        },
+        "commands": {
+          "status": "detected",
+          "sources": []
+        },
+        "workflows": {
+          "status": "derived",
+          "sources": []
+        },
+        "configuration": {
+          "status": "configured",
+          "sources": []
+        },
+        "security": {
+          "status": "detected",
+          "sources": []
+        },
+        "limitations": {
+          "status": "derived",
+          "sources": []
+        }
+      }
+    }
+  }
+}
+END SECTION FACTS

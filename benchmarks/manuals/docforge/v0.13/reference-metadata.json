@@ -1,0 +1,6 @@
+{
+  "reference_version": "v0.13",
+  "supersedes": "v0.12",
+  "cli_reference_generation_mode": "deterministic",
+  "signature_coverage": "required"
+}

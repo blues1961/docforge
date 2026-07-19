@@ -1,0 +1,13 @@
+{
+  "reference_version": "v0.16",
+  "supersedes": "v0.15",
+  "cli_reference_generation_mode": "deterministic",
+  "deterministic_sections": [
+    "configuration",
+    "security",
+    "protected-documents",
+    "cli-reference"
+  ],
+  "python_cli_invariants_policy": "detected-only",
+  "ollama_called": false
+}

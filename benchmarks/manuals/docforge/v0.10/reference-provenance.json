@@ -1,0 +1,29 @@
+{
+  "reference_version": "v0.10",
+  "source_reference_version": "v0.9",
+  "source_file": "benchmarks/manuals/docforge/v0.9/docforge-guide-usager.md",
+  "source_sha256": "ba03acff4c92b0bb7875f6772d97dc4342573fc1a58e2c5bc9008262376526fb",
+  "guide_file": "docforge-guide-usager.md",
+  "guide_content_modified": false,
+  "prepared_with_prompt_version_v0_10": false,
+  "prepared_with_prompt_version": "v0.10",
+  "compatibility_validated_against_v0_10": true,
+  "validation_date": "2026-07-18",
+  "validation_commands_executed": [
+    "docforge manual prepare . --clean --mode both --output-dir .docforge/benchmark-check/v0.10",
+    "scripts/verify_docforge_manual_reference.sh --prepared-dir .docforge/benchmark-check/v0.10 --fast --results-dir .tmp-docforge-v010-validation docforge-guide-usager.v0.10-copy.md"
+  ],
+  "validation_summary": {
+    "manual_markdown_valid": true,
+    "expected_sections": 21,
+    "present_sections": 21,
+    "command_path_coverage": "23/23",
+    "executable_invocation_coverage": "23/23",
+    "strict_error_count": 0,
+    "unknown_command_count": 0,
+    "unknown_option_count": 0,
+    "blocking_warning_count": 0,
+    "non_blocking_warning_count": 9
+  },
+  "manual_prompt_prepared_note": "manual-prompt-prepared.md est figé comme copie de manual-prompt.md pour compatibilité du chargeur de référence actuel."
+}

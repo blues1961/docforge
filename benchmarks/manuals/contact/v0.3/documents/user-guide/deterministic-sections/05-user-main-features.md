@@ -1,0 +1,11 @@
+- Connexion
+- Consultation des contacts
+- Création de contacts
+- Modification de contacts
+- Suppression de contacts
+- Recherche
+- Aide
+- Changement de thème
+- Coffre local chiffré côté client
+- Affichage d’une valeur protégée
+- Gestion des utilisateurs pour l’administrateur fonctionnel

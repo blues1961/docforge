@@ -1,0 +1,2 @@
+- Utilisateur connecté : accès aux fonctionnalités réservées aux utilisateurs authentifiés.
+- Administrateur fonctionnel : accès aux fonctions de gestion des utilisateurs.

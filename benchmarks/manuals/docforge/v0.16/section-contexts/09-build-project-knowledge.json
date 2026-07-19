@@ -1,0 +1,63 @@
+{
+  "identifier": "build-project-knowledge",
+  "title": "Construction de ProjectKnowledge",
+  "purpose": "Décrire la construction de la connaissance structurée.",
+  "estimated_tokens": 253,
+  "context_budget": null,
+  "fact_breakdown": {
+    "workflows": 649,
+    "commands": 3832,
+    "documentation_policy": 137
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "workflows": [
+      {
+        "identifier": "build-project-knowledge",
+        "title": "Construire ProjectKnowledge",
+        "summary": "Produire la représentation factuelle structurée du dépôt.",
+        "commands": [
+          "docforge knowledge"
+        ],
+        "operational_status": "operational",
+        "notes": []
+      }
+    ],
+    "commands": [],
+    "documentation_policy": {
+      "required_documents": [
+        "README.md",
+        "README_DEV.md",
+        "CODEX_START.md",
+        "AGENTS.md",
+        "docs/architecture.md",
+        "docs/cli.md",
+        "docs/specification.md",
+        "docs/configuration.md",
+        "docs/security.md"
+      ],
+      "optional_documents": [
+        "docs/roadmap.md",
+        "docs/workflows.md"
+      ],
+      "deterministic_documents": [
+        "README.md",
+        "README_DEV.md",
+        "CODEX_START.md",
+        "AGENTS.md",
+        "docs/architecture.md",
+        "docs/cli.md",
+        "docs/configuration.md",
+        "docs/specification.md",
+        "docs/security.md"
+      ],
+      "protected_documents": [],
+      "source": {
+        "status": "configured",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}

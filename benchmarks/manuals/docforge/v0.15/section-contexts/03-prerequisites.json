@@ -1,0 +1,102 @@
+{
+  "identifier": "prerequisites",
+  "title": "Prérequis",
+  "purpose": "Lister les prérequis strictement démontrés pour utiliser le dépôt localement.",
+  "estimated_tokens": 505,
+  "context_budget": null,
+  "fact_breakdown": {
+    "installation.prerequisites": 14,
+    "project.python_requires": 2,
+    "configuration": 428
+  },
+  "missing_fact_paths": [],
+  "repeated_fact_paths": [],
+  "facts": {
+    "installation": {
+      "prerequisites": [
+        "Python >=3.11",
+        "Git",
+        "Un shell compatible POSIX"
+      ]
+    },
+    "project": {
+      "python_requires": ">=3.11"
+    },
+    "configuration": {
+      "user_config_root": "~/.config/docforge",
+      "project_state_root": ".docforge",
+      "project_config_file": ".docforge.yml",
+      "report_root": "reports",
+      "files": [
+        {
+          "path": "~/.config/docforge/projects.yml",
+          "scope": "utilisateur",
+          "exists": true,
+          "tracked_candidate": false,
+          "description": "Registre des projets connus par docforge."
+        },
+        {
+          "path": "~/.config/docforge/invariant-baseline.json",
+          "scope": "utilisateur",
+          "exists": true,
+          "tracked_candidate": false,
+          "description": "Empreintes approuvées des documents d’invariants protégés."
+        },
+        {
+          "path": ".docforge.yml",
+          "scope": "projet",
+          "exists": false,
+          "tracked_candidate": true,
+          "description": "Configuration locale du projet pour le profil, la sélection documentaire et les exclusions de scan."
+        },
+        {
+          "path": ".docforge/cache/",
+          "scope": "projet",
+          "exists": true,
+          "tracked_candidate": false,
+          "description": "Cache local des faits et de ProjectKnowledge."
+        },
+        {
+          "path": ".docforge/preview/",
+          "scope": "projet",
+          "exists": true,
+          "tracked_candidate": false,
+          "description": "Aperçus documentaires générés avant application."
+        },
+        {
+          "path": "reports/",
+          "scope": "dépôt",
+          "exists": true,
+          "tracked_candidate": true,
+          "description": "Rapports durables pouvant être suivis par Git."
+        },
+        {
+          "path": "pyproject.toml",
+          "scope": "dépôt",
+          "exists": true,
+          "tracked_candidate": true,
+          "description": "Métadonnées du paquet, dépendances et point d’entrée CLI."
+        },
+        {
+          "path": ".gitignore",
+          "scope": "dépôt",
+          "exists": true,
+          "tracked_candidate": true,
+          "description": "Exclusions Git, notamment caches, aperçus et environnements virtuels."
+        }
+      ],
+      "environment_variables": [],
+      "ignored_paths": [
+        ".docforge/",
+        ".pytest_cache/",
+        ".venv/",
+        "__pycache__/"
+      ],
+      "source": {
+        "status": "configured",
+        "sources": [],
+        "notes": []
+      }
+    }
+  }
+}
