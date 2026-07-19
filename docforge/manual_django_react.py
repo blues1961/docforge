@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any
+import re
 
 from docforge.knowledge import ProjectKnowledge
 from docforge.manual_knowledge import (
@@ -46,7 +47,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             conflicts,
         )
 
-        return ManualKnowledge(
+        manual = ManualKnowledge(
             schema_version=self.SCHEMA_VERSION,
             project=ManualProject(
                 name=knowledge.application.name or knowledge.identity.name,
@@ -82,6 +83,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             installation=self._build_installation(knowledge),
             application={
                 "name": knowledge.application.name,
+                "display_name": self._display_name(knowledge.application.name or knowledge.identity.name),
                 "category": knowledge.application.category,
                 "backend_framework": knowledge.application.backend_framework,
                 "frontend_framework": knowledge.application.frontend_framework,
@@ -176,6 +178,32 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             ),
             source_traceability=self._build_source_traceability(knowledge),
         )
+        return self._normalize_manual_paths(manual, project_root)
+
+    @staticmethod
+    def _normalize_manual_paths(manual: ManualKnowledge, project_root: Path) -> None:
+        """Keep prepared knowledge portable without exposing external paths."""
+        root = project_root.resolve().as_posix().rstrip("/")
+        external = re.compile(r"/(?:home|Users|opt)/[^\s'\"`]+")
+
+        def normalize(value: Any) -> Any:
+            if isinstance(value, str):
+                if value == root:
+                    return "."
+                value = value.replace(root + "/", "")
+                return external.sub("[chemin externe non résolu]", value)
+            if isinstance(value, list):
+                return [normalize(item) for item in value]
+            if isinstance(value, tuple):
+                return tuple(normalize(item) for item in value)
+            if isinstance(value, dict):
+                return {key: normalize(item) for key, item in value.items()}
+            if is_dataclass(value):
+                for item in fields(value):
+                    value = replace(value, **{item.name: normalize(getattr(value, item.name)) for item in fields(value)})
+            return value
+
+        return normalize(manual)
 
     def _build_installation(
         self,
@@ -275,6 +303,7 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
 
     @staticmethod
     def _make_command_description(command) -> ManualCommandDescription:
+        has_service = any(parameter.name == "SERVICE" for parameter in command.parameters)
         summaries = {
             "help": "Affiche les cibles Make rendues disponibles par le projet.",
             "init": "Initialise l’environnement de travail avec la recette détectée.",
@@ -283,44 +312,46 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             "up": "Démarre les services définis par le projet.",
             "down": "Arrête les services actifs.",
             "restart": "Redémarre les services en exécutant la recette de redémarrage.",
-            "rebuild": "Reconstruit le ou les services demandés.",
-            "logs": "Affiche les journaux du service demandé.",
+            "rebuild": "Reconstruit les images ou services définis par la recette.",
+            "logs": "Affiche les journaux définis par la recette.",
             "ps": "Affiche l’état des services.",
             "check": "Exécute le contrôle ou diagnostic déclaré par le projet.",
             "migrate": "Applique les migrations définies par la recette du projet.",
             "backup": "Lance la sauvegarde de base de données démontrée.",
             "restore": "Lance la restauration de base de données depuis le fichier fourni.",
             "update": "Exécute la recette de mise à jour déclarée par le projet.",
+            "test": "Exécute les suites de tests regroupées par le projet.",
+            "test-backend": "Exécute la suite de tests backend démontrée.",
+            "test-frontend": "Exécute la suite de tests frontend démontrée.",
+            "token-test": "Exécute le contrôle de jeton et d’identité démontré.",
         }
         summary = summaries.get(command.name, f"Exécute la cible Make `{command.name}` détectée.")
-        behavior = command.help_text or (" ; ".join(command.body) if command.body else summary)
+        if command.name == "logs" and not has_service:
+            summary = "Affiche les journaux définis par la recette, sans sélection de service documentée."
+        elif command.name == "rebuild" and not has_service:
+            summary = "Reconstruit les images ou services définis par la recette, sans sélection de service documentée."
         return ManualCommandDescription(
             summary=summary,
             user_purpose={
-                "help": "Consulter les commandes disponibles.",
-                "dev": "Sélectionner la configuration de développement.",
-                "prod": "Sélectionner la configuration de production.",
-                "init": "Initialiser l’environnement après sa configuration.",
-                "up": "Démarrer les services.",
-                "ps": "Vérifier l’état des services.",
-                "logs": "Examiner les journaux d’un service.",
-                "migrate": "Appliquer les migrations.",
-                "rebuild": "Reconstruire un service après un changement nécessitant une nouvelle image.",
-                "restart": "Redémarrer les services.",
-                "down": "Arrêter les services.",
-                "update": "Exécuter la procédure de mise à jour du projet.",
-                "backup": "Créer une sauvegarde avant une opération risquée.",
-                "restore": "Restaurer les données depuis une sauvegarde.",
-                "check": "Exécuter les contrôles déclarés par le projet.",
+                "help": "Consulter les commandes disponibles.", "dev": "Sélectionner la configuration de développement.",
+                "prod": "Sélectionner la configuration de production.", "init": "Initialiser l’environnement après sa configuration.",
+                "up": "Démarrer les services.", "ps": "Vérifier l’état des services.", "logs": "Examiner les journaux définis par la recette.",
+                "migrate": "Appliquer les migrations.", "rebuild": "Reconstruire les images ou services du projet après un changement nécessitant une nouvelle image.",
+                "restart": "Redémarrer les services.", "down": "Arrêter les services.", "update": "Exécuter la procédure de mise à jour du projet.",
+                "backup": "Créer une sauvegarde avant une opération risquée.", "restore": "Restaurer les données depuis une sauvegarde.",
+                "check": "Exécuter les contrôles déclarés par le projet.", "test": "Exécuter les suites de tests regroupées.",
+                "test-backend": "Exécuter les tests backend.", "test-frontend": "Exécuter les tests frontend.", "token-test": "Vérifier le flux de jeton démontré.",
             }.get(command.name, ""),
-            behavior=behavior,
+            behavior=command.help_text or summary,
             inputs=[parameter.name for parameter in command.parameters],
             side_effects=DjangoReactManualKnowledgeBuilder._command_destructive_effects(command),
-            provenance={
-                "summary": ManualFactSource(status="derived", sources=(command.source,)),
-                "behavior": ManualFactSource(status="detected", sources=(command.source,)),
-            },
+            provenance={"summary": ManualFactSource(status="derived", sources=(command.source,)), "behavior": ManualFactSource(status="detected", sources=(command.source,))},
         )
+
+    @staticmethod
+    def _display_name(name: str | None) -> str:
+        value = str(name or "L’application")
+        return value[:1].upper() + value[1:]
 
     @staticmethod
     def _manual_command_provenance(knowledge: ProjectKnowledge, command) -> str:
@@ -330,6 +361,8 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
         return command.provenance
 
     def _command_audience(self, knowledge: ProjectKnowledge, command) -> str:
+        if command.provenance == "developer-public":
+            return "developer"
         if command.visibility != "public":
             return "internal"
         if knowledge.template.project_kind == "application-template":
@@ -348,6 +381,8 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
     def _command_reference_level(self, command) -> str:
         if command.visibility != "public" or command.documentation_policy == "exclude":
             return "omit"
+        if command.documentation_policy == "developer-reference":
+            return "developer"
         if command.documentation_policy == "advanced-reference":
             return "advanced"
         if command.documentation_policy in {"quick-start", "main-reference"}:
@@ -356,7 +391,6 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             return "alias"
         if command.category in {"tests", "diagnostic", "backup", "restore", "migrations", "build"}:
             return "advanced"
-        return "primary"
 
     @staticmethod
     def _command_is_destructive(command) -> bool:
@@ -374,23 +408,29 @@ class DjangoReactManualKnowledgeBuilder(ManualKnowledgeBuilder):
             if not line.strip().startswith(("@printf", "printf", "@echo", "echo"))
         ]
         body = "\n".join(executable_lines)
-        if " down" in f" {body}" or command.category == "shutdown":
+        if command.name == "restart" or command.category == "restart":
+            effects.append("Interruption puis redémarrage des services actifs")
+        elif " down" in f" {body}" or command.category == "shutdown":
             effects.append("Arrêt des services actifs")
-        if "psql" in body or command.category == "restore":
+        if command.category == "restore" or "drop schema" in body or "pg_restore" in body:
             effects.append("Modification ou écrasement potentiel des données PostgreSQL")
-        if "rm " in body or "rm -" in body:
+        if re.search(r"(?<![-\\w])rm\\s", body):
             effects.append("Suppression de fichiers")
         if " build" in f" {body}" or command.category == "build":
             effects.append("Reconstruction des images ou services")
         recipe_effects = {
-            "backup": "Création d’une sauvegarde de base de données",
-            "migrate": "Application des migrations de base de données",
+            "backup": "Création d’un artefact de sauvegarde de base de données",
+            "migrate": "Migration ou modification du schéma ou de l’état de la base de données",
             "up": "Démarrage des services définis par le projet",
             "init": "Initialisation de l’environnement de travail",
             "prod": "Sélection de l’environnement de production",
         }
         if command.name in recipe_effects:
             effects.append(recipe_effects[command.name])
+        if command.name == "backup" and ("backup/" in body or "backup" in body):
+            effects.append("Artefact de sauvegarde écrit dans le répertoire relatif `backup/`")
+        if command.category == "tests":
+            effects = [effect for effect in effects if effect != "Suppression de fichiers"]
         return list(dict.fromkeys(effects))
 
     def _parameter_allowed_values(self, knowledge: ProjectKnowledge, parameter) -> list[str]:

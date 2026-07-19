@@ -172,10 +172,24 @@ class DjangoReactMultiDocumentValidator:
             commands_by_name = {item.get("name"): item for item in knowledge.get("commands", []) if isinstance(item, dict)}
             for name, block in re.findall(r"^#### `([^`]+)`\n(.*?)(?=^#### `|\Z)", rendered, flags=re.M | re.S):
                 effects = commands_by_name.get(name, {}).get("destructive_effects", [])
-                risky = any(any(term in str(effect).casefold() for term in ("arrêt", "reconstruction", "écrasement", "modification", "production")) for effect in effects)
+                risky = any(any(term in str(effect).casefold() for term in ("arrêt", "reconstruction", "écrasement", "modification", "migration", "production")) for effect in effects)
                 if risky and "Avertissement" not in block:
                     diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL023", "Une commande à effet risqué n’affiche pas de précaution.", "operator-guide", "operator-make-commands"))
                     break
+                parameters = {item.get("name") for item in commands_by_name.get(name, {}).get("parameters", []) if isinstance(item, dict)}
+                lowered_block = block.casefold()
+                if name == "backup" and "avertissement" in lowered_block and "écras" in lowered_block:
+                    diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL026", "Une sauvegarde est présentée comme un écrasement de données.", "operator-guide", "operator-make-commands"))
+                    break
+                if name == "migrate" and ("avertissement" not in lowered_block or "écras" in lowered_block or not any(term in lowered_block for term in ("migration", "schéma", "état de la base"))):
+                    diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL027", "Une migration doit avoir une précaution distincte de la restauration.", "operator-guide", "operator-make-commands"))
+                if "SERVICE=" in block and "SERVICE" not in parameters:
+                    diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL024", "Une invocation Make publie SERVICE sans preuve pour cette cible.", "operator-guide", "operator-make-commands"))
+                    break
+                if "FILE=" in block and "FILE" not in parameters:
+                    diagnostics.append(DjangoReactManualDiagnostic("DJANGO_MANUAL025", "Une invocation Make publie FILE sans preuve pour cette cible.", "operator-guide", "operator-make-commands"))
+                    break
+
         developer = contexts.get("developer-reference", {})
         routes = developer.get("developer-routes-api", {}).get("django", {}).get("resolved_routes", [])
         route_entry = developer_entries.get("developer-routes-api", {})

@@ -79,7 +79,7 @@ def normalize_section_headings(markdown: str, canonical_title: str) -> str:
 
 
 def _h1(title: str, knowledge: dict) -> str:
-    name = knowledge.get("application", {}).get("name") or knowledge.get("project", {}).get("name") or "l’application"
+    name = knowledge.get("application", {}).get("display_name") or knowledge.get("application", {}).get("name") or knowledge.get("project", {}).get("name") or "l’application"
     if title == "Guide utilisateur": return f"# Guide utilisateur de {name}"
     return f"# {title} de {name}"
 

@@ -417,13 +417,15 @@ class ManualPromptBuilder:
                     commands_block[group_name] = [item for item in group if item.get("command_path") in referenced]
 
     @staticmethod
-    def _group_operational_commands(commands: list[dict[str, Any]]) -> dict[str, Any]:
+    def _group_operational_commands(commands: list[dict[str, Any]], *, audience: str = "operator") -> dict[str, Any]:
+        allowed = {"template-standard", "app-template", "application-public"} if audience == "operator" else {"developer-public"}
         documentable = [
             item
             for item in commands
             if item.get("visibility") == "public"
             and item.get("documentation_policy") != "exclude"
             and item.get("reference_level") != "omit"
+            and item.get("provenance") in allowed
         ]
         primary = [
             item for item in documentable
@@ -653,7 +655,7 @@ class ManualPromptBuilder:
             if section_identifier == "developer-commands":
                 block = projection.get("operational_commands")
                 if isinstance(block, dict) and isinstance(block.get("commands"), list):
-                    projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"])
+                    projection["operational_commands"] = ManualPromptBuilder._group_operational_commands(block["commands"], audience="developer")
             return
 
         if section_identifier == "quick-start":

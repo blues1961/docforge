@@ -115,6 +115,8 @@ class ManualMarkdownValidator:
             or payload.get("project", {}).get("name")
             or "l’application"
         )
+        # Keep technical slugs separate while rendering the canonical public name.
+        project_name = project_name[:1].upper() + project_name[1:]
         template_id = payload.get("template", {}).get("template_id") or payload.get("template", {}).get("origin_template_id") or project_name
         if blueprint.document_kind == "template-creation-guide":
             return f"# Guide de création d’une application avec {template_id}"

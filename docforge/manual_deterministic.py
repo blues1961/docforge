@@ -31,8 +31,12 @@ class ManualDeterministicContentBuilder:
 
     @staticmethod
     def _application_name(knowledge: ManualKnowledge) -> str:
-        application = knowledge.application if isinstance(knowledge.application, dict) else {}
-        name = str(application.get("name") or knowledge.project.name or "L’application")
+        application = knowledge.application
+        if isinstance(application, dict):
+            raw_name = application.get("display_name") or application.get("name")
+        else:
+            raw_name = getattr(application, "display_name", None) or getattr(application, "name", None)
+        name = str(raw_name or knowledge.project.name or "L’application")
         return name[:1].upper() + name[1:]
 
     @staticmethod
@@ -63,16 +67,18 @@ class ManualDeterministicContentBuilder:
         return items
 
     @staticmethod
-    def _make_commands(knowledge: ManualKnowledge) -> list:
+    def _make_commands(knowledge: ManualKnowledge, *, audience: str = "operator") -> list:
         order = ["help", "dev", "prod", "init", "up", "ps", "logs", "migrate", "rebuild", "restart", "down", "update", "backup", "restore", "check"]
-        commands = [command for command in knowledge.commands if command.visibility == "public" and command.documentation_policy != "exclude" and command.invocation.startswith("make ")]
+        allowed = {"template-standard", "app-template", "application-public"} if audience == "operator" else {"developer-public"}
+        commands = [command for command in knowledge.commands if command.visibility == "public" and command.provenance in allowed and command.invocation.startswith("make ")]
         return sorted(commands, key=lambda command: (order.index(command.name) if command.name in order else len(order), command.name))
 
     @staticmethod
     def _make_syntax(command, services: list[str]) -> list[str]:
-        if command.name == "restore":
+        parameter_names = {parameter.name for parameter in command.parameters}
+        if command.name == "restore" and "FILE" in parameter_names:
             return ["make restore", "make restore FILE=chemin/vers/sauvegarde.sql.gz"]
-        if command.name in {"logs", "rebuild"}:
+        if command.name in {"logs", "rebuild"} and "SERVICE" in parameter_names:
             service = "backend" if "backend" in services else (services[0] if services else "SERVICE")
             return [f"make {command.name} SERVICE={service}"]
         return [command.invocation]
@@ -84,8 +90,10 @@ class ManualDeterministicContentBuilder:
     @staticmethod
     def _precaution(effects: list[str]) -> str | None:
         lowered = " ".join(effects).casefold()
-        if "écrasement" in lowered or "modification" in lowered:
-            return "Cette opération peut modifier ou écraser des données ; vérifiez la sauvegarde et l’environnement actif."
+        if "écrasement" in lowered or "restauration" in lowered:
+            return "Cette opération peut restaurer, modifier ou écraser des données ; vérifiez l’environnement actif et la sauvegarde sélectionnée."
+        if "migration" in lowered or "schéma" in lowered:
+            return "Cette opération peut modifier le schéma ou l’état de la base de données ; vérifiez l’environnement actif et la sauvegarde disponible."
         if "interruption" in lowered or "arrêt" in lowered:
             return "Cette opération interrompt des services ; prévenez les utilisateurs concernés."
         if "reconstruction" in lowered:
@@ -113,7 +121,7 @@ class ManualDeterministicContentBuilder:
             return "\n".join([*lines, "", self._status(knowledge.configuration.source.status), ""])
         if section_identifier == "operator-presentation":
             name = knowledge.application.get("name", knowledge.project.name) if isinstance(knowledge.application, dict) else knowledge.project.name
-            return f"{str(name).capitalize()} est une application auto-hébergée dont l’exploitation s’appuie sur les services et cibles Make démontrés dans ce guide.\n"
+            return f"{self._application_name(knowledge)} est une application auto-hébergée dont l’exploitation s’appuie sur les services et cibles Make démontrés dans ce guide.\n"
         if section_identifier == "operator-prerequisites":
             return "Outils nécessaires : Docker, Docker Compose et Make. Leurs versions minimales ne sont pas documentées dans les faits disponibles.\n"
         if section_identifier == "operator-environments":
@@ -159,7 +167,7 @@ class ManualDeterministicContentBuilder:
             services = sorted({service.get("name") for environment in knowledge.environments.get("items", []) for service in environment.get("services", []) if isinstance(service, dict) and service.get("name")})
             lines = []
             warnings = {"down", "restart", "rebuild", "migrate", "restore", "update"}
-            for command in self._make_commands(knowledge):
+            for command in self._make_commands(knowledge, audience="operator"):
                 description = command.description
                 summary = description.summary if description else command.help or "Description indisponible."
                 purpose = description.user_purpose if description else "Utilisez cette commande lorsque l’opération décrite est nécessaire."
@@ -182,7 +190,16 @@ class ManualDeterministicContentBuilder:
                 lines.append("")
             return "\n".join(lines).rstrip() + "\n"
         if section_identifier == "developer-commands":
-            return "La référence complète des cibles Make est publiée dans le **Guide d’exploitation**. Aucune commande de test backend distincte n’est démontrée dans les faits disponibles.\n"
+            commands = self._make_commands(knowledge, audience="developer")
+            lines = ["La référence complète des cibles Make d’exploitation est publiée dans le **Guide d’exploitation**.", ""]
+            for command in commands:
+                description = command.description
+                summary = description.summary if description else command.help or "Commande de développement démontrée."
+                lines.extend([f"#### `{command.name}`", "", summary, "", "```bash", *self._make_syntax(command, []), "```"])
+                if command.destructive_effects:
+                    lines.extend(["", f"Effet de bord : {', '.join(command.destructive_effects)}."])
+                lines.append("")
+            return "\n".join(lines).rstrip() + "\n"
         if section_identifier in {"operator-environment-variables", "developer-development-configuration"}:
             lines = ["### Variables de configuration démontrées", ""]
             for variable in knowledge.environment_variables.get("variables", []):
@@ -219,12 +236,14 @@ class ManualDeterministicContentBuilder:
             lines.extend(["", "Les routes et méthodes démontrées figurent dans **Routes et API**."])
             return "\n".join(lines) + "\n"
         if section_identifier == "developer-models-capabilities":
-            caps = knowledge.capabilities.get("capabilities", []) if isinstance(knowledge.capabilities, dict) else []
-            lines = ["Capacités techniques disponibles :"]
-            for item in caps:
-                if isinstance(item, dict) and item.get("label"):
-                    lines.append(f"- {item['label']}")
-            return "\n".join(lines) + "\n"
+            models = knowledge.django.get("models", []) if isinstance(knowledge.django, dict) else []
+            if models:
+                lines = ["Modèles structurés :"]
+                for item in models:
+                    if isinstance(item, dict) and item.get("name"):
+                        lines.append(f"- {item['name']}")
+                return "\n".join(lines) + "\n"
+            return "Aucun détail de modèle supplémentaire n’est structuré ; les capacités et routes sont décrites dans les sections Frontend et Routes et API.\n"
         if section_identifier == "developer-missing-information":
             lines=[]
             for item in knowledge.missing_information:
@@ -329,6 +348,9 @@ class ManualDeterministicContentBuilder:
                     lines.append("| Données privées | Elles sont chiffrées côté client avant stockage et déchiffrées localement pendant l’utilisation. |")
                     if crypto.get("recovery_supported") is None:
                         lines.append("| Récupération | Aucune procédure de récupération n’est démontrée. |")
+                labels = {str(item.get("label", "")).casefold() for item in self._user_capabilities(knowledge)}
+                if any("importation de clé" in label or "exportation de clé" in label for label in labels):
+                    lines.append("| Clé exportée | Considérez toute clé exportée comme une information sensible ; ne la publiez pas et conservez-la dans un emplacement approprié. |")
             else:
                 lines.extend(["| Identifiant | Catégorie | Règle | Preuve |", "|---|---|---|"])
                 for control in knowledge.security.controls:

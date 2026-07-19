@@ -1886,6 +1886,15 @@ class DjangoReactApplicationAnalyzer:
             )
 
         manifest_targets = template_manifest.get("targets", {})
+        if target in {"test", "test-backend", "test-frontend", "token-test"} and (body or (target == "test" and prerequisites and all(item.startswith("test-") for item in prerequisites))):
+            return (
+                "developer-public",
+                "developer-reference",
+                None,
+                ["demonstrated Makefile recipe or public test-aggregator dependencies"],
+                "Makefile",
+            )
+
         manifest_entry = manifest_targets.get(target)
         signature = self._make_target_signature(
             target=target,
@@ -3620,7 +3629,7 @@ class DjangoReactApplicationAnalyzer:
             ("Importation de clé", ("keyimportform", "importer la clé", "importkeybundle"), ("/login", "/vault/key-backup", "/vault/key-check"), ()),
             ("Exportation de clé", ("keybackup", "exporter la clé", "exportkeybundle"), ("/vault/key-backup",), ("passwords/",)),
             ("Vérification de clé", ("keycheck", "vérif clé", "key-check"), ("/vault/key-check",), ()),
-            ("Révélation d’une valeur", ("revealdialog", "réimporte la clé", "impossible de déchiffrer", "decryptpayload"), ("/vault", "/vault/:id/edit"), ("passwords/",)),
+            ("Afficher une valeur protégée", ("revealdialog", "réimporte la clé", "impossible de déchiffrer", "decryptpayload"), ("/vault", "/vault/:id/edit"), ("passwords/",)),
             ("Changement de thème", ("themetoggle", "thème", "theme"), (), ()),
             ("Recherche", ("rechercher", "search", "vault-search", "effacer la recherche"), ("/vault",), ("passwords/", "categories/")),
             ("Connexion", ("loginform", "connexion", "current-password"), ("/login",), ("auth/",)),
