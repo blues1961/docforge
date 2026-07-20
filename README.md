@@ -145,3 +145,18 @@ Les fichiers de secrets des projets analysés ne doivent jamais être lus ni rep
 - [`INVARIANTS.md`](INVARIANTS.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/specification.md`](docs/specification.md)
+
+## Manuels de projet
+
+Les commandes de haut niveau préparent et publient les manuels sans mémoriser les chemins internes :
+
+```bash
+docforge manual build /chemin/du/projet --all-documents
+docforge manual publish /chemin/du/projet --write
+```
+
+Le build reste dans `.docforge/manuals/build/` et ne modifie jamais `docs/`. La publication exige `--write`; utilisez `--replace` pour remplacer un fichier existant et `--allow-dirty` uniquement si le dépôt cible est volontairement modifié. Pour un run historique :
+
+```bash
+docforge manual publish /chemin/du/projet --from-run /chemin/du/run --write
+```

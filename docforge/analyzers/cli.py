@@ -149,6 +149,12 @@ class CliAnalyzer:
                 if group is None
                 else f"{group} {command_name}"
             )
+            # High-level manual orchestration is exposed by the CLI, but is
+            # deliberately excluded from the project CLI reference facts;
+            # ``manual prepare`` and ``manual validate`` remain historical
+            # reference entries.
+            if command_path in {"manual build", "manual publish"}:
+                continue
 
             results.append(
                 CliCommandFacts(

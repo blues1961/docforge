@@ -42,6 +42,7 @@ from docforge.knowledge import (
 from docforge.manual_service import (
     ManualPreparationService,
 )
+from docforge.manual_commands import build_manual, publish_manual
 from docforge.manual_blueprint import ManualBlueprintRegistry
 from docforge.validators import ManualMarkdownValidator
 from docforge.profiles import (
@@ -203,6 +204,63 @@ def manual_prepare_command(
             f"exclues={summary.get('excluded', 0)}"
         )
 
+
+
+
+@manual_app.command("build")
+def manual_build_command(
+    project: Path = typer.Argument(Path("."), exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Projet à documenter (par défaut : .)."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Répertoire de prévisualisation."),
+    model: str | None = typer.Option(None, "--model", help="Modèle Ollama pour les sections narratives."),
+    num_ctx: int | None = typer.Option(None, "--num-ctx"),
+    max_output_tokens: int | None = typer.Option(None, "--max-output-tokens"),
+    document_id: list[str] = typer.Option([], "--document-id", help="Document à construire (répétable)."),
+    all_documents: bool = typer.Option(False, "--all-documents", help="Construire tous les documents applicables."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Préparer sans appeler Ollama ni assembler les récits."),
+) -> None:
+    """Construire et valider les manuels du projet dans un aperçu sécurisé.
+
+    Exemple déterministe : docforge manual build ~/projets/gestionnaireMDP
+    Exemple avec Ollama : docforge manual build . --model qwen3.5:4b
+    """
+    try:
+        state = build_manual(project, output_dir=output_dir, model=model, num_ctx=num_ctx, max_output_tokens=max_output_tokens, document_ids=document_id, all_documents=all_documents, dry_run=dry_run)
+    except (ValueError, OSError) as exc:
+        raise typer.BadParameter(str(exc))
+    console.print("[green]Manuels construits et validés :[/green]")
+    for item in state.get("documents", {}).values():
+        console.print(f"- {item['title']}")
+    console.print(f"Build : {state['output_dir']}")
+    console.print(f"Pour les publier : docforge manual publish {project} --write")
+
+
+@manual_app.command("publish")
+def manual_publish_command(
+    project: Path = typer.Argument(Path("."), exists=True, file_okay=False, dir_okay=True, resolve_path=True, help="Projet cible (par défaut : .)."),
+    output_dir: Path | None = typer.Option(None, "--output-dir", help="Répertoire documentaire cible, par défaut docs/."),
+    from_run: Path | None = typer.Option(None, "--from-run", help="Build ou run à publier."),
+    write: bool = typer.Option(False, "--write", help="Effectuer effectivement les copies."),
+    replace: bool = typer.Option(False, "--replace", help="Remplacer les fichiers existants."),
+    allow_dirty: bool = typer.Option(False, "--allow-dirty", help="Autoriser un dépôt Git déjà modifié."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Afficher les copies sans modifier le projet."),
+) -> None:
+    """Publier le dernier build valide vers docs/ après confirmation explicite.
+
+    Exemple : docforge manual publish . --write
+    Benchmark : docforge manual publish PROJECT --from-run RUN_DIR --write
+    """
+    try:
+        pairs = publish_manual(project, output_dir=output_dir, from_run=from_run, write=write, replace=replace, allow_dirty=allow_dirty, dry_run=dry_run)
+    except (ValueError, OSError) as exc:
+        raise typer.BadParameter(str(exc))
+    console.print("Fichiers de publication :")
+    for source, destination in pairs:
+        action = "remplacement" if destination.exists() else "création"
+        console.print(f"- {source} -> {destination} ({action})")
+    if not write or dry_run:
+        console.print("Prévisualisation uniquement : ajoutez --write pour copier les fichiers.")
+    else:
+        console.print("[green]Manuels publiés.[/green]")
 
 
 
