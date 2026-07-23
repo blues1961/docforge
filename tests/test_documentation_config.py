@@ -57,3 +57,14 @@ def test_loader_applies_project_document_exceptions() -> None:
 
     assert "docs/deployment.md" not in config.required_documents
     assert "docs/troubleshooting.md" in config.required_documents
+
+
+def test_loader_resolves_hugo_static_profile() -> None:
+    config = DocumentationConfigLoader().resolve_profile(
+        "hugo-static"
+    )
+
+    assert config.profile == "hugo-static"
+    assert "README.md" in config.required_documents
+    assert "docs/deployment.md" in config.optional_documents
+    assert "docs/api.md" not in config.required_documents

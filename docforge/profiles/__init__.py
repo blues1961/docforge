@@ -13,6 +13,9 @@ from docforge.profiles.django_react import (
 from docforge.profiles.generic import (
     GenericProfile,
 )
+from docforge.profiles.hugo_static import (
+    HugoStaticProfile,
+)
 from docforge.profiles.python_cli import (
     PythonCliProfile,
 )
@@ -20,6 +23,7 @@ from docforge.profiles.python_cli import (
 __all__ = [
     "DjangoReactProfile",
     "GenericProfile",
+    "HugoStaticProfile",
     "ProfileCandidate",
     "ProfileDetector",
     "ProfileDocumentPolicy",

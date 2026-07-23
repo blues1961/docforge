@@ -7,7 +7,7 @@ class ManualDeterministicContentBuilder:
     """Render executable facts without asking a language model to restate them."""
 
     FULLY_DETERMINISTIC_SECTIONS = frozenset({
-        "cli-reference", "configuration", "security", "protected-documents",
+        "cli-reference", "preview-review", "prerequisites", "apply-documents", "limitations", "configuration", "security", "protected-documents",
         "operator-presentation", "operator-prerequisites", "operator-environments",
         "operator-installation-configuration", "operator-compose-services", "operator-make-commands",
         "operator-start-stop", "operator-migrations-administration", "operator-backup-restore",
@@ -33,11 +33,10 @@ class ManualDeterministicContentBuilder:
     def _application_name(knowledge: ManualKnowledge) -> str:
         application = knowledge.application
         if isinstance(application, dict):
-            raw_name = application.get("display_name") or application.get("name")
+            raw_name = application.get("name") or application.get("display_name")
         else:
-            raw_name = getattr(application, "display_name", None) or getattr(application, "name", None)
-        name = str(raw_name or knowledge.project.name or "L’application")
-        return name[:1].upper() + name[1:]
+            raw_name = getattr(application, "name", None) or getattr(application, "display_name", None)
+        return str(raw_name or knowledge.project.name or "L’application")
 
     @staticmethod
     def _user_capabilities(knowledge: ManualKnowledge, *, administrator: bool = False) -> list[dict]:
@@ -103,6 +102,28 @@ class ManualDeterministicContentBuilder:
         return None
 
     def render_section(self, knowledge: ManualKnowledge, section_identifier: str) -> str:
+        if section_identifier == "prerequisites":
+            lines = ["Prérequis démontrés :", ""]
+            for item in knowledge.installation.prerequisites:
+                if isinstance(item, str) and item:
+                    lines.append(f"- {item}")
+            return "\n".join(lines) + ("\n" if len(lines) > 2 else "- Aucun prérequis supplémentaire n’est structuré.\n")
+        if section_identifier == "apply-documents":
+            apply = next((command for command in knowledge.commands if command.command_path == "apply"), None)
+            if apply is None:
+                return "La commande d’application n’est pas structurée dans les faits disponibles.\n"
+            lines = ["L’application d’un aperçu exige une commande explicite.", "", "```bash", self._syntax(apply), "```"]
+            protected = knowledge.security.protected_documents
+            if protected:
+                lines.extend(["", f"Les documents protégés ({', '.join(f'`{item}`' for item in protected)}) exigent l’autorisation explicite démontrée par leurs options."])
+            return "\n".join(lines) + "\n"
+        if section_identifier == "limitations":
+            lines = []
+            for item in knowledge.missing_information:
+                description = getattr(item, "description", "")
+                if description and description not in lines:
+                    lines.append(f"- {description}")
+            return "\n".join(lines) + ("\n" if lines else "- Aucune information manquante supplémentaire n’est structurée.\n")
         if section_identifier == "installation":
             lines = ["### Commandes d’installation", ""]
             for step in knowledge.installation.steps:
@@ -119,6 +140,20 @@ class ManualDeterministicContentBuilder:
                     description = item.get("description")
                     lines.append(f"- `{path}`" + (f" — {description}" if isinstance(description, str) and description else ""))
             return "\n".join([*lines, "", self._status(knowledge.configuration.source.status), ""])
+        if section_identifier == "preview-review":
+            commands = []
+            for command in knowledge.commands:
+                if command.command_path in {"document", "generate"}:
+                    flags = {parameter.name for parameter in command.parameters}
+                    if {"--refresh", "--clean"}.intersection(flags):
+                        commands.append(command)
+            lines = ["Les aperçus sont produits avant toute application.", ""]
+            for command in commands:
+                lines.append(f"- `{command.invocation}` — options démontrées : {', '.join(sorted({p.name for p in command.parameters if p.name in {'--refresh', '--clean'}}))}.")
+            if any("git diff" in str(item) for workflow in knowledge.workflows for item in workflow.commands):
+                lines.extend(["", "- `git diff` permet d’examiner les changements avant publication."])
+            lines.extend(["", "Aucune garantie supplémentaire sur le contenu ou l’état de ces changements n’est déduite des faits disponibles."])
+            return "\n".join(lines) + "\n"
         if section_identifier == "operator-presentation":
             name = knowledge.application.get("name", knowledge.project.name) if isinstance(knowledge.application, dict) else knowledge.project.name
             return f"{self._application_name(knowledge)} est une application auto-hébergée dont l’exploitation s’appuie sur les services et cibles Make démontrés dans ce guide.\n"

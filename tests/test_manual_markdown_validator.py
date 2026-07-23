@@ -318,3 +318,33 @@ def test_manual_markdown_forbidden_vocabulary_has_line_and_section() -> None:
     assert diagnostic.fact == "pipeline documentaire"
     assert diagnostic.section == "Génération documentaire"
     assert diagnostic.line is not None
+
+
+def test_internal_pipeline_vocabulary_allowed_only_in_internal_section() -> None:
+    validator = ManualMarkdownValidator()
+    internal = _markdown_with_sections().replace("Contenu pour Construction de ProjectKnowledge.", "Le pipeline documentaire interne est décrit ici.")
+    public = _markdown_with_sections().replace("Contenu pour Présentation.", "Le pipeline documentaire est exposé aux utilisateurs.")
+    assert not any(item.code == "MANUAL005" for item in validator.validate(markdown=internal, knowledge=_knowledge(), blueprint=_blueprint()))
+    assert any(item.code == "MANUAL005" for item in validator.validate(markdown=public, knowledge=_knowledge(), blueprint=_blueprint()))
+
+
+def test_platform_terms_are_not_allowed_without_demonstrated_facts() -> None:
+    diagnostics = _safety_diagnostics("# Guide utilisateur de docforge\n\nUtilisez PowerShell sous Windows ou macOS.")
+    assert sum(item.code == "MANUAL018" for item in diagnostics) == 3
+
+
+def test_preview_review_is_deterministic_and_cautious() -> None:
+    from docforge.manual_deterministic import ManualDeterministicContentBuilder
+    from docforge.manual_knowledge import ManualKnowledge, ManualProject
+    from docforge.manual_knowledge import ManualFactSource
+    from docforge.manual_knowledge import ManualInstallation, ManualConfiguration
+    knowledge = ManualKnowledge(schema_version=3, project=ManualProject("demo", None, None, "python-cli", None, None, ManualFactSource(status="detected")), profile={}, installation=ManualInstallation(""), configuration=ManualConfiguration("", "", "", ""))
+    fragment = ManualDeterministicContentBuilder().render_section(knowledge, "preview-review")
+    assert "Aucune garantie supplémentaire" in fragment
+
+
+def test_prerequisites_and_limitations_are_deterministic_sections() -> None:
+    from docforge.manual_deterministic import ManualDeterministicContentBuilder
+    assert "prerequisites" in ManualDeterministicContentBuilder.FULLY_DETERMINISTIC_SECTIONS
+    assert "limitations" in ManualDeterministicContentBuilder.FULLY_DETERMINISTIC_SECTIONS
+    assert "apply-documents" in ManualDeterministicContentBuilder.FULLY_DETERMINISTIC_SECTIONS

@@ -6,6 +6,7 @@ from docforge.detectors import (
 from docforge.profiles import (
     DjangoReactProfile,
     GenericProfile,
+    HugoStaticProfile,
     ProfileDetector,
     ProfileFacts,
     PythonCliProfile,
@@ -79,6 +80,20 @@ demo-cli = "demo_cli.cli:main"
     )
 
 
+def _create_hugo_static_project(root: Path) -> None:
+    (root / "hugo.toml").write_text(
+        'baseURL = "https://mon-site.ca/"\n',
+        encoding="utf-8",
+    )
+    for directory in ("content", "layouts", "static"):
+        (root / directory).mkdir()
+
+    (root / "content" / "_index.md").write_text(
+        "---\ntitle: Accueil\n---\n",
+        encoding="utf-8",
+    )
+
+
 def _scan_and_detect(root: Path):
     project = FileSystemScanner().scan(root)
     TechnologyDetector().detect(project)
@@ -126,6 +141,25 @@ def test_detects_python_cli_profile(
     assert "docs/api.md" not in (
         profile.document_policy.required_documents
     )
+
+
+def test_detects_hugo_static_profile(
+    tmp_path: Path,
+) -> None:
+    _create_hugo_static_project(tmp_path)
+    project = _scan_and_detect(tmp_path)
+
+    detector = ProfileDetector()
+    profile = detector.detect(project)
+    resolved = detector.resolve(project)
+
+    assert isinstance(profile, ProfileFacts)
+    assert profile.name == "hugo-static"
+    assert profile.confidence >= 50
+    assert isinstance(resolved, HugoStaticProfile)
+    assert "README.md" in profile.document_policy.required_documents
+    assert "docs/deployment.md" in profile.document_policy.optional_documents
+    assert "docs/api.md" not in profile.document_policy.required_documents
 
 
 def test_falls_back_to_generic_profile(

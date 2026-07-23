@@ -25,6 +25,10 @@ Score actuel : `100 %`
 
 Aucune action requise.
 
+## docforge
+
+_Projet ignoré ou bloqué : projet hors du profil applicatif Django/React canonique._
+
 ## gestionnaireMDP
 
 Score actuel : `100 %`
@@ -44,10 +48,6 @@ _Projet ignoré ou bloqué : projet hors du profil applicatif Django/React canon
 Score actuel : `100 %`
 
 Aucune action requise.
-
-## docforge
-
-_Projet ignoré ou bloqué : projet hors du profil applicatif Django/React canonique._
 
 ## suivi-diabete
 
