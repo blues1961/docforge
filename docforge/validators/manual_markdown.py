@@ -97,7 +97,7 @@ class ManualMarkdownValidator:
 
         diagnostics.extend(self._validate_interface_metadata(lines))
         diagnostics.extend(self._validate_section_order(markdown, blueprint))
-        diagnostics.extend(self._validate_forbidden_vocabulary(markdown, blueprint.profile_name))
+        diagnostics.extend(self._validate_forbidden_vocabulary(markdown, blueprint))
         diagnostics.extend(self._validate_placeholders(markdown))
         diagnostics.extend(self._validate_commands(lines, payload))
         diagnostics.extend(self._validate_urls_and_endpoints(markdown, payload))
@@ -115,8 +115,6 @@ class ManualMarkdownValidator:
             or payload.get("project", {}).get("name")
             or "l’application"
         )
-        # Keep technical slugs separate while rendering the canonical public name.
-        project_name = project_name[:1].upper() + project_name[1:]
         template_id = payload.get("template", {}).get("template_id") or payload.get("template", {}).get("origin_template_id") or project_name
         if blueprint.document_kind == "template-creation-guide":
             return f"# Guide de création d’une application avec {template_id}"
@@ -247,10 +245,12 @@ class ManualMarkdownValidator:
             ))
         return headings
 
-    def _validate_forbidden_vocabulary(self, markdown: str, profile_name: str) -> list[ManualMarkdownDiagnostic]:
+    def _validate_forbidden_vocabulary(self, markdown: str, blueprint: ManualBlueprint) -> list[ManualMarkdownDiagnostic]:
         lowered = markdown.casefold()
         diagnostics: list[ManualMarkdownDiagnostic] = []
         forbidden = self.FORBIDDEN_VOCABULARY
+        profile_name = blueprint.profile_name
+        internal_titles = {"Construction de ProjectKnowledge", "Génération avec Ollama", "Référence CLI DocForge"}
         if profile_name == "python-cli":
             forbidden = tuple(token for token in forbidden if token not in {"ProjectKnowledge", "ManualKnowledge", "builder", "projection"})
         headings = [heading for heading in self._extract_headings(markdown) if heading.level == 2]
@@ -259,6 +259,8 @@ class ManualMarkdownValidator:
             if match:
                 line = markdown.count("\n", 0, match.start()) + 1
                 section = next((heading.title for heading in reversed(headings) if heading.line_number <= line), None)
+                if token == "pipeline documentaire" and profile_name == "python-cli" and section in internal_titles:
+                    continue
                 diagnostics.append(ManualMarkdownDiagnostic(
                     code="MANUAL005",
                     severity="error",

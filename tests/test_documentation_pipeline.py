@@ -435,3 +435,27 @@ demo-cli = "docforge.cli:app"
 
     assert result.generator_name == "deployment-déterministe"
     assert "# Déploiement" in result.content
+
+
+def test_pipeline_generates_hugo_static_documents(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "hugo.toml").write_text(
+        'baseURL = "https://mon-site.ca/"\n',
+        encoding="utf-8",
+    )
+    for directory in ("content", "layouts", "static"):
+        (tmp_path / directory).mkdir()
+    (tmp_path / "content" / "_index.md").write_text(
+        "---\ntitle: Accueil\n---\n",
+        encoding="utf-8",
+    )
+
+    project = FileSystemScanner().scan(tmp_path)
+    knowledge = ProjectKnowledgeBuilder().build_from_path(tmp_path)
+    pipeline = DocumentationPipeline(knowledge)
+
+    assert knowledge.profile.name == "hugo-static"
+    for document_path in knowledge.profile.document_policy.deterministic_documents:
+        result = pipeline.generate(project, document_path)
+        assert result.generator_name.endswith("déterministe")

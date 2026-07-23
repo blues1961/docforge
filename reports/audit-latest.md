@@ -5,7 +5,7 @@ Document généré automatiquement par docforge.
 Ne pas modifier manuellement.
 -->
 
-- Généré le : `2026-07-14T14:03:33.008962+00:00`
+- Généré le : `2026-07-23T03:08:07.561597+00:00`
 - Template canonique : `/home/sylvain/projets/app-template`
 - Projets analysés : `9`
 - Applications admissibles : `6`
@@ -28,9 +28,9 @@ Ne pas modifier manuellement.
 | calendrier | conforme | 100 % | 0 | 0 |
 | contact | conforme | 100 % | 0 | 0 |
 | dashboard | conforme | 100 % | 0 | 0 |
+| docforge | ignoré | — | 0 | 0 |
 | gestionnaireMDP | conforme | 100 % | 0 | 0 |
 | meteo | ignoré | — | 0 | 0 |
 | mon-site.ca | ignoré | — | 0 | 0 |
 | pense_bete | conforme | 100 % | 0 | 0 |
-| docforge | ignoré | — | 0 | 0 |
 | suivi-diabete | conforme | 100 % | 0 | 0 |

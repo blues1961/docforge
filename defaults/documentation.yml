@@ -576,13 +576,15 @@ profiles:
     required_documents:
     - docs/api.md
     - docs/deployment.md
-  hugo:
+  hugo-static:
     extends: base
     optional_documents:
     - docs/deployment.md
     - docs/troubleshooting.md
     excluded_documents:
     - docs/api.md
+  hugo:
+    extends: hugo-static
   raspberry-dashboard:
     extends: base
     required_documents:

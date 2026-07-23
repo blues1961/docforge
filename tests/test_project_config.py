@@ -130,3 +130,19 @@ scan:
     assert config.profile == "python-cli"
     assert legacy_path.exists() is False
     assert (tmp_path / ".docforge.yml").is_file()
+
+
+def test_detect_profile_for_hugo_static(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "hugo.toml").write_text(
+        'baseURL = "https://mon-site.ca/"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "content").mkdir()
+    (tmp_path / "layouts").mkdir()
+
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+
+    assert detect_profile(project) == "hugo-static"

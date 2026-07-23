@@ -99,3 +99,26 @@ def test_detector_finds_traefik_labels(
     }
 
     assert "Traefik" in technology_names
+
+
+def test_detector_finds_hugo_from_its_configuration(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "hugo.toml").write_text(
+        'baseURL = "https://example.test/"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "content").mkdir()
+    (tmp_path / "layouts").mkdir()
+
+    project = FileSystemScanner().scan(tmp_path)
+    TechnologyDetector().detect(project)
+
+    assert "Hugo" in project.frameworks
+    hugo = next(
+        technology
+        for technology in project.technologies
+        if technology.name == "Hugo"
+    )
+    assert hugo.category == "static-site-generator"
+    assert hugo.evidence == ["hugo.toml"]

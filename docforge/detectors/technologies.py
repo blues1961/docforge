@@ -13,11 +13,55 @@ class TechnologyDetector:
     def detect(self, project: Project) -> Project:
         self._detect_django(project)
         self._detect_react_and_vite(project)
+        self._detect_hugo(project)
         self._detect_docker_compose(project)
         self._detect_postgresql(project)
         self._detect_traefik(project)
 
         return project
+
+    def _detect_hugo(self, project: Project) -> None:
+        """Détecter Hugo à partir de ses fichiers de configuration dédiés."""
+        config_names = {
+            "hugo.toml",
+            "hugo.yaml",
+            "hugo.yml",
+            "hugo.json",
+        }
+        evidence = [
+            relative_path
+            for relative_path in project.files
+            if Path(relative_path).name in config_names
+        ]
+
+        legacy_config_names = {
+            "config.toml",
+            "config.yaml",
+            "config.yml",
+            "config.json",
+        }
+        has_hugo_structure = (
+            "content" in project.directories
+            and "layouts" in project.directories
+        )
+        if has_hugo_structure:
+            evidence.extend(
+                relative_path
+                for relative_path in project.files
+                if relative_path in legacy_config_names
+            )
+
+        if not evidence:
+            return
+
+        project.add_framework("Hugo")
+        project.add_technology(
+            Technology(
+                name="Hugo",
+                category="static-site-generator",
+                evidence=sorted(set(evidence)),
+            )
+        )
 
     def _detect_django(self, project: Project) -> None:
         evidence: list[str] = []

@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from dataclasses import asdict
 import yaml
 from pathlib import Path
 from typing import Any
@@ -71,8 +72,6 @@ def build_manual(project: Path, *, output_dir: Path | None = None, model: str | 
     available = [d["identifier"] for d in manifest.get("documents", [])]
     selected = set(available if all_documents or not document_ids else document_ids)
     required_sections = [f"{d['identifier']}/{e['identifier']}" for d in manifest.get("documents", []) if d["identifier"] in selected for e in d.get("section_contexts", []) if e.get("generation_mode") != "deterministic"]
-    if required_sections and not model and not dry_run:
-        raise ValueError("Certaines sections nécessitent un modèle Ollama :\n- " + "\n- ".join(required_sections) + "\nRelancez avec :\ndocforge manual build . --model qwen3.5:4b")
     deterministic_count = sum(1 for d in manifest.get("documents", []) if d["identifier"] in selected for e in d.get("section_contexts", []) if e.get("generation_mode") == "deterministic")
     print(f"Projet : {project}")
     print(f"Profil : {manifest.get('profile_name', 'inconnu')}")
@@ -83,6 +82,8 @@ def build_manual(project: Path, *, output_dir: Path | None = None, model: str | 
     print(f"Répertoire de prévisualisation : {target}")
     if required_sections and model:
         print(f"Appels Ollama prévus : {len(required_sections)}")
+    if required_sections and not model and not dry_run:
+        raise ValueError("Certaines sections nécessitent un modèle Ollama :\n- " + "\n- ".join(required_sections) + "\nRelancez avec :\ndocforge manual build . --model qwen3.5:4b")
     if not selected <= set(available):
         raise ValueError("document-id inconnu : " + ", ".join(sorted(selected - set(available))))
     state: dict[str, Any] = {"schema_version": 1, "project": str(project), "project_name": knowledge.get("project", {}).get("name"), "display_name": _display_name(knowledge), "output_dir": str(target), "generation_state": "running", "final_state": "running", "documents": {}, "multidocument_validation": {"executed": False, "deferred": selected != set(available)}}
@@ -96,6 +97,7 @@ def build_manual(project: Path, *, output_dir: Path | None = None, model: str | 
             doc_dir = target / "documents" / ident
             doc_dir.mkdir(parents=True, exist_ok=True)
             section_states = {}
+            blueprint = registry.blueprint_for_document(manifest["profile_name"], project_kind=manifest.get("project_kind"), document_identifier=ident)
             parts = [_h1(document["title"], state["display_name"]), ""]
             for entry in document["section_contexts"]:
                 sid = entry["identifier"]
@@ -118,6 +120,19 @@ def build_manual(project: Path, *, output_dir: Path | None = None, model: str | 
                             content += "\n\n" + fragment
                 if mode == "deterministic" and not content.strip():
                     raise ValueError(f"Fragment déterministe vide : {ident}/{sid}")
+                if mode != "deterministic" and not dry_run:
+                    validator = ManualMarkdownValidator()
+                    fragment_markdown = f"# {document['title']}\n\n## {entry['title']}\n\n{content}"
+                    diagnostics = [
+                        *validator._validate_forbidden_vocabulary(fragment_markdown, blueprint),
+                        *validator._validate_hybrid_safety(fragment_markdown, knowledge),
+                    ]
+                    errors = [item for item in diagnostics if item.severity == "error"]
+                    report = target / "validation" / "sections" / f"{ident}-{sid}.json"
+                    report.parent.mkdir(parents=True, exist_ok=True)
+                    report.write_text(json.dumps([asdict(item) for item in diagnostics], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                    if errors:
+                        raise ValueError(f"Validation immédiate échouée pour {ident}/{sid}. Rapport JSON : {report}")
                 section_path = doc_dir / "sections" / f"{sid}.md"
                 section_path.parent.mkdir(parents=True, exist_ok=True)
                 section_path.write_text(content, encoding="utf-8")
@@ -126,14 +141,16 @@ def build_manual(project: Path, *, output_dir: Path | None = None, model: str | 
             if not dry_run:
                 guide = doc_dir / "guide-genere.md"
                 guide.write_text("\n".join(parts).rstrip() + "\n", encoding="utf-8")
-                blueprint = registry.blueprint_for_document(manifest["profile_name"], project_kind=manifest.get("project_kind"), document_identifier=ident)
                 diagnostics = ManualMarkdownValidator().validate(markdown=guide.read_text(encoding="utf-8"), knowledge=knowledge, blueprint=blueprint)
                 errors = [d for d in diagnostics if d.severity == "error"]
                 warnings = [d for d in diagnostics if d.severity == "warning"]
                 (target / "validation").mkdir(exist_ok=True)
                 (target / "validation" / f"{ident}.json").write_text(json.dumps([d.__dict__ if hasattr(d, "__dict__") else {"code": d.code, "severity": d.severity, "message": d.message} for d in diagnostics], ensure_ascii=False, indent=2), encoding="utf-8")
                 if errors:
-                    raise ValueError(f"Validation échouée pour {ident} : {len(errors)} erreur(s)")
+                    raise ValueError(
+                        f"Validation échouée pour {ident} : {len(errors)} erreur(s). "
+                        f"Guide : {guide}. Rapport JSON : {target / 'validation' / (ident + '.json')}"
+                    )
                 state["documents"][ident] = {"title": document["title"], "sections": section_states, "guide": str(guide.relative_to(target)), "errors": len(errors), "warnings": len(warnings)}
         if not dry_run and selected == set(available) and manifest.get("profile_name") == "django-react":
             multi = DjangoReactMultiDocumentValidator().validate(root=target, manifest=manifest)

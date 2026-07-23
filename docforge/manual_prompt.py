@@ -80,6 +80,7 @@ class ManualPromptBuilder:
         "N’ajoute jamais de référence de citation interne comme `oaicite`.",
         "N’expose jamais de secret ni de valeur sensible; seuls les noms non sensibles ou les noms de variables peuvent être cités.",
         "Ne cite aucun nom concret de fichier sensible, de plateforme ou de mécanisme d’automatisation à titre d’exemple : il doit être présent dans les faits de cette section et démontré par le profil courant.",
+        "Les plateformes Windows, PowerShell, WSL et macOS sont interdites sauf si ManualKnowledge les démontre explicitement dans les faits projetés de la section; n’en déduis jamais une procédure à partir d’un usage général du terminal.",
         "Retourne uniquement le Markdown du manuel.",
     )
 
